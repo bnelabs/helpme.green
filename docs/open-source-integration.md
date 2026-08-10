@@ -17,6 +17,7 @@ never-list (§16) bind every ingestion below.
 
 ## 1. Precious Plastic (CC BY-SA content, MIT/GPL code)
 
+- **Canonical:** https://preciousplastic.com · umbrella https://onearmy.earth/project/precious-plastic · GitHub org `ONEARMY`
 - **Role:** Basis for **Plastic Route Cards** (Phase E) and community
   micro-processing knowledge.
 - **Architectural mapping:** process logic (shredding, extruding, washing
@@ -35,6 +36,7 @@ never-list (§16) bind every ingestion below.
 
 ## 2. Plastic Odyssey (No Public License)
 
+- **Canonical:** https://technology.plasticodyssey.org · main site https://plasticodyssey.org
 - **Role:** Contextual framework for **Geography & Income-Tier Framing**.
 - **Architectural mapping:** informs the Evaluator Core and Economics Agent
   when evaluating low-infrastructure, regional, or decentralized recycling
@@ -49,6 +51,7 @@ never-list (§16) bind every ingestion below.
 
 ## 3. Deep Waste (BSD-3)
 
+- **Canonical:** https://github.com/sumn2u/deep-waste-app · site https://www.dwaste.live/
 - **Role:** Blueprint for **Catalog Taxonomy & Photo-Intake Pipeline**
   (Phase 3 / Public Web).
 - **Architectural mapping:** taxonomy structures material streams into
@@ -66,6 +69,7 @@ never-list (§16) bind every ingestion below.
 
 ## 4. Fleetbase (AGPL-3.0)
 
+- **Canonical:** https://fleetbase.io · https://github.com/fleetbase
 - **Role:** Architectural design pattern for **Agent Contracts & Pipeline
   Event Loops**.
 - **Architectural mapping:** informs the event-driven core architecture
@@ -82,6 +86,7 @@ never-list (§16) bind every ingestion below.
 
 ## 5. CIRCULOOS / FIWARE
 
+- **Canonical:** https://circuloos.eu · code under `european-dynamics-rnd` on GitHub (Horizon Europe grant 101092295)
 - **Role:** Methodology for **Sustainability Metrics & Catalog Naming**.
 - **Architectural mapping:** EU Product Environmental Footprint (PEF) and
   Environmental Footprint (EF 3.1) methodologies inform the environmental
@@ -99,6 +104,7 @@ never-list (§16) bind every ingestion below.
 
 ## 6. PV ICE (BSD-3)
 
+- **Canonical:** https://github.com/NatLabRockies/PV_ICE (GitHub `NREL/PV_ICE` redirects here) · docs pv-ice.readthedocs.io (rate-limited/unverified at check time)
 - **Role:** Algorithmic model for **Mass/Energy-Flow & Material Degradation**.
 - **Architectural mapping:** direct inspiration (and potential BSD-3 module
   reuse) for deterministic yield calculations in the Evaluator Core; powers
