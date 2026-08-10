@@ -7,10 +7,15 @@ ingestion: **no external content enters the knowledge base outside these rules.*
 
 ## Reuse rules (binding)
 
-1. **Cite-and-summarize, don't copy.** Facts, data, and scientific ideas are not
-   copyrightable; their *expression* (text, blueprints, diagrams, code) is.
-   Ingest external projects as source-register entries (R5): link, attribute,
-   summarize, extract facts — never reproduce protected expression wholesale.
+1. **Read, learn, reimplement — don't copy.** Reading open-source projects for
+   their logic, architecture, algorithms, and knowledge — and building our own
+   implementation upon that understanding — is permissible and intended. Ideas,
+   algorithms, facts, and methodologies are not copyrightable; only their
+   *expression* (code text, prose, blueprints, diagrams) is protected. We may
+   study any of these projects, extract facts, and re-express them in our own
+   structure, attributed via the source register (R5). We never reproduce
+   protected expression wholesale, and we never copy code verbatim into our
+   codebase without honoring its license.
 2. **Share-alike triggers.** Content under CC BY-SA / AGPL / EUPL that is
    copied substantially forces the derived work to carry the same license.
    A facts-only summary with attribution is the safe posture; large copied
@@ -25,6 +30,13 @@ ingestion: **no external content enters the knowledge base outside these rules.*
 5. **Point-in-time verification.** Entries below were verified on 2026-08-10.
    Re-verify before shipping ingested content, and have derivative-work
    boundaries (especially BY-SA and AGPL) reviewed legally.
+6. **EU sui generis database right.** Individual facts are not copyrightable,
+   but a *compiled knowledge base* can be protected in the EU by the sui
+   generis database right (substantial investment in obtaining, verifying, or
+   presenting the data; ~15 years per investment). Extract individual facts
+   with attribution; **never bulk-harvest or substantially reuse another
+   project's compilation**. The same protection applies to helpme.green's own
+   compiled knowledge — it is our asset.
 
 ## Register
 
@@ -41,9 +53,9 @@ ingestion: **no external content enters the knowledge base outside these rules.*
 
 - **Canonical:** https://technology.plasticodyssey.org · main site https://plasticodyssey.org
 - **License:** **none found.** "Plans are made available free of charge and patent-free" is a claim about patents, not a copyright grant. No CC/OSI license, no LICENSE file; footers show "© Plastic Odyssey"; downloads gated behind an account (terms of service apply).
-- **Reusable:** nothing without written permission. The scientific *facts* about their low-tech machines are public knowledge; the plans, guides, and text are not.
-- **Restrictions:** all-rights-reserved default.
-- **Verdict:** **do not ingest.** Obtain written permission before any use. Re-check periodically for a published license.
+- **Reusable (reading):** studying their materials for facts, machine concepts, process logic, and business models is permissible — reading is not copying. Their *expression* (plans, guides, text, images) is not reusable without written permission.
+- **Restrictions:** all-rights-reserved default for expression; no bulk harvesting of their content; no reproduction of plans or guides.
+- **Verdict:** **study for inspiration and facts (attributed); do not copy or ingest expression.** Obtain written permission before any reproduction. Re-check periodically for a published license.
 
 ### 3. Deep Waste App (D.Waste)
 
