@@ -25,6 +25,7 @@ Early-stage. The full requirements and plan are in
 - `REQUIREMENTS.md` — consolidated v3.0 requirements & plan (codex goal brief).
 - `AGENTS.md` — repository instructions and invariant rules for coding agents.
 - `docs/open-source-reuse.md` — license register for external open-source circular-economy projects (reuse rules + per-project verdicts, binding on the Sourcer Agent).
+- `docs/open-source-integration.md` — how external projects map into the architecture (clean-room inspiration / governed data sources) with invariant enforcement.
 
 ## Reference
 
