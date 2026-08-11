@@ -88,6 +88,21 @@ API key. The browser only shows a token gate when `HELPME_CONSOLE_TOKEN` is expl
 Use **New conversation** in the header to clear the current thread without reloading. **Enter**
 sends a message; **Shift+Enter** inserts a line break.
 
+Provider request behavior is model-specific and optional. Set `HELPME_MODEL_PROFILES` to a JSON
+object keyed by the full `provider:model` identity; unprofiled models retain the normal defaults.
+For the Muse Glimmer model card supplied with this repository, an appropriate profile is:
+
+```bash
+export HELPME_MODEL=localai:muse-glimmer-30B
+export HELPME_LOCALAI_BASE_URL=http://192.168.68.57:8090/v1
+export HELPME_MODEL_PROFILES='{"localai:muse-glimmer-30B":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":8192,"timeout_seconds":120,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
+```
+
+The profile is selected only when that model identity is active. Changing to another model does
+not carry Muse’s sampling or reasoning settings into it. Profiles can also use keys such as
+`reasoning_budget` when a provider documents them; protected fields such as `messages` and
+`response_format` cannot be overridden.
+
 ## Run in Docker
 
 ```bash
