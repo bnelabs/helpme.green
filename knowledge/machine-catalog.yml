@@ -1,0 +1,442 @@
+schema_version: "1"
+purpose: >-
+  Vendor-published machinery reference records for process selection research. Every record is a
+  candidate technical reference, not an independent performance guarantee, quotation, CE decision,
+  or site-specific HSE approval.
+machines:
+  - id: vecoplan-viz-shredder
+    brand: Vecoplan
+    product: VIZ high-performance shredder
+    category: size reduction and pre-shredding
+    material_families: [plastics, paper, cellulose, mixed-materials]
+    process_stages: [feeding, primary-shredding, size-reduction, conveying]
+    input_forms: [bales, bulky-plastics, post-consumer-plastics, paper, production-scrap]
+    outputs: [shredded-fraction, liberated-feedstock]
+    capabilities:
+      - Flexible rotor, drive, and cutting-geometry configurations are described by the vendor.
+      - Intended for varied plastics and selected paper/cellulose and in-house recycling applications.
+      - Vendor describes test-centre trials as part of application design.
+    published_specifications: [Working width and rotor length vary by VIZ configuration; confirm the current data sheet.]
+    scale: industrial
+    official_source_ids: [vecoplan-viz-shredder, vecoplan-downloads]
+    techsheet_urls:
+      - https://vecoplan.com/en/products/shredding/single-shaft-shredder/viz-high-performance-shredder
+      - https://vecoplan.com/en/downloads
+    hse_topics: [guarding, lockout-tagout, noise, dust, fire-risk, blade-maintenance]
+    limitations:
+      - Vendor application language does not establish throughput for the user's feedstock.
+      - A trial and a complete line risk assessment are needed before procurement.
+
+  - id: lindner-film-washtech
+    brand: Lindner
+    product: Film and plastics recycling systems
+    category: shredding, washing, separation, and sorting line
+    material_families: [plastics, ldpe, hdpe, pp, films, packaging]
+    process_stages: [pre-shredding, washing, separation, drying, optical-sorting]
+    input_forms: [post-consumer-film, mixed-packaging, plastic-waste]
+    outputs: [washed-flakes, separated-polymer-fraction, feedstock-for-extrusion]
+    capabilities:
+      - Vendor describes multi-step processing with primary and secondary shredding and separation.
+      - Vendor describes optical sorting for extracting recyclable plastics and PVC fractions.
+      - Film Examiner is described as a final quality-control step before extrusion in film washing.
+    published_specifications: [Line capacity and purity depend on the configured system and feedstock.]
+    scale: industrial
+    official_source_ids: [lindner-srf-sorting, lindner-film-examiner]
+    techsheet_urls:
+      - https://www.lindner.com/system-solutions/alternative-fuels/srf-for-main-burners
+      - https://www.lindner.com/de/news/artikel/verbesserung-der-output-qualitaet-in-folienwaschanlagen
+    hse_topics: [guarding, wet-processing, chemical-dosing, wastewater, dust, fire-risk, noise]
+    limitations:
+      - Pages describe system capabilities rather than a binding acceptance specification.
+      - A wash line creates wastewater, residue, and chemical-management obligations.
+
+  - id: herbold-sml-granulator
+    brand: Herbold Meckesheim
+    product: SML granulator
+    category: granulation and size reduction
+    material_families: [plastics, pet, hdpe, ldpe, pp, pipes, fibres, carpet]
+    process_stages: [granulation, screen-sizing, feed-preparation]
+    input_forms: [bales, bottles, agricultural-film, carpet-waste, pipes, profiles]
+    outputs: [regrind, flakes]
+    capabilities:
+      - Vendor lists applications across bottles, films, fibres, carpet waste, pipes, and profiles.
+      - One-step size reduction and screen-selected output are described.
+      - The published sheet describes a 45–110 kW drive range and 0.5–3.0 t/h example range for one SML configuration.
+    published_specifications: [Herbold SML 60/100 HB information sheet; capacity depends on screen, material, and rotor.]
+    scale: industrial
+    official_source_ids: [herbold-sml-technical-sheet, herbold-plastics-recycling]
+    techsheet_urls:
+      - https://www.herbold.com/wp-content/uploads/pdf/datenblaetter-2019/55-SML-HB/Herbold-Meckesheim-Infoblatt-SML-HB_EN.pdf
+      - https://www.herbold.com/en/machines/shredding-equipment/granulators/smr-granulator/
+    hse_topics: [guarding, blade-change, lockout-tagout, noise, dust, screen-maintenance]
+    limitations:
+      - Published capacity is configuration- and material-dependent and is not a project guarantee.
+      - PVC, abrasives, wet feedstock, and mixed polymers require a dedicated application review.
+
+  - id: erema-intarema-regrindpro
+    brand: EREMA
+    product: INTAREMA TVEplus RegrindPro
+    category: extrusion, degassing, melt filtration, and pelletizing
+    material_families: [plastics, ldpe, hdpe, pp, abs, ps, regrind, films]
+    process_stages: [preconditioning, extrusion, degassing, melt-filtration, pelletizing]
+    input_forms: [regrind, film, sheet, nonwoven, post-industrial-scrap]
+    outputs: [recycled-pellets, compounded-recyclate]
+    capabilities:
+      - Vendor describes processing of multiple regrind and film types with a universal screw configuration.
+      - Vendor publishes example capacities by polymer and model and warns that moisture, print, and contamination affect capacity.
+      - Degassing and filtration are included as application-dependent process features.
+    published_specifications: [INTAREMA RegrindPro technical data sheet; example capacities are material-dependent.]
+    scale: industrial
+    official_source_ids: [erema-regrindpro-technical-sheet, erema-intarema-t-te]
+    techsheet_urls:
+      - https://www.erema.com/en/regrind_pro_technical_data/
+      - https://www.erema.com/us/intarema_t_te/
+    hse_topics: [hot-surfaces, pressure, fumes, dust, melt-filter-maintenance, guarding, electrical-safety]
+    limitations:
+      - Vendor material examples do not establish compatibility with an uncharacterized mixed bale.
+      - Food-contact, chemical contamination, and regulatory status require separate qualification.
+
+  - id: zerma-gsh-granulators
+    brand: ZERMA
+    product: GSH and GSP granulator families
+    category: granulation and regrind production
+    material_families: [plastics, pipes, profiles, reinforced-plastics, rubber]
+    process_stages: [granulation, screen-sizing, regrind-preparation]
+    input_forms: [large-parts, bins, barrels, pipes, profiles, reinforced-plastics]
+    outputs: [granulate, regrind]
+    capabilities:
+      - Vendor describes configurable rotors and hopper styles for high-throughput applications.
+      - GSP is described for pipe and profile granulation with low fines as a design objective.
+      - Outboard bearings and external knife adjustment are described features on the GSP family.
+    published_specifications: [GSH and GSP data sheets are supplied by the vendor; verify current dimensions and power.]
+    scale: industrial
+    official_source_ids: [zerma-granulators]
+    techsheet_urls:
+      - https://zerma.com/english/machinery/granulators.html
+    hse_topics: [guarding, blade-change, lockout-tagout, noise, dust, screen-maintenance]
+    limitations:
+      - Machine family descriptions are not a feedstock acceptance test.
+      - Reinforced and abrasive plastics can change wear, dust, and maintenance requirements.
+
+  - id: genox-plastic-washing-line
+    brand: Genox
+    product: Plastic washing, shredding, granulation, and metal recycling systems
+    category: integrated preparation and washing line
+    material_families: [plastics, hdpe, pp, films, metals, tires, batteries]
+    process_stages: [shredding, granulation, washing, drying, separation, metal-recovery]
+    input_forms: [bottles, containers, film, mixed-plastics, industrial-waste]
+    outputs: [washed-flakes, separated-metals, prepared-feedstock]
+    capabilities:
+      - Vendor publishes separate brochures for shredders, granulators, plastic washing, metal, and battery systems.
+      - Configurations are presented as complete recycling systems or selected equipment modules.
+      - Application-specific brochure review is required because the catalog spans multiple waste types.
+    published_specifications: [Vendor brochure library; model-specific sheets must be retrieved and checked.]
+    scale: industrial
+    official_source_ids: [genox-brochure-library]
+    techsheet_urls:
+      - https://www.genoxtech.com/en/download.html
+    hse_topics: [guarding, wet-processing, wastewater, dust, fire-risk, battery-hazards, noise]
+    limitations:
+      - The brochure index is not itself a design specification.
+      - Battery, mixed waste, and washing applications have different hazard envelopes.
+
+  - id: sesotec-varisort
+    brand: Sesotec
+    product: VARISORT and FLAKE PURIFIER multi-sensor sorting systems
+    category: sensor sorting and contaminant removal
+    material_families: [plastics, metals, e-waste, glass, mixed-materials]
+    process_stages: [conveying, sensor-detection, air-ejection, polymer-sorting, colour-sorting]
+    input_forms: [flakes, granules, packaging, mixed-plastics, e-waste]
+    outputs: [sorted-polymer-fractions, rejected-contaminants, colour-fractions]
+    capabilities:
+      - Vendor describes combinations of metal, NIR, colour, and other sensors.
+      - The published VARISORT+ sheet describes configurable sensor combinations and three-chute sorting.
+      - FLAKE PURIFIER is described for material-type and colour sorting with dust and label extraction connections.
+    published_specifications: [VARISORT+ sheet reports up to 8 t/h in a PET application; verify application conditions.]
+    scale: industrial
+    official_source_ids: [sesotec-varisort-technical-sheet, sesotec-flake-purifier]
+    techsheet_urls:
+      - https://www.sesotec.com/sites/593fc2aac25e5b0640a20ff8/assets/62b5894693b356d0c1b4507a/Sesotec_Varisort_220522_01_SM_EN_Digital.pdf
+      - https://www.sesotec.com/sites/593fc2aac25e5b0640a20ff8/content_entry59e75c78ffe9ecdb05f0bdf9/5a97c50bffe9ec732a731491/files/varisort-pr-en.pdf?1652433049=
+    hse_topics: [compressed-air, dust-extraction, guarding, electrical-safety, noise]
+    limitations:
+      - Sorting performance depends on particle size, liberation, presentation, sensor configuration, and contamination.
+      - “Purity” and “throughput” statements in vendor sheets require representative trials.
+
+  - id: tomra-autosort-gainnext
+    brand: TOMRA
+    product: AUTOSORT and GAINnext sorting solutions
+    category: NIR, colour, AI, and flake sorting
+    material_families: [plastics, packaging, pet, hdpe, pp, films, paper]
+    process_stages: [pre-sorting, NIR-sorting, deep-learning-sorting, flake-sorting, air-ejection]
+    input_forms: [packaging, bottles, flakes, films, mixed-plastics]
+    outputs: [polymer-fractions, food-grade-sorted-fractions, reject-streams]
+    capabilities:
+      - Vendor describes polymer, colour, film, and food-contact sorting applications.
+      - GAINnext is described as an AI-based add-on or standalone configuration with multiple material streams.
+      - TOMRA describes the need for complementary pre-sorting, washing, drying, and flake sorting in complex streams.
+    published_specifications: [Application pages describe purity and configuration examples; independent acceptance testing remains necessary.]
+    scale: industrial
+    official_source_ids: [tomra-plastics-sorting, tomra-gainnext, tomra-holygrail]
+    techsheet_urls:
+      - https://www.tomra.com/en-ie/waste-metal-recycling/applications/waste-recycling/plastics
+      - https://www.tomra.com/waste-metal-recycling/products/machines/gainnext
+    hse_topics: [compressed-air, guarding, dust, electrical-safety, laser-or-optical-systems, noise]
+    limitations:
+      - Sensor sorting cannot compensate for an unsuitable presentation, unliberated composite, or unknown chemistry.
+      - Food-grade claims require the applicable regulatory and process qualification pathway.
+
+  - id: polystar-repro-flex
+    brand: POLYSTAR
+    product: Repro-Flex plastic film recycling machine
+    category: cutter-compactor, extrusion, degassing, and pelletizing
+    material_families: [plastics, pe, ldpe, hdpe, pp, films, bopp, opp]
+    process_stages: [feeding, cutting, compacting, drying, extrusion, degassing, pelletizing]
+    input_forms: [film-scrap, bags, stretch-film, printed-film, rolls, regrind]
+    outputs: [plastic-pellets, regrind]
+    capabilities:
+      - Vendor describes a one-step cutter-compactor and direct extrusion arrangement for selected film streams.
+      - Published page lists optional degassing, metal detection, additive dosing, and centrifugal drying.
+      - Vendor publishes a 100–1200 kg/h example range for clean, dry post-industrial LDPE film.
+    published_specifications: [Repro-Flex page; output depends on clean, dry material and configuration.]
+    scale: small-to-industrial
+    official_source_ids: [polystar-repro-flex]
+    techsheet_urls:
+      - https://www.polystarco.com/products-detail/plastic-film-recycling-machine/
+    hse_topics: [hot-surfaces, fumes, rotating-knives, guarding, melt-pressure, dust, electrical-safety]
+    limitations:
+      - The published capacity basis is clean, dry post-industrial LDPE film, not mixed contaminated bales.
+      - Supplier claims require a material trial, polymer screening, and HSE/process review.
+
+  - id: ngr-cgran
+    brand: NGR
+    product: C:GRAN wet-material recycling system
+    category: cutter-compactor and extrusion for moist plastics
+    material_families: [plastics, ldpe, hdpe, pp, films, post-consumer-plastics]
+    process_stages: [cutting, pre-drying, compaction, extrusion, melt-filtration, pelletizing]
+    input_forms: [flakes, film, moist-post-consumer-plastics]
+    outputs: [recycled-pellets, filtered-melt]
+    capabilities:
+      - Vendor describes pre-drying of flakes and films with residual moisture up to 12 percent for the C:GRAN application.
+      - Vendor lists melt-filter options and example model output rates up to 3000 kg/h depending on type and material.
+      - Vendor offers test-centre demonstrations using customer raw materials.
+    published_specifications: [NGR C:GRAN table; example output is stated for LDPE under NGR standards and depends on quality.]
+    scale: industrial
+    official_source_ids: [ngr-cgran, ngr-cgran-twin]
+    techsheet_urls:
+      - https://ngr-world.com/product/cgran/
+      - https://ngr-world.com/product/cgran-twin/
+    hse_topics: [hot-surfaces, fumes, moisture-and-steam, melt-pressure, guarding, dust, electrical-safety]
+    limitations:
+      - Moisture tolerance does not mean unknown contamination or mixed polymers are acceptable.
+      - Model output tables are not a substitute for a representative trial and downstream product specification.
+
+  - id: pellencst-aisee
+    brand: Pellenc ST
+    product: AISEE quality-control gantry and optical sorting ecosystem
+    category: optical sorting, monitoring, and quality control
+    material_families: [plastics, paper, metals, textiles, mixed-materials]
+    process_stages: [flow-analysis, optical-sorting, anomaly-detection, quality-monitoring]
+    input_forms: [conveyor-streams, packaging, plastics, paper, textiles]
+    outputs: [composition-data, alerts, sorted-fractions]
+    capabilities:
+      - Vendor describes real-time flow composition analysis and configurable alerts.
+      - Smart&Share is described as a data and monitoring layer for optical sorter performance.
+      - Pellenc ST publishes service, test-line, and application support options.
+    published_specifications: [AISEE technical sheet and Smart&Share material; verify current sensor configuration.]
+    scale: industrial
+    official_source_ids: [pellencst-aisee, pellencst-smart-share]
+    techsheet_urls:
+      - https://www.pellencst.com/wp-content/uploads/2025/11/AISEE_2025_WEB_EN.pdf
+      - https://www.pellencst.com/wp-content/uploads/2019/12/EN_SMART_SHARE_WEB_1.pdf
+    hse_topics: [conveyor-guarding, compressed-air, dust, electrical-safety, data-access]
+    limitations:
+      - Monitoring data does not itself establish polymer identity, regulatory status, or buyer acceptance.
+      - Vendor service and cloud/local data arrangements require an operational and privacy review.
+
+  - id: starlinger-recostar-dynamic
+    brand: Starlinger
+    product: recoSTAR dynamic recycling line
+    category: extrusion, degassing, melt filtration, and pelletizing
+    material_families: [plastics, pe, pp, pet, pa, ps, pla, fibres, films]
+    process_stages: [feeding, drying, extrusion, melt-filtration, degassing, pelletizing]
+    input_forms: [film, fibres, flakes, bottles, caps, trays, washed-post-consumer-plastics]
+    outputs: [recycled-pellets, food-contact-candidate-recyclate]
+    capabilities:
+      - Vendor describes modular processing for rigid and flexible post-consumer plastics.
+      - SMART feeder, continuous melt filtration, C-VAC degassing, and water-ring pelletizing are described.
+      - Vendor publishes a process line brochure and application-specific material examples.
+    published_specifications: [recoSTAR dynamic technical brochure; configuration follows physical form, impurities, and end use.]
+    scale: industrial
+    official_source_ids: [starlinger-recostar-dynamic, starlinger-recycling-brochure, starlinger-recostar-sheet]
+    techsheet_urls:
+      - https://www.starlinger.com/en/recycling-technology/recostar-dynamic-art
+      - https://www.starlinger.com/fileadmin/user_upload/Recycling_Post_Consumer_E3_23861_published_02_2024_protected.pdf
+    hse_topics: [hot-surfaces, fumes, pressure, melt-filter-maintenance, guarding, dust, food-contact-quality]
+    limitations:
+      - Food-contact suitability is a regulated process outcome, not a generic machine attribute.
+      - Vendor examples require a feedstock-specific process design and acceptance test.
+
+  - id: steinert-unisort-plastics
+    brand: STEINERT
+    product: UniSort and EddyC sorting systems
+    category: NIR, colour, magnetic, and eddy-current separation
+    material_families: [plastics, pet, pe, pp, ps, pvc, metals, packaging]
+    process_stages: [magnetic-separation, eddy-current-separation, NIR-sorting, colour-sorting]
+    input_forms: [pre-shredded-plastics, flakes, packaging, mixed-waste]
+    outputs: [polymer-concentrates, ferrous-fraction, nonferrous-fraction, rejects]
+    capabilities:
+      - Vendor describes combined magnetic, eddy-current, NIR, HSI, and colour sorting for plastics.
+      - UniSort Black and BlackEye are described for dark plastics and selected black polyolefin applications.
+      - Vendor publishes example belt-sorter throughput ranges and a 10–40 mm example particle range for certain applications.
+    published_specifications: [Application page and solution guide; throughput depends on belt, presentation, and feedstock.]
+    scale: industrial
+    official_source_ids: [steinert-plastics-sorting, steinert-household-waste]
+    techsheet_urls:
+      - https://steinertglobal.com/applications/waste-recycling/plastics/
+      - https://steinertglobal.com/applications/waste-recycling/household-waste/
+    hse_topics: [magnets, eddy-current, guarding, dust, compressed-air, electrical-safety, noise]
+    limitations:
+      - Sorting requires liberation and appropriate particle size; it cannot resolve every multilayer or embedded contaminant.
+      - Performance examples are not independent certification or a site design.
+
+  - id: buehler-sortex-plastics
+    brand: Bühler
+    product: SORTEX optical sorting systems for plastics
+    category: optical sorting and defect removal
+    material_families: [plastics, pet, hdpe, upvc, pellets, flakes]
+    process_stages: [camera-sorting, colour-sorting, defect-removal, air-ejection]
+    input_forms: [flakes, pellets, regrind]
+    outputs: [sorted-resin-streams, reject-streams]
+    capabilities:
+      - Vendor describes sorting PET, HDPE, uPVC, pellets, colour variations, and foreign materials.
+      - Vendor describes camera, lighting, and machine-learning software combinations.
+      - SORTEX A MultiVision is described as an ATEX-compliant product in a separate product page; verify the exact configuration.
+    published_specifications: [Product pages publish application examples; current model data sheets must be checked.]
+    scale: industrial
+    official_source_ids: [buehler-sortex-plastic-sorting, buehler-sortex-multivision]
+    techsheet_urls:
+      - https://www.buhlergroup.com/global/vi/process-technologies/Optical-Sorting/Plastic-sorting.html
+      - https://www.buhlergroup.com/global/ru/products/sortex_a_multivisionopticalsorter.html
+    hse_topics: [ATEX-scope, guarding, dust, compressed-air, electrical-safety, noise]
+    limitations:
+      - ATEX status must be verified for the actual model, zone, installation, and dust characteristics.
+      - Optical sorting is sensitive to presentation, surface visibility, and material condition.
+
+  - id: andritz-textile-recycling
+    brand: ANDRITZ
+    product: Textile recycling conditioning and tearing systems
+    category: textile sorting, cutting, tearing, blending, and nonwoven preparation
+    material_families: [textiles, cotton, wool, polyester, fibres, carpets, nonwovens]
+    process_stages: [sorting, hard-point-removal, cutting, tearing, blending, baling, airlay]
+    input_forms: [garments, rags, carpets, textile-offcuts, bales]
+    outputs: [prepared-fibre, blended-fibre, nonwoven-feedstock, baled-fibre]
+    capabilities:
+      - Vendor describes equipment from sorting and hard-point removal through tearing, blending, baling, and airlay.
+      - Mechanical tearing capacity examples range from 50 to 3000 kg/h depending on machine and raw material quality.
+      - Vendor describes technical-centre and pilot testing for textile recycling applications.
+    published_specifications: [ANDRITZ mechanical recycling brochure; capacity varies by machine and material quality.]
+    scale: pilot-to-industrial
+    official_source_ids: [andritz-textile-recycling, andritz-mechanical-textile-brochure, andritz-textile-technical-centre]
+    techsheet_urls:
+      - https://www.andritz.com/products-en/group/nonwoven-textile/textile-recycling/recycling-equipment
+      - https://www.andritz.com/resource/blob/511816/f45eefa8854a4673bd6e4cbe0816c766/brochure-mechanical-textile-recycling-2023-nonwoven-and-textile-data.pdf
+    hse_topics: [fibre-dust, fire-risk, metal-detection, guarding, noise, manual-handling]
+    limitations:
+      - Mechanical fibre quality depends on blend, finish, contamination, and desired yarn/nonwoven route.
+      - Chemical recycling claims require separate chemistry, emissions, and permit analysis.
+
+  - id: andritz-deinking-systems
+    brand: ANDRITZ
+    product: Deinking and recycled-paper stock-preparation systems
+    category: pulping, deinking, reject treatment, and fibre preparation
+    material_families: [paper, cardboard, fibre, packaging, cellulose]
+    process_stages: [pulping, screening, deinking, flotation, reject-treatment, sludge-treatment]
+    input_forms: [recovered-paper, office-paper, printed-paper, packaging-grades]
+    outputs: [deinked-pulp, recycled-fibre, rejects, sludge]
+    capabilities:
+      - Vendor describes complete deinked-pulp systems from pulping and storage through reject and sludge treatment.
+      - Vendor describes separate reject operations such as shredding, dewatering, screening, sorting, and sand separation.
+      - Site-specific mill acceptance, chemistry, and wastewater design remain necessary.
+    published_specifications: [ANDRITZ deinking and reject-equipment pages; no generic mill acceptance grade is implied.]
+    scale: industrial
+    official_source_ids: [andritz-deinking-systems, andritz-paper-reject-equipment]
+    techsheet_urls:
+      - https://www.andritz.com/products-en/products/pulp-and-paper/deinking-systems
+      - https://www.andritz.com/products-en/products/recycling/reject-equipment-recycled-paper
+    hse_topics: [chemical-dosing, wastewater, sludge, guarding, dust, noise, confined-spaces]
+    limitations:
+      - Paper grade, inks, coatings, wet strength, and mill specifications determine the route.
+      - Chemical and wastewater controls cannot be inferred from a general equipment page.
+
+  - id: mtb-cable-and-metal-recycling
+    brand: MTB Recycling
+    product: Cable, aluminium, WEEE, and metal preparation systems
+    category: shredding, granulation, screening, and dry separation
+    material_families: [metals, copper, aluminium, cables, e-waste, batteries]
+    process_stages: [pre-shredding, granulation, screening, magnetic-separation, densimetric-separation, optical-sorting]
+    input_forms: [cables, scrap-metal, aluminium, WEEE, batteries, granules]
+    outputs: [copper-granules, aluminium-granules, ferrous-fraction, plastic-fraction, rejects]
+    capabilities:
+      - Vendor describes a three-stage mechanical preparation approach of shredding, granulation, and sorting.
+      - Upgrade Box is described for optical refining of mixed metal granules above a stated particle-size basis.
+      - CableBox One is described as a containerized cable line with vendor capacity examples that vary by cable quality.
+    published_specifications: [MTB corporate, Upgrade Box, and CableBox technical PDFs; data are non-contractual where stated.]
+    scale: small-to-industrial
+    official_source_ids: [mtb-corporate-brochure, mtb-upgrade-box, mtb-cablebox]
+    techsheet_urls:
+      - https://www.mtb-recycling.fr/wp-content/uploads/2026/04/mtb-corporate-2026-en-web-comp.pdf
+      - https://www.mtb-recycling.fr/wp-content/uploads/2024/07/compact-sysytem-brochure-web.pdf
+      - https://www.mtb-recycling.fr/wp-content/uploads/2025/01/compact-system-cb1-web-part-3.pdf
+    hse_topics: [dust, fire-risk, magnets, rotating-equipment, noise, battery-hazards, metal-projection]
+    limitations:
+      - Metal recovery requires representative assay, liberation, and buyer specification.
+      - WEEE and batteries require depollution and authorization controls beyond mechanical equipment.
+
+  - id: eldan-redoma-cable-recycling
+    brand: ELDAN / REDOMA
+    product: Cable granulation, separation, and Turbo Mill systems
+    category: cable and WEEE dry separation
+    material_families: [metals, copper, aluminium, cables, e-waste, plastics]
+    process_stages: [rough-chopping, granulation, magnetic-separation, air-separation, metal-fines-cleaning]
+    input_forms: [copper-cable, aluminium-cable, dry-cable, WEEE-plastic-fractions]
+    outputs: [metal-fraction, insulation-fraction, cleaned-plastic-fraction, metal-fines]
+    capabilities:
+      - REDOMA pages describe modular rough choppers, granulators, and separators for small-to-medium cable plants.
+      - Thunderhawk technical data gives a 300–500 kg/h example input basis for a specified cable composition.
+      - Turbo Mill is described for metal-fines recovery and cleaning plastic fractions from cable and WEEE plants.
+    published_specifications: [Thunderhawk A+B and Separator technical PDFs; capacity and purity depend on feed composition.]
+    scale: small-to-industrial
+    official_source_ids: [eldan-redoma-cable-systems, eldan-thunderhawk, eldan-separator, eldan-turbo-mill]
+    techsheet_urls:
+      - https://www.eldan-recycling.com/redoma/
+      - https://www.eldan-recycling.com/wp-content/uploads/2021/06/Thunderhawk-AB-Cable-Plants.pdf
+      - https://www.eldan-recycling.com/wp-content/uploads/2021/06/Separators.pdf
+      - https://www.eldan-recycling.com/wp-content/uploads/2024/03/Turbomill_TM_220309_high-1.pdf
+    hse_topics: [dust, fire-risk, guarding, noise, air-extraction, cable-contaminants, metal-projection]
+    limitations:
+      - Vendor purity and capacity examples are feedstock-specific and not an assay or guarantee.
+      - Greasy, jelly-filled, armoured, or contaminated cable requires a separate process and HSE review.
+
+  - id: guidetti-wire-pro
+    brand: Guidetti
+    product: Wire Pro and Sincro Eko cable recycling systems
+    category: compact granulation and dry separation
+    material_families: [metals, copper, aluminium, cables, e-waste, radiators]
+    process_stages: [pre-shredding, granulation, dry-separation, densimetric-separation]
+    input_forms: [rigid-cable, flexible-cable, radiators, electrical-cables]
+    outputs: [copper-output, aluminium-output, insulation-fraction]
+    capabilities:
+      - Wire Pro is described for copper and aluminium cables and radiators with modular upstream and downstream integration.
+      - Sincro Eko is described for manual or conveyor feeding and compact dry separation.
+      - Vendor offers test-lab trials using customer material.
+    published_specifications: [Wire Pro pages publish model dimensions and power; production depends on material.]
+    scale: small-to-industrial
+    official_source_ids: [guidetti-wire-pro, guidetti-sincro-eko]
+    techsheet_urls:
+      - https://www.guidettisrl.com/en/series/wire-pro-series/
+      - https://sincroeko.guidettisrl.com/
+    hse_topics: [guarding, dust, noise, metal-projection, air-separation, electrical-safety]
+    limitations:
+      - Vendor recovery statements do not replace a representative test, assay, or buyer specification.
+      - Cable insulation, moisture, and attached hazardous items can change the safe route.

@@ -1,0 +1,1144 @@
+schema_version: "2"
+purpose: >-
+  Broad candidate source catalog for local, source-backed circular-economy research. It combines
+  scientific, engineering, chemistry, machinery, industry, low-tech, HSE, and regulatory references.
+  Fetches are explicit operator actions, stored in a separate local source-download directory and
+  runtime SQLite database, and never promote claims automatically. “All relevant sources” is an
+  ongoing research program, not a finite completeness claim.
+sources:
+  - id: us-epa-plastics-advanced-recycling
+    title: Advanced Recycling of Plastics
+    url: https://www.epa.gov/plastics/advanced-recycling-plastics
+    publisher: US Environmental Protection Agency
+    source_type: OFFICIAL_GUIDANCE
+    material_families: [plastics]
+    jurisdiction: United States
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: General background; it is not a permit, process design, batch acceptance, or price.
+    authority_tier: primary
+    scale: policy and process background
+    access_mode: web
+  - id: us-epa-plastics-data
+    title: Plastics Material-Specific Data
+    url: https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/plastics-material-specific-data
+    publisher: US Environmental Protection Agency
+    source_type: OFFICIAL_STATISTICS
+    material_families: [plastics]
+    jurisdiction: United States
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: National historical statistics do not establish a local stream's composition, yield, or economics.
+    authority_tier: primary
+    scale: national statistics
+    access_mode: web
+  - id: eu-plastics-strategy
+    title: Plastics Strategy for a Circular Economy
+    url: https://environment.ec.europa.eu/strategy/plastics-strategy_en
+    publisher: European Commission
+    source_type: POLICY
+    material_families: [plastics, packaging]
+    jurisdiction: European Union
+    license_note: European Commission public information page; retain the source URL and reuse under applicable terms.
+    limitations: Policy context only; not a case-specific legal classification or route approval.
+    authority_tier: primary
+    scale: policy
+    access_mode: web
+  - id: us-epa-ferrous-metals-data
+    title: Ferrous Metals Material-Specific Data
+    url: https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/ferrous-metals-material-specific-data
+    publisher: US Environmental Protection Agency
+    source_type: OFFICIAL_STATISTICS
+    material_families: [metals, ferrous]
+    jurisdiction: United States
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: National historical statistics do not establish a grade, assay, recovery, or buyer settlement.
+    authority_tier: primary
+    scale: national statistics
+    access_mode: web
+  - id: eu-jrc-critical-raw-material-recovery
+    title: JRC identifies opportunities for critical raw material recovery
+    url: https://joint-research-centre.ec.europa.eu/jrc-news-and-updates/jrc-identifies-key-opportunities-critical-raw-material-recovery-2026-05-29_en
+    publisher: Joint Research Centre of the European Commission
+    source_type: OFFICIAL_RESEARCH_SUMMARY
+    material_families: [metals, e-waste, batteries, composites]
+    jurisdiction: European Union
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: Summary context; does not establish a facility's authorization, recovery yield, or economics.
+    authority_tier: primary
+    scale: research and policy
+    access_mode: web
+  - id: us-epa-paper-products
+    title: Comprehensive Procurement Guidelines for Paper and Paper Products
+    url: https://www.epa.gov/smm/comprehensive-procurement-guidelines-paper-and-paper-products
+    publisher: US Environmental Protection Agency
+    source_type: OFFICIAL_GUIDANCE
+    material_families: [paper, cardboard, paperboard, fibre]
+    jurisdiction: United States
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: Procurement guidance is not a mill acceptance specification or a process-yield guarantee.
+    authority_tier: primary
+    scale: procurement guidance
+    access_mode: web
+  - id: eu-textiles-strategy
+    title: Textiles Strategy
+    url: https://environment.ec.europa.eu/strategy/textiles-strategy_en
+    publisher: European Commission
+    source_type: POLICY
+    material_families: [textiles, fibres]
+    jurisdiction: European Union
+    license_note: European Commission public information page; retain the source URL and reuse under applicable terms.
+    limitations: Policy context; does not determine reuse grade, fibre blend, chemical risk, or buyer acceptance for a lot.
+    authority_tier: primary
+    scale: policy
+    access_mode: web
+  - id: eea-textiles-circular-economy
+    title: Textiles in Europe's circular economy
+    url: https://www.eea.europa.eu/en/topics/in-depth/textiles
+    publisher: European Environment Agency
+    source_type: OFFICIAL_RESEARCH_SUMMARY
+    material_families: [textiles, fibres, plastics]
+    jurisdiction: European Union
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: Regional indicators and research context; not a local composition or market assessment.
+    authority_tier: primary
+    scale: research and policy
+    access_mode: web
+  - id: us-epa-common-recyclables
+    title: How Do I Recycle Common Recyclables
+    url: https://www.epa.gov/recycle/how-do-i-recycle-common-recyclables
+    publisher: US Environmental Protection Agency
+    source_type: OFFICIAL_GUIDANCE
+    material_families: [paper, cardboard, plastics, glass, metals, organics, e-waste]
+    jurisdiction: United States
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: General public guidance; local programs and facility specifications differ.
+    authority_tier: primary
+    scale: public guidance
+    access_mode: web
+  - id: us-epa-composting
+    title: Composting
+    url: https://www.epa.gov/sustainable-management-food/composting
+    publisher: US Environmental Protection Agency
+    source_type: OFFICIAL_GUIDANCE
+    material_families: [organics, food, green-waste, compostables]
+    jurisdiction: United States
+    license_note: Public-sector web page; retain the source URL and respect current reuse terms.
+    limitations: General background; local feedstock rules, permits, product tests, and outlets remain case-specific.
+    authority_tier: primary
+    scale: public guidance
+    access_mode: web
+
+  # Scientific, chemistry, and engineering research
+  - id: pmc-polymer-recycling-review
+    title: "Polymer recycling review: mechanical, chemical, and biological routes"
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11902707/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_REVIEW_OPEN_ACCESS
+    material_families: [plastics, polymers, chemical-recycling]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Review-level evidence; not a feedstock acceptance specification or process guarantee.
+    authority_tier: secondary
+    scale: lab and technology review
+    access_mode: api
+  - id: pmc-plastic-chemical-recycling-review
+    title: Chemical recycling and circularity of plastics review
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8941171/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_REVIEW_OPEN_ACCESS
+    material_families: [plastics, polymers, chemical-recycling]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Literature synthesis; does not establish commercial yield, emissions, or permit status.
+    authority_tier: secondary
+    scale: lab and pilot research
+    access_mode: api
+  - id: sciencedirect-plastic-recycling-open-access
+    title: Open-access engineering review of plastic recycling routes
+    url: https://www.sciencedirect.com/science/article/pii/S2666086524000122
+    publisher: ScienceDirect / peer-reviewed literature
+    source_type: SCIENTIFIC_ENGINEERING_REVIEW
+    material_families: [plastics, polymers, mechanical-recycling, chemical-recycling]
+    jurisdiction: International research context
+    license_note: Follow the article licence and publisher reuse terms.
+    limitations: Review evidence; verify claims against primary studies and current plant data.
+    authority_tier: secondary
+    scale: engineering research
+    access_mode: web
+  - id: pmc-textile-recycling-review
+    title: Textile recycling and circularity review
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11902667/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_REVIEW_OPEN_ACCESS
+    material_families: [textiles, fibres, cotton, polyester]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Review-level evidence; fibre quality, blend, and commercial acceptance remain case-specific.
+    authority_tier: secondary
+    scale: lab and industrial review
+    access_mode: api
+  - id: pmc-textile-mechanical-recycling
+    title: Mechanical textile recycling research
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8588244/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_ENGINEERING_RESEARCH
+    material_families: [textiles, fibres, cotton, wool, polyester]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Study conditions do not transfer automatically to a different blend, machine, or scale.
+    authority_tier: secondary
+    scale: lab and pilot research
+    access_mode: api
+  - id: pmc-textile-chemical-recycling
+    title: Chemical routes for textile-to-textile recycling
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11767914/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_CHEMICAL_RESEARCH
+    material_families: [textiles, fibres, polyester, cellulose, chemical-recycling]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Chemical route research; HSE, effluent, solvent recovery, and permit requirements need separate review.
+    authority_tier: secondary
+    scale: lab and pilot research
+    access_mode: api
+  - id: pmc-paper-recycling-review
+    title: Recovered paper and fibre recycling research
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9866924/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_ENGINEERING_RESEARCH
+    material_families: [paper, cardboard, fibre, cellulose]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Research context; mill grade, wet-strength, coatings, and deinking chemistry remain case-specific.
+    authority_tier: secondary
+    scale: lab and process research
+    access_mode: api
+  - id: pmc-glass-recycling-review
+    title: Glass recycling and circularity research
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10488657/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_ENGINEERING_RESEARCH
+    material_families: [glass, cullet, minerals]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Research context; container-glass, flat-glass, ceramic, and furnace specifications differ.
+    authority_tier: secondary
+    scale: lab and industrial research
+    access_mode: api
+  - id: pmc-glass-computer-vision
+    title: Computer-vision and sensor sorting for glass waste
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12609803/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_ENGINEERING_RESEARCH
+    material_families: [glass, cullet, mixed-materials]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Model and dataset performance does not establish plant performance or buyer acceptance.
+    authority_tier: secondary
+    scale: lab and pilot research
+    access_mode: api
+  - id: pmc-pcb-metals-recovery
+    title: Printed circuit board and e-waste metals recovery research
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11321694/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_CHEMICAL_ENGINEERING_RESEARCH
+    material_families: [e-waste, metals, copper, precious-metals, composites]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: Laboratory chemistry and feedstock assumptions do not establish safe plant operation or legal authorization.
+    authority_tier: secondary
+    scale: lab and pilot research
+    access_mode: api
+  - id: pmc-metal-recovery-energy
+    title: Metal recovery and resource-efficiency research
+    url: https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11690026/fullTextXML
+    publisher: PubMed Central / peer-reviewed open-access literature
+    source_type: SCIENTIFIC_ENGINEERING_RESEARCH
+    material_families: [metals, e-waste, batteries, critical-raw-materials]
+    jurisdiction: International research context
+    license_note: Verify the article's current licence and cite the original authors when reusing.
+    limitations: System-boundary and energy assumptions need checking before applying results to a project.
+    authority_tier: secondary
+    scale: lab and systems research
+    access_mode: api
+  - id: nist-polymers-plastics
+    title: NIST polymers and plastics circular-economy research
+    url: https://www.nist.gov/circular-economy/research-areas/polymers-plastics
+    publisher: US National Institute of Standards and Technology
+    source_type: OFFICIAL_RESEARCH
+    material_families: [plastics, polymers, additives]
+    jurisdiction: United States / international research context
+    license_note: Public-sector research page; retain attribution and source URL.
+    limitations: Research program context; not a machine or batch acceptance specification.
+    authority_tier: primary
+    scale: research and metrology
+    access_mode: web
+  - id: nist-chemistry-webbook
+    title: NIST Chemistry WebBook
+    url: https://webbook.nist.gov/
+    publisher: US National Institute of Standards and Technology
+    source_type: OFFICIAL_CHEMISTRY_REFERENCE
+    material_families: [chemistry, polymers, additives, gases]
+    jurisdiction: United States / international reference
+    license_note: Check NIST terms and the individual data record before reuse.
+    limitations: Reference data require correct chemical identity, conditions, and uncertainty interpretation.
+    authority_tier: primary
+    scale: laboratory reference
+    access_mode: web
+  - id: nist-polymer-thermal-decomposition
+    title: Molecular modeling of thermal decomposition of polymers
+    url: https://www.nist.gov/publications/molecular-modeling-thermal-decomposition-polymers
+    publisher: US National Institute of Standards and Technology
+    source_type: OFFICIAL_CHEMICAL_RESEARCH
+    material_families: [plastics, polymers, thermal-processing, fumes]
+    jurisdiction: United States / international research context
+    license_note: Public-sector research publication; retain attribution and source URL.
+    limitations: Modeling and research findings do not replace process-temperature, fume, or exposure assessment.
+    authority_tier: primary
+    scale: laboratory research
+    access_mode: web
+  - id: echa-plastic-additives-mapping
+    title: ECHA mapping exercise on plastic additives
+    url: https://echa.europa.eu/mapping-exercise-plastic-additives-initiative
+    publisher: European Chemicals Agency
+    source_type: OFFICIAL_CHEMICALS_GUIDANCE
+    material_families: [plastics, polymers, additives, chemicals]
+    jurisdiction: European Union
+    license_note: ECHA public information; retain source URL and verify current regulatory status.
+    limitations: Mapping context; not a complete composition disclosure for an unknown waste item.
+    authority_tier: primary
+    scale: chemical policy and risk
+    access_mode: web
+  - id: eu-jrc-textile-study
+    title: JRC report on textiles and circularity
+    url: https://publications.jrc.ec.europa.eu/repository/handle/JRC134586
+    publisher: Joint Research Centre of the European Commission
+    source_type: OFFICIAL_ENGINEERING_RESEARCH
+    material_families: [textiles, fibres, clothing]
+    jurisdiction: European Union
+    license_note: Check the report's reuse terms and cite the authors and JRC record.
+    limitations: EU study context; not a local feedstock composition, plant design, or buyer specification.
+    authority_tier: primary
+    scale: EU research and policy
+    access_mode: web
+  - id: eu-jrc-plastics-flows
+    title: JRC analysis of plastics flows and circularity
+    url: https://publications.jrc.ec.europa.eu/repository/handle/JRC142860
+    publisher: Joint Research Centre of the European Commission
+    source_type: OFFICIAL_ENGINEERING_RESEARCH
+    material_families: [plastics, polymers, packaging]
+    jurisdiction: European Union
+    license_note: Check the report's reuse terms and cite the authors and JRC record.
+    limitations: EU flow analysis; does not establish a particular operator's yield, permit, or price.
+    authority_tier: primary
+    scale: EU systems research
+    access_mode: web
+  - id: eu-jrc-end-of-waste
+    title: JRC end-of-waste research and criteria
+    url: https://joint-research-centre.ec.europa.eu/projects-and-activities/circular-resource-management/end-waste_en
+    publisher: Joint Research Centre of the European Commission
+    source_type: OFFICIAL_REGULATORY_RESEARCH
+    material_families: [waste-management, plastics, metals, paper, glass]
+    jurisdiction: European Union
+    license_note: European Commission public information; verify the applicable legislation and national implementation.
+    limitations: Research and criteria context; not an automatic end-of-waste determination.
+    authority_tier: primary
+    scale: regulatory and policy
+    access_mode: web
+
+  # Official regulations, chemicals, transport, machinery safety, and HSE
+  - id: eu-machinery-regulation-2023-1230
+    title: Regulation (EU) 2023/1230 on machinery
+    url: https://publications.europa.eu/resource/cellar/51ed7804-1617-11ee-806b-01aa75ed71a1.0006.01/DOC_1
+    publisher: EUR-Lex / European Union
+    source_type: OFFICIAL_REGULATION
+    material_families: [machinery, recycling-equipment, safety]
+    jurisdiction: European Union / EEA
+    license_note: EUR-Lex text; consult the authentic Official Journal and current consolidated version.
+    limitations: Legal text requires jurisdiction, product scope, transition dates, conformity assessment, and professional review.
+    authority_tier: primary
+    scale: machinery regulation
+    access_mode: pdf
+  - id: eu-atex-2014-34
+    title: Directive 2014/34/EU for equipment in potentially explosive atmospheres
+    url: https://publications.europa.eu/resource/cellar/68451154-b720-11e3-86f9-01aa75ed71a1.0006.01/DOC_1
+    publisher: EUR-Lex / European Union
+    source_type: OFFICIAL_REGULATION
+    material_families: [machinery, dust, combustible-dust, safety]
+    jurisdiction: European Union / EEA
+    license_note: EUR-Lex text; consult current national implementation and applicable harmonised standards.
+    limitations: Applicability depends on zones, equipment, atmosphere, dust characteristics, and installation design.
+    authority_tier: primary
+    scale: equipment and workplace regulation
+    access_mode: web
+  - id: eu-reach-and-clp
+    title: REACH Regulation (EC) No 1907/2006
+    url: https://publications.europa.eu/resource/cellar/5a380587-970b-46c6-80b0-985dd1d4812d.0006.01/DOC_1
+    publisher: Publications Office of the European Union
+    source_type: OFFICIAL_CHEMICALS_REGULATION
+    material_families: [chemicals, additives, plastics, wastewater, HSE]
+    jurisdiction: European Union / EEA
+    license_note: Official Journal publication; verify current consolidated provisions and national duties.
+    limitations: Chemical obligations depend on identity, tonnage, use, exposure, mixtures, and role in the supply chain.
+    authority_tier: primary
+    scale: chemicals regulation
+    access_mode: pdf
+  - id: eu-clp-regulation-1272-2008
+    title: Regulation (EC) No 1272/2008 on classification, labelling and packaging
+    url: https://publications.europa.eu/resource/cellar/6bf54b59-7673-461b-b8e1-f24c545cbd3c.0006.01/DOC_1
+    publisher: Publications Office of the European Union
+    source_type: OFFICIAL_CHEMICALS_REGULATION
+    material_families: [chemicals, additives, HSE, safety]
+    jurisdiction: European Union / EEA
+    license_note: Official Journal publication; verify consolidated amendments and national implementation.
+    limitations: Legal text requires substance identity, classification, use, exposure, and professional review.
+    authority_tier: primary
+    scale: chemicals regulation
+    access_mode: web
+  - id: eu-recycled-plastic-food-contact
+    title: Regulation (EU) 2022/1616 on recycled plastic food-contact materials
+    url: https://publications.europa.eu/resource/cellar/9ec45713-3880-11ed-9c68-01aa75ed71a1.0006.01/DOC_1
+    publisher: Publications Office of the European Union
+    source_type: OFFICIAL_FOOD_CONTACT_REGULATION
+    material_families: [plastics, food-contact, polymers]
+    jurisdiction: European Union / EEA
+    license_note: Official Journal publication; verify current Commission and national implementation.
+    limitations: Food-contact rules do not apply to every product but are critical where the intended use falls within scope.
+    authority_tier: primary
+    scale: product and process regulation
+    access_mode: pdf
+  - id: eu-waste-framework-directive
+    title: Waste Framework Directive 2008/98/EC and end-of-waste rules
+    url: https://publications.europa.eu/resource/cellar/a32ddb30-1a98-4911-964a-e4f4f638f20d.0006.01/DOC_1
+    publisher: Publications Office of the European Union
+    source_type: OFFICIAL_WASTE_REGULATION
+    material_families: [waste-management, plastics, metals, paper, glass, organics]
+    jurisdiction: European Union / EEA
+    license_note: Official Journal publication; verify amendments and national implementation.
+    limitations: Classification and end-of-waste outcomes depend on facts, criteria, permits, and competent authority interpretation.
+    authority_tier: primary
+    scale: waste regulation
+    access_mode: pdf
+  - id: eu-waste-shipments-2024-1157
+    title: Regulation (EU) 2024/1157 on shipments of waste
+    url: https://publications.europa.eu/resource/cellar/158d0d27-068f-11ef-a251-01aa75ed71a1.0006.01/DOC_1
+    publisher: Publications Office of the European Union
+    source_type: OFFICIAL_WASTE_SHIPMENT_REGULATION
+    material_families: [waste-management, plastics, metals, e-waste, batteries]
+    jurisdiction: European Union / EEA
+    license_note: Official Journal publication; verify application dates, annexes, and competent-authority practice.
+    limitations: Shipment rules are not a permit, classification, or facility authorization for a particular lot.
+    authority_tier: primary
+    scale: transboundary waste regulation
+    access_mode: pdf
+  - id: echa-safety-data-sheets
+    title: ECHA safety data sheet guidance
+    url: https://echa.europa.eu/documents/10162/1854937/downstream_sds_en.pdf/f3963ab4-4691-427b-97cc-f0d4b39368e9
+    publisher: European Chemicals Agency
+    source_type: OFFICIAL_HSE_CHEMICAL_GUIDANCE
+    material_families: [chemicals, additives, cleaning, washing, HSE]
+    jurisdiction: European Union / EEA
+    license_note: ECHA publication; retain attribution and verify current version.
+    limitations: SDS guidance does not substitute for a site-specific chemical risk assessment or exposure monitoring.
+    authority_tier: primary
+    scale: chemical workplace safety
+    access_mode: pdf
+  - id: hse-plastics-safety-basics
+    title: Managing plastics safely
+    url: https://www.hse.gov.uk/plastics/basics.htm
+    publisher: UK Health and Safety Executive
+    source_type: OFFICIAL_HSE_GUIDANCE
+    material_families: [plastics, machinery, HSE, fire-safety]
+    jurisdiction: United Kingdom
+    license_note: UK HSE content is generally under the Open Government Licence unless stated otherwise.
+    limitations: UK guidance; apply local law and site-specific risk assessment.
+    authority_tier: primary
+    scale: workplace safety
+    access_mode: web
+  - id: hse-plastics-industry
+    title: HSE plastics industry safety resources
+    url: https://www.hse.gov.uk/plastics/index.htm
+    publisher: UK Health and Safety Executive
+    source_type: OFFICIAL_HSE_GUIDANCE
+    material_families: [plastics, machinery, chemicals, HSE]
+    jurisdiction: United Kingdom
+    license_note: UK HSE content is generally under the Open Government Licence unless stated otherwise.
+    limitations: UK guidance; not a substitute for a competent-person risk assessment or permit decision.
+    authority_tier: primary
+    scale: workplace safety
+    access_mode: web
+  - id: hse-plastics-fume-ppis13
+    title: Controlling fume during plastics processing, PPIS13
+    url: https://www.hse.gov.uk/pubns/ppis13.pdf
+    publisher: UK Health and Safety Executive
+    source_type: OFFICIAL_HSE_TECHNICAL_SHEET
+    material_families: [plastics, polymers, fumes, HSE]
+    jurisdiction: United Kingdom
+    license_note: UK HSE publication; retain attribution and verify current revision.
+    limitations: Examples of fumes are not a complete emissions inventory for every formulation or contaminant.
+    authority_tier: primary
+    scale: process HSE
+    access_mode: pdf
+  - id: hse-simpl-plastics
+    title: SIMPL safety in manufacturing plastics and composites
+    url: https://www.hse.gov.uk/plastics/assets/docs/simpl-final.pdf
+    publisher: UK Health and Safety Executive and industry partners
+    source_type: OFFICIAL_INDUSTRY_HSE_GUIDANCE
+    material_families: [plastics, composites, machinery, HSE]
+    jurisdiction: United Kingdom
+    license_note: UK HSE publication; retain attribution and verify current revision.
+    limitations: Collaborative guidance; local legal duties, site hazards, and process-specific controls remain decisive.
+    authority_tier: primary
+    scale: workplace safety
+    access_mode: pdf
+  - id: hse-waste-processing
+    title: Sorting and processing waste safety guidance
+    url: https://www.hse.gov.uk/Waste/processing.htm
+    publisher: UK Health and Safety Executive
+    source_type: OFFICIAL_HSE_GUIDANCE
+    material_families: [waste-management, plastics, metals, e-waste, batteries, HSE]
+    jurisdiction: United Kingdom
+    license_note: UK HSE content is generally under the Open Government Licence unless stated otherwise.
+    limitations: General waste-sector guidance; risk controls must be adapted to the actual stream, plant, and workforce.
+    authority_tier: primary
+    scale: waste-sector safety
+    access_mode: web
+  - id: osha-plastics-machine-guarding
+    title: OSHA machine guarding for plastics machinery
+    url: https://www.osha.gov/etools/machine-guarding/plastics-machinery
+    publisher: US Occupational Safety and Health Administration
+    source_type: OFFICIAL_HSE_GUIDANCE
+    material_families: [plastics, machinery, HSE]
+    jurisdiction: United States
+    license_note: US public-sector guidance; retain source URL and verify applicable OSHA standards.
+    limitations: US guidance; not an equipment conformity assessment or local legal opinion.
+    authority_tier: primary
+    scale: workplace safety
+    access_mode: web
+  - id: osha-lockout-tagout
+    title: OSHA 1910.147 hazardous energy control
+    url: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.147
+    publisher: US Occupational Safety and Health Administration
+    source_type: OFFICIAL_HSE_REGULATION
+    material_families: [machinery, HSE, maintenance, electrical-safety]
+    jurisdiction: United States
+    license_note: US public-sector regulation; retain source URL and verify current applicability.
+    limitations: Employer duties and exceptions are fact-specific; use competent safety review.
+    authority_tier: primary
+    scale: workplace regulation
+    access_mode: web
+  - id: osha-combustible-dust
+    title: OSHA combustible dust information
+    url: https://www.osha.gov/laws-regs/federalregister/2010-01-25
+    publisher: US Occupational Safety and Health Administration
+    source_type: OFFICIAL_HSE_GUIDANCE
+    material_families: [dust, plastics, paper, wood, metals, HSE, fire-safety]
+    jurisdiction: United States
+    license_note: US public-sector information; verify current OSHA standards and fire-code requirements.
+    limitations: Hazard depends on dust properties, concentration, ignition sources, housekeeping, and equipment design.
+    authority_tier: primary
+    scale: workplace fire and explosion safety
+    access_mode: web
+  - id: osha-hazard-communication
+    title: OSHA hazard communication and safety data sheets
+    url: https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.1200
+    publisher: US Occupational Safety and Health Administration
+    source_type: OFFICIAL_HSE_REGULATION
+    material_families: [chemicals, additives, HSE, cleaning, washing]
+    jurisdiction: United States
+    license_note: US public-sector regulation; retain source URL and verify current revision.
+    limitations: Communication requirements do not replace exposure assessment, engineering controls, or local law.
+    authority_tier: primary
+    scale: workplace regulation
+    access_mode: web
+
+  # Industry specifications, open technical resources, and low-tech methods
+  - id: precious-plastic-machines
+    title: Precious Plastic machine overview
+    url: https://www.preciousplastic.com/solutions/machines/overview
+    publisher: Precious Plastic
+    source_type: OPEN_SOURCE_LOW_TECH_GUIDE
+    material_families: [plastics, low-tech, small-scale]
+    jurisdiction: International / community practice
+    license_note: Check current Precious Plastic licence and version before redistributing designs.
+    limitations: Open machine designs are not a site-specific safety, product, permit, or economic approval.
+    authority_tier: community
+    scale: small-scale
+    access_mode: web
+  - id: precious-plastic-open-source
+    title: Precious Plastic open-source and reuse information
+    url: https://www.preciousplastic.com/about/open-source
+    publisher: Precious Plastic
+    source_type: OPEN_SOURCE_LICENSE_REFERENCE
+    material_families: [plastics, low-tech, small-scale]
+    jurisdiction: International / community practice
+    license_note: Current page states the applicable open-source licence; verify before copying assets.
+    limitations: Licence information does not prove engineering fitness, CE conformity, or HSE adequacy.
+    authority_tier: community
+    scale: small-scale
+    access_mode: web
+  - id: precious-plastic-download-kit
+    title: Precious Plastic download kit library
+    url: https://community.preciousplastic.com/library/download-kit
+    publisher: Precious Plastic community
+    source_type: OPEN_SOURCE_TECHNICAL_LIBRARY
+    material_families: [plastics, low-tech, small-scale, machinery]
+    jurisdiction: International / community practice
+    license_note: Use the local downloaded kit as a candidate reference and preserve its version and licence metadata.
+    limitations: Community designs require competent construction, guarding, electrical, fire, and process review.
+    authority_tier: community
+    scale: small-scale
+    access_mode: web
+  - id: practical-action-plastics-recycling
+    title: Practical Action small-scale plastics recycling technical resource
+    url: https://infohub.practicalaction.org/server/api/core/bitstreams/c6d0f34b-8fd2-4344-b01d-4ced75483aae/content
+    publisher: Practical Action
+    source_type: LOW_TECH_TECHNICAL_GUIDE
+    material_families: [plastics, low-tech, small-scale, waste-management]
+    jurisdiction: International development practice
+    license_note: Check the publication's current reuse terms and cite Practical Action.
+    limitations: Low-tech guidance is not a permit, safe-work method, or modern machinery specification.
+    authority_tier: low-tech
+    scale: small-scale and community
+    access_mode: pdf
+  - id: practical-action-recycling-book
+    title: Practical Action recycling and waste-management book resource
+    url: https://practicalactionpublishing.com/book/3102/download?type=download
+    publisher: Practical Action Publishing
+    source_type: LOW_TECH_TECHNICAL_GUIDE
+    material_families: [waste-management, plastics, paper, metals, organics, low-tech]
+    jurisdiction: International development practice
+    license_note: Check the book's current licence and publisher reuse terms.
+    limitations: General technical resource; local law, market, and HSE controls remain necessary.
+    authority_tier: low-tech
+    scale: small-scale and community
+    access_mode: pdf
+  - id: plastic-odyssey-recycled-boards
+    title: Plastic Odyssey guide to making boards from recycled plastics
+    url: https://plasticodyssey.org/wp-content/Recycling-Academy/EN/MINI-GUIDE-Solutions-to-make-boards-with-recycled-plastics.pdf
+    publisher: Plastic Odyssey
+    source_type: LOW_TECH_PROCESS_GUIDE
+    material_families: [plastics, low-tech, boards, mixed-plastics]
+    jurisdiction: International / community practice
+    license_note: Check current guide licence and cite Plastic Odyssey.
+    limitations: Board-making guidance does not establish structural, fire, chemical, or product safety for a new product.
+    authority_tier: low-tech
+    scale: small-scale
+    access_mode: pdf
+  - id: basel-plastic-recycling-compilation
+    title: Basel Convention compilation on plastic waste recycling
+    url: https://www.basel.int/Portals/4/download.aspx?d=UNEP-CHW-PWPWG-PUB-PlasticRecycling-Jan2023.English.pdf
+    publisher: Basel Convention / United Nations Environment Programme
+    source_type: INTERNATIONAL_POLICY_TECHNICAL_GUIDE
+    material_families: [plastics, waste-management, transboundary-waste]
+    jurisdiction: International / Basel Convention parties
+    license_note: UN publication; retain attribution and verify current Convention decisions.
+    limitations: International policy and technical context; not a local permit or plant design.
+    authority_tier: primary
+    scale: policy and technical guidance
+    access_mode: pdf
+  - id: rema-apr-plastic-specifications
+    title: ReMA and APR recycled plastic specifications
+    url: https://www.recycledmaterials.org/press-release/rema-and-apr-release-updated-recycled-plastic-specifications-2/
+    publisher: Recycled Materials Association and Association of Plastic Recyclers
+    source_type: INDUSTRY_SPECIFICATION
+    material_families: [plastics, polymers, bale-specifications]
+    jurisdiction: United States / industry practice
+    license_note: Industry resource; verify current specification documents and member-use terms.
+    limitations: Industry specifications are not a universal buyer contract or local legal requirement.
+    authority_tier: industry
+    scale: commercial and industrial
+    access_mode: web
+
+  # Machinery, technical sheets, and industrial application references
+  - id: vecoplan-viz-shredder
+    title: Vecoplan VIZ high-performance shredder
+    url: https://vecoplan.com/en/products/shredding/single-shaft-shredder/viz-high-performance-shredder
+    publisher: Vecoplan
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, paper, cellulose, mixed-materials, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and do not copy protected brochures without permission.
+    limitations: Vendor claims require application testing, engineering review, and HSE assessment.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: vecoplan-downloads
+    title: Vecoplan recycling machinery downloads and data sheets
+    url: https://vecoplan.com/en/downloads
+    publisher: Vecoplan
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_LIBRARY
+    material_families: [plastics, paper, cellulose, biomass, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer download library; retain source URL and respect document terms.
+    limitations: Catalogue material is not a project specification; model and revision must be recorded.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: lindner-srf-sorting
+    title: Lindner multi-step shredding, sorting, and optical separation
+    url: https://www.lindner.com/system-solutions/alternative-fuels/srf-for-main-burners
+    publisher: Lindner Recyclingtech
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, mixed-waste, metals, glass, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Application page is not an acceptance test or guaranteed output purity.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: lindner-film-examiner
+    title: Lindner Film Examiner for film-washing output control
+    url: https://www.lindner.com/de/news/artikel/verbesserung-der-output-qualitaet-in-folienwaschanlagen
+    publisher: Lindner Washtech
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, ldpe, hdpe, pp, films, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and verify current product language.
+    limitations: Quality-control equipment does not replace composition testing or buyer qualification.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: herbold-sml-technical-sheet
+    title: Herbold SML granulator technical sheet
+    url: https://www.herbold.com/wp-content/uploads/pdf/datenblaetter-2019/55-SML-HB/Herbold-Meckesheim-Infoblatt-SML-HB_EN.pdf
+    publisher: Herbold Meckesheim
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, pipes, profiles, fibres, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Capacity depends on screen, material, and rotor and is not a contractual guarantee.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: herbold-plastics-recycling
+    title: Herbold granulation and plastics recycling equipment
+    url: https://www.herbold.com/en/machines/shredding-equipment/granulators/smr-granulator/
+    publisher: Herbold Meckesheim
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pipes, profiles, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Product family description is not a feedstock-specific engineering design.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: erema-regrindpro-technical-sheet
+    title: EREMA INTAREMA RegrindPro technical data
+    url: https://www.erema.com/en/regrind_pro_technical_data/
+    publisher: EREMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, ldpe, hdpe, pp, abs, ps, regrind, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Example capacities explicitly depend on material properties, moisture, print, contamination, and configuration.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: erema-intarema-t-te
+    title: EREMA INTAREMA T and TE application page
+    url: https://www.erema.com/us/intarema_t_te/
+    publisher: EREMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, films, ldpe, pp, technical-plastics, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Material examples do not establish a route for mixed or contaminated waste.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: zerma-granulators
+    title: ZERMA granulator families and data sheets
+    url: https://zerma.com/english/machinery/granulators.html
+    publisher: ZERMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_LIBRARY
+    material_families: [plastics, pipes, profiles, reinforced-plastics, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Model data sheets and actual application conditions must be checked before selection.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: genox-brochure-library
+    title: Genox recycling machinery brochure library
+    url: https://www.genoxtech.com/en/download.html
+    publisher: Genox Recycling Technology
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_LIBRARY
+    material_families: [plastics, metals, tires, batteries, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer download library; retain source URL and respect document terms.
+    limitations: Brochure index spans different waste streams; select the exact line and revision.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: sesotec-varisort-technical-sheet
+    title: Sesotec VARISORT+ sorting systems technical sheet
+    url: https://www.sesotec.com/sites/593fc2aac25e5b0640a20ff8/assets/62b5894693b356d0c1b4507a/Sesotec_Varisort_220522_01_SM_EN_Digital.pdf
+    publisher: Sesotec
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, metals, e-waste, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Throughput and reject examples depend on material presentation and configuration.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: sesotec-flake-purifier
+    title: Sesotec FLAKE PURIFIER+ technical sheet
+    url: https://www.sesotec.com/sites/593fc2aac25e5b0640a20ff8/content_entry59e75c78ffe9ecdb05f0bdf9/5a97c4c4ffe9ec732a731485/files/flake-purifier-plus-pr-en.pdf?1597989519=
+    publisher: Sesotec
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, flakes, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Sorting performance requires representative trials and correct infeed distribution.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: tomra-plastics-sorting
+    title: TOMRA plastics sorting applications
+    url: https://www.tomra.com/en-ie/waste-metal-recycling/applications/waste-recycling/plastics
+    publisher: TOMRA Recycling
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pet, hdpe, pp, pvc, films, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Vendor application claims require test-centre validation and product qualification.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: tomra-gainnext
+    title: TOMRA GAINnext deep-learning sorting system
+    url: https://www.tomra.com/waste-metal-recycling/products/machines/gainnext
+    publisher: TOMRA Recycling
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pet, hdpe, pp, packaging, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Deep-learning sorting does not replace feedstock characterization, regulatory qualification, or HSE controls.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: tomra-holygrail
+    title: TOMRA chemical tracers and digital watermark sorting context
+    url: https://www.tomra.com/news-and-media/feature-articles/holygrail-intelligent-sorting-to-achieve-a-circular-economy-for-packaging
+    publisher: TOMRA Recycling
+    source_type: INDUSTRY_TECHNICAL_CONTEXT
+    material_families: [plastics, packaging, digital-sorting, machinery]
+    jurisdiction: International industry context
+    license_note: Manufacturer information; retain source URL and respect document terms.
+    limitations: Feature article context does not establish availability, throughput, or project economics.
+    authority_tier: industry
+    scale: pilot and industrial context
+    access_mode: web
+  - id: polystar-repro-flex
+    title: POLYSTAR Repro-Flex plastic film recycling machine
+    url: https://www.polystarco.com/products-detail/plastic-film-recycling-machine/
+    publisher: POLYSTAR
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pe, ldpe, hdpe, pp, films, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Published capacity is stated on a clean, dry post-industrial LDPE basis and is not transferable to mixed bales.
+    authority_tier: industry
+    scale: small-to-industrial
+    access_mode: web
+  - id: ngr-cgran
+    title: NGR C:GRAN wet-material recycling system
+    url: https://ngr-world.com/product/cgran/
+    publisher: NGR
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, films, ldpe, hdpe, pp, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Moisture tolerance does not establish tolerance to mixed polymers, PVC, pesticides, or unknown contaminants.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: ngr-cgran-twin
+    title: NGR C:GRAN Twin cascade extrusion and compounding
+    url: https://ngr-world.com/product/cgran-twin/
+    publisher: NGR
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, polymers, compounding, glass-fibre, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Compound and fibre claims require material-specific formulation, test, and HSE review.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: pellencst-aisee
+    title: Pellenc ST AISEE technical sheet
+    url: https://www.pellencst.com/wp-content/uploads/2025/11/AISEE_2025_WEB_EN.pdf
+    publisher: Pellenc ST
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, paper, metals, textiles, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Quality monitoring is not a material identity or legal classification.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: pellencst-smart-share
+    title: Pellenc ST Smart and Share performance-monitoring system
+    url: https://www.pellencst.com/wp-content/uploads/2019/12/EN_SMART_SHARE_WEB_1.pdf
+    publisher: Pellenc ST
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, paper, metals, textiles, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Monitoring and optimization services need a data, cybersecurity, and operational review.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: starlinger-recostar-dynamic
+    title: Starlinger recoSTAR dynamic art post-consumer plastics line
+    url: https://www.starlinger.com/en/recycling-technology/recostar-dynamic-art
+    publisher: Starlinger recycling technology
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pe, pp, pet, ps, films, fibres, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Application, contamination, and end-use determine the detailed line configuration.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: starlinger-recycling-brochure
+    title: Starlinger post-consumer recycling technology brochure
+    url: https://www.starlinger.com/fileadmin/user_upload/Recycling_Post_Consumer_E3_23861_published_02_2024_protected.pdf
+    publisher: Starlinger recycling technology
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, polymers, films, flakes, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Brochure examples are not independent validation or a buyer specification.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: starlinger-recostar-sheet
+    title: Starlinger recoSTAR dynamic art technical sheet
+    url: https://www.starlinger.com/fileadmin/user_upload/recoSTAR_dynamic_art_24821_published_022026_ansicht.pdf
+    publisher: Starlinger recycling technology
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [plastics, pe, pp, pet, fibres, films, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Model data are vendor-published and must be checked against the current offer and material trial.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: steinert-plastics-sorting
+    title: STEINERT plastics sorting and separation systems
+    url: https://steinertglobal.com/applications/waste-recycling/plastics/
+    publisher: STEINERT
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pet, pe, pp, ps, pvc, metals, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Example particle sizes, capacities, and purity depend on feedstock and configuration.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: steinert-household-waste
+    title: STEINERT household-waste sorting process chain
+    url: https://steinertglobal.com/applications/waste-recycling/household-waste/
+    publisher: STEINERT
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, paper, glass, metals, mixed-waste, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: A process chain must be designed for the actual collection system, residues, and outlets.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: buehler-sortex-plastic-sorting
+    title: Bühler SORTEX plastic sorting
+    url: https://www.buhlergroup.com/global/vi/process-technologies/Optical-Sorting/Plastic-sorting.html
+    publisher: Bühler Group
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pet, hdpe, upvc, pellets, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Optical sorting requires correct presentation and cannot by itself establish end-use compliance.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: buehler-sortex-multivision
+    title: Bühler SORTEX A MultiVision product page
+    url: https://www.buhlergroup.com/global/ru/products/sortex_a_multivisionopticalsorter.html
+    publisher: Bühler Group
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, machinery, dust, ATEX]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: ATEX and throughput statements require verification for the exact model and installation.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: andritz-textile-recycling
+    title: ANDRITZ textile recycling machinery and equipment
+    url: https://www.andritz.com/products-en/group/nonwoven-textile/textile-recycling/recycling-equipment
+    publisher: ANDRITZ
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [textiles, cotton, wool, polyester, fibres, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Fibre quality, blend, hard points, and downstream route govern equipment selection.
+    authority_tier: industry
+    scale: pilot-to-industrial
+    access_mode: web
+  - id: andritz-mechanical-textile-brochure
+    title: ANDRITZ mechanical textile recycling machinery brochure
+    url: https://www.andritz.com/resource/blob/511816/f45eefa8854a4673bd6e4cbe0816c766/brochure-mechanical-textile-recycling-2023-nonwoven-and-textile-data.pdf
+    publisher: ANDRITZ
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [textiles, fibres, nonwovens, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Published capacity ranges depend on machine and raw material quality.
+    authority_tier: industry
+    scale: pilot-to-industrial
+    access_mode: pdf
+  - id: andritz-textile-technical-centre
+    title: ANDRITZ textile recycling technical centre
+    url: https://www.andritz.com/nonwoven-textile-en/technical-centers-nonwoven-and-textile/technical-center-airlay-textile-recycling/technical-center-airlay-and-textile-recycling
+    publisher: ANDRITZ
+    source_type: MACHINE_TESTING_TECHNICAL_CENTER
+    material_families: [textiles, fibres, nonwovens, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Test-centre availability is not a production result or commercial commitment.
+    authority_tier: industry
+    scale: pilot and industrial trials
+    access_mode: web
+  - id: andritz-deinking-systems
+    title: ANDRITZ deinking systems
+    url: https://www.andritz.com/products-en/products/pulp-and-paper/deinking-systems
+    publisher: ANDRITZ
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [paper, cardboard, fibre, cellulose, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Deinking chemistry, mill grade, water, sludge, and permits require project-specific design.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: andritz-paper-reject-equipment
+    title: ANDRITZ recovered-paper reject equipment
+    url: https://www.andritz.com/products-en/products/recycling/reject-equipment-recycled-paper
+    publisher: ANDRITZ
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [paper, cardboard, fibre, rejects, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Reject treatment depends on particle sizes, dry content, contaminants, and outlet.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: mtb-corporate-brochure
+    title: MTB recycling equipment corporate technical brochure
+    url: https://www.mtb-recycling.fr/wp-content/uploads/2026/04/mtb-corporate-2026-en-web-comp.pdf
+    publisher: MTB Recycling
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, cables, e-waste, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Corporate overview; model-level data and trials are required.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: mtb-upgrade-box
+    title: MTB Upgrade Box containerized refining line
+    url: https://www.mtb-recycling.fr/wp-content/uploads/2024/07/compact-sysytem-brochure-web.pdf
+    publisher: MTB Recycling
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, granules, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Published capacity and purity examples require feedstock-specific verification.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: mtb-cablebox
+    title: MTB CableBox One containerized cable recycling line
+    url: https://www.mtb-recycling.fr/wp-content/uploads/2025/01/compact-system-cb1-web-part-3.pdf
+    publisher: MTB Recycling
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, cables, plastics, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Technical data are explicitly non-contractual in the brochure and depend on cable quality.
+    authority_tier: industry
+    scale: small-to-industrial
+    access_mode: pdf
+  - id: eldan-redoma-cable-systems
+    title: ELDAN REDOMA cable equipment and system overview
+    url: https://www.eldan-recycling.com/redoma/
+    publisher: ELDAN Recycling / REDOMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [metals, copper, aluminium, cables, plastics, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Capacity and purity examples are application-specific and not a buyer guarantee.
+    authority_tier: industry
+    scale: small-to-industrial
+    access_mode: web
+  - id: eldan-thunderhawk
+    title: ELDAN REDOMA Thunderhawk A+B technical sheet
+    url: https://www.eldan-recycling.com/wp-content/uploads/2021/06/Thunderhawk-AB-Cable-Plants.pdf
+    publisher: ELDAN Recycling / REDOMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, cables, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Maximum infeed example is based on a stated cable copper-content assumption.
+    authority_tier: industry
+    scale: small-scale and industrial
+    access_mode: pdf
+  - id: eldan-separator
+    title: ELDAN REDOMA separator technical sheet
+    url: https://www.eldan-recycling.com/wp-content/uploads/2021/06/Separators.pdf
+    publisher: ELDAN Recycling / REDOMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, cables, plastics, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Purity and capacity depend on dry cable granulate, settings, and presentation.
+    authority_tier: industry
+    scale: small-to-industrial
+    access_mode: pdf
+  - id: eldan-turbo-mill
+    title: ELDAN Turbo Mill TM900 technical sheet
+    url: https://www.eldan-recycling.com/wp-content/uploads/2024/03/Turbomill_TM_220309_high-1.pdf
+    publisher: ELDAN Recycling
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, e-waste, plastics, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer PDF; retain source URL and respect document terms.
+    limitations: Metal-fines and plastic-cleaning applications require a dust and fire-risk review.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+  - id: guidetti-wire-pro
+    title: Guidetti Wire Pro cable and radiator recycling system
+    url: https://www.guidettisrl.com/en/series/wire-pro-series/
+    publisher: Guidetti Recycling Systems
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [metals, copper, aluminium, cables, radiators, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Production is stated as material-dependent and requires a test with the actual feed.
+    authority_tier: industry
+    scale: small-to-industrial
+    access_mode: web
+  - id: guidetti-sincro-eko
+    title: Guidetti Sincro Eko compact cable recycling systems
+    url: https://sincroeko.guidettisrl.com/
+    publisher: Guidetti Recycling Systems
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [metals, copper, aluminium, cables, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and respect document terms.
+    limitations: Recovery statements require feedstock testing, assay, and buyer specification.
+    authority_tier: industry
+    scale: small-scale
+    access_mode: web

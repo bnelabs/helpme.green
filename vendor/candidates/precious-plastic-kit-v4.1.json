@@ -1,0 +1,51 @@
+{
+  "source_id": "precious-plastic-kit-v4.1",
+  "title": "Precious Plastic Download Kit",
+  "version": "V4.1",
+  "kind": "candidate_external_source",
+  "status": "candidate_only",
+  "active_knowledge": false,
+  "scope": "Future plastic material-family work (Phase E); excluded from Phase A copper-cable evaluation.",
+  "observed_at": "2026-08-10",
+  "local_artifact": {
+    "path": "/Users/barisnacierzeren/Downloads/precious-plastic-kit",
+    "file_count": 1352,
+    "bytes": 1406093134,
+    "readme_sha256": "1078b1fbaa7a10e0ed6718cb42684c3a8ab8b3853acaa6b44161017649e88fe1"
+  },
+  "canonical_source": {
+    "academy": "https://community.preciousplastic.com/academy",
+    "community": "https://community.preciousplastic.com/",
+    "project": "https://preciousplastic.com/",
+    "umbrella": "https://onearmy.earth/project/precious-plastic",
+    "github_organization": "https://github.com/ONEARMY"
+  },
+  "license_evidence": {
+    "content_license": "CC BY-SA 4.0",
+    "rights_holder": "Stichting One Army",
+    "document_path": "0. Start/License & Disclaimer .pdf",
+    "document_sha256": "0c7ea2c9a422de787f278cd6fb5359f56ad21e5e06a65afc20f72d0e8779d40e",
+    "kit_code_license": "Not established by the kit license document; do not infer a code license."
+  },
+  "disclaimer_evidence": {
+    "document_path": "0. Start/License & Disclaimer .pdf",
+    "summary": "The kit disclaims guarantees and liability for the safety, reliability, durability, and performance of information or machines built from it.",
+    "interpretation": "Kit material is not safety, engineering, permitting, performance, or financial approval evidence."
+  },
+  "related_helpme_green_evidence": {
+    "repository": "https://github.com/bnelabs/helpme.green",
+    "integration_strategy_commit": "9819b711b9f006b38e83b00451e4e753f7b40e53",
+    "reuse_register": "docs/open-source-reuse.md",
+    "integration_strategy": "docs/open-source-integration.md"
+  },
+  "permitted_next_use": [
+    "Use exact kit files as candidate references for future plastic route-card research.",
+    "Extract and re-express individual facts only after source-register review, with attribution and location.",
+    "Keep any substantial adapted content under the applicable share-alike obligations."
+  ],
+  "blocked_use": [
+    "Do not load this candidate into the active Phase A copper-cable knowledge pack.",
+    "Do not promote user-download, blueprint, machine, safety, or performance content to reviewed evidence automatically.",
+    "Do not copy substantial blueprint, diagram, prose, or other protected expression into a non-compliant pack."
+  ]
+}

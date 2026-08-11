@@ -1,0 +1,120 @@
+skills:
+  - id: general-material-triage
+    title: General material triage
+    material_families: [mixed-materials, unknown]
+    triggers: [material, waste, stream, mixed, recycling, recovery, residue]
+    concepts: [what the object is, condition and contamination, likely route classes, end use, geography]
+    tests: [representative sample, composition, moisture, contamination, mass balance]
+    verify_before_claiming: [material identity, process suitability, buyer acceptance, regulatory status]
+    avoid_overclaims: [recyclable or unrecyclable as a binary, guaranteed yield, assumed price]
+    followups: [what is the stream made of, what condition is it in, what outcome is wanted]
+    next_step: Start with the single fact that most changes the available route.
+    source_domains: [circular-economy, waste-management]
+
+  - id: plastics-recycling
+    title: Plastics recycling and polymer route triage
+    material_families: [plastics, polymers, packaging, films]
+    triggers: [plastic, plastics, polymer, resin, ldpe, lldpe, hdpe, pp, pet, pvc, ps, abs, film, pellet, flake, extrusion, injection molding]
+    concepts: [polymer identity and mixture, additives and multilayers, contamination and moisture, thermal history, process compatibility, end-use specification]
+    tests: [representative polymer composition, chlorine or PVC screen, moisture, soil and organic contamination, ash and metals, melt behavior, usable yield]
+    verify_before_claiming: [polymer fraction, compatibility, food or product contact status, safety and permit position, buyer specification, economics]
+    avoid_overclaims: [one contaminant always destroys equipment, mixed polymers are automatically worthless, a kit proves a route, a price without yield and cost basis]
+    followups: [can the supplier separate the stream at source, what polymer test exists, what end product is intended]
+    next_step: Do not buy processing equipment until a representative sample establishes composition, reject fraction, and usable yield.
+    source_domains: [plastics, packaging, waste-management]
+
+  - id: metals-recovery
+    title: Metals recovery and fraction qualification
+    material_families: [metals, ferrous, non-ferrous, copper, aluminium, steel]
+    triggers: [metal, metals, ferrous, non-ferrous, steel, iron, aluminium, aluminum, copper, brass, cable, scrap, assay, magnet, eddy current]
+    concepts: [ferrous versus non-ferrous identity, liberation, attachments and hazardous items, assay basis, mass balance, receiver specification]
+    tests: [representative composition, moisture and free liquids, hazardous-item inspection, size and liberation, assay, output contamination, residue mass]
+    verify_before_claiming: [metal grade, recovery, receiver acceptance, waste status, shipment route, price or settlement]
+    avoid_overclaims: [visual colour is an assay, all metal fractions have a positive value, separation yield transfers from another plant]
+    followups: [is the lot mixed or segregated, what is attached to it, does a receiver have a written specification]
+    next_step: Establish a representative composition and receiver acceptance before comparing processing routes.
+    source_domains: [metals, waste-management, critical-raw-materials]
+
+  - id: paper-fiber-recovery
+    title: Paper and fibre recovery
+    material_families: [paper, cardboard, paperboard, fibre]
+    triggers: [paper, cardboard, corrugated, paperboard, fibre, fiber, pulp, office paper, newspaper, carton]
+    concepts: [fibre grade, moisture, prohibitives, coatings and laminates, pulping suitability, bale specification]
+    tests: [grade composition, moisture, prohibitives and outthrows, wet-strength or coating indicators, bale density, usable yield]
+    verify_before_claiming: [grade acceptance, de-inking or pulping route, product specification, contamination limit, economics]
+    avoid_overclaims: [all paper is interchangeable, clean appearance proves bale grade, recycling is possible without a mill or receiver]
+    followups: [what paper grades dominate, is it wet or laminated, who would receive the fibre]
+    next_step: Separate the dominant grade from wet, laminated, food-soiled, and non-paper material before assessing a route.
+    source_domains: [paper, packaging, waste-management]
+
+  - id: textiles-recovery
+    title: Textile reuse and fibre recovery
+    material_families: [textiles, clothing, cotton, wool, polyester, fibres]
+    triggers: [textile, textiles, clothing, garment, cotton, wool, polyester, nylon, fabric, fibre, fiber, yarn, carpet]
+    concepts: [reuse before recycling, fibre blend, finish and coating, colour, hygiene and damage, mechanical versus chemical recovery]
+    tests: [fibre composition, blend ratio, moisture and odour, hazardous finishes, sorting grade, staple length or yarn quality, usable yield]
+    verify_before_claiming: [fibre identity, reuse grade, chemical risk, recycled-fibre performance, buyer acceptance, regulatory status]
+    avoid_overclaims: [a clothing label is a complete composition test, blended fabric has one obvious route, export or resale is guaranteed]
+    followups: [is the stream reusable, what blend is declared, is it post-consumer or manufacturing offcut]
+    next_step: Preserve reusable items first and characterize the fibre blend and finish before choosing recycling equipment.
+    source_domains: [textiles, circular-economy, waste-management]
+
+  - id: glass-and-minerals
+    title: Glass and mineral fraction recovery
+    material_families: [glass, minerals, cullet, inert-materials]
+    triggers: [glass, cullet, bottle, ceramic, mineral, aggregate, sand, stone, inert]
+    concepts: [glass family, colour, ceramics and stones, size distribution, moisture, end-market specification]
+    tests: [glass versus ceramic sorting, colour, particle size, organics and metals, moisture, fines, buyer specification]
+    verify_before_claiming: [cullet quality, furnace or aggregate acceptance, contamination threshold, transport economics]
+    avoid_overclaims: [all glass melts together, broken glass is automatically acceptable, colour or clarity alone proves a buyer grade]
+    followups: [is it container glass or mixed glass, how much ceramic is present, what outlet is available]
+    next_step: Identify the glass family and non-glass contamination before investing in size reduction or sorting.
+    source_domains: [glass, construction-materials, waste-management]
+
+  - id: organics-recovery
+    title: Organics recycling and biological treatment
+    material_families: [organics, food, green-waste, biomass, compostables]
+    triggers: [organic, organics, food, compost, composting, yard waste, biomass, manure, anaerobic digestion, biowaste]
+    concepts: [biodegradability, contamination, moisture and structure, aerobic or anaerobic route, pathogen and product requirements, local scale]
+    tests: [contamination, moisture, particle size, carbon-to-nitrogen balance, stability, pathogens or chemical contaminants where relevant]
+    verify_before_claiming: [feedstock eligibility, product quality, pathogen controls, local authorization, outlet and economics]
+    avoid_overclaims: [biodegradable means compostable in this facility, a home method transfers to commercial scale, compost quality without testing]
+    followups: [what contaminants are present, where would treatment occur, what product or outlet is intended]
+    next_step: Characterize contaminants and moisture first because they determine both the biological route and the lawful outlet.
+    source_domains: [organics, waste-management, agriculture]
+
+  - id: ewaste-and-composites
+    title: E-waste, composites, and complex products
+    material_families: [e-waste, batteries, composites, multilayer, electronics]
+    triggers: [e-waste, ewaste, electronics, battery, batteries, circuit board, composite, multilayer, appliance, refrigerator, solar panel]
+    concepts: [hazardous components, material liberation, mixed-material interfaces, critical raw materials, residue route, authorized downstream chain]
+    tests: [de-energization, hazardous component inventory, composition, liberation, contamination, assay, residue mass balance]
+    verify_before_claiming: [safe handling, authorization, recovery yield, product or residue status, shipment and buyer acceptance]
+    avoid_overclaims: [valuable metal content equals recoverable value, disassembly is safe by default, a downstream buyer accepts untested fractions]
+    followups: [what product is it, is it intact or depolluted, are batteries or refrigerants present]
+    next_step: Establish the hazardous-component and authorization envelope before discussing recovery equipment or value.
+    source_domains: [e-waste, metals, safety, waste-management]
+
+  - id: machinery-and-process-design
+    title: Recycling machinery and process-line selection
+    material_families: [machinery, process-lines, plastics, metals, paper, textiles, glass, organics]
+    triggers: [machine, machinery, equipment, shredder, granulator, extruder, pelletizer, pelletiser, washing line, sorter, conveyor, separator, throughput, technical sheet, datasheet, vendor, brand, line design, process design]
+    concepts: [unit operations, feed presentation, liberation, capacity basis, moisture and contamination envelope, utilities, maintenance, wear, scale-up, trial protocol, vendor qualification]
+    tests: [representative material trial, particle-size distribution, moisture, composition, contamination, mass balance, power and water demand, dust and noise survey, output specification]
+    verify_before_claiming: [model and revision, rated versus demonstrated throughput, material acceptance, utilities, wear parts, guarding and conformity, service support, HSE controls]
+    avoid_overclaims: [a catalogue capacity is a guaranteed rate, a machine handles every polymer, a brand name proves quality, CE or ATEX without model and installation review, a pilot trial guarantees commercial economics]
+    followups: [what exact feedstock and particle form are available, what output and capacity are required, what utilities and site constraints exist]
+    next_step: Define the material, target output, capacity basis, and site constraints before comparing brands or requesting quotations.
+    source_domains: [machinery, engineering, plastics, metals, paper, textiles, HSE]
+
+  - id: hse-and-regulatory
+    title: HSE, chemical safety, and regulatory boundary review
+    material_families: [HSE, safety, chemicals, machinery, waste-management, transport, permits]
+    triggers: [HSE, health and safety, safety, hazard, fumes, dust, combustible dust, fire, explosion, ATEX, CE, machinery regulation, lockout, tagout, LOTO, SDS, safety data sheet, REACH, CLP, permit, authorization, waste shipment, food contact, compliance]
+    concepts: [hazard identification, hierarchy of controls, guarding, hazardous energy, dust and fume control, chemical identity, exposure route, fire and explosion risk, waste classification, machinery conformity, jurisdiction and competent authority]
+    tests: [risk assessment, chemical inventory and SDS review, exposure monitoring, dust explosibility where relevant, guarding and interlock verification, emergency controls, wastewater and residue characterization, permit and shipment review]
+    verify_before_claiming: [jurisdiction, current regulation, equipment conformity, site risk controls, chemical classification, waste status, emissions and wastewater duties, product-contact status]
+    avoid_overclaims: [a source page is legal advice, a CE mark alone makes an installation safe, an SDS covers unknown waste chemistry, a generic HSE checklist clears a site, regulation status without jurisdiction and current version]
+    followups: [where is the operation, who is exposed, what equipment or chemical is involved, is the stream known or potentially hazardous]
+    next_step: Identify the jurisdiction and the highest-consequence hazard first, then route the question to a competent HSE or regulatory professional.
+    source_domains: [HSE, chemicals, machinery, waste-regulation, fire-safety]

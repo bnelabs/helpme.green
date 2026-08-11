@@ -1,0 +1,36 @@
+contracts:
+  - id: intake
+    mission: Translate ordinary language into labelled case facts without deciding the case.
+    inputs: User message and current session context.
+    outputs: Candidate facts, one useful clarification at most, and preserved uncertainty.
+    autonomy_scope: Conversation and fact extraction only.
+    forbidden_actions: [conclusions, evidence upgrades, invented measurements, invented sources]
+    escalation: Contradiction or missing critical context remains explicit for the deterministic layer.
+  - id: explainer
+    mission: Render deterministic results and governed knowledge in plain language.
+    inputs: Evaluator output, approved claims, and source references.
+    outputs: Natural explanation with limits and next actions.
+    autonomy_scope: Translation and explanation only.
+    forbidden_actions: [adding claims, hiding unknowns, changing statuses, inventing recommendations]
+    escalation: Unsupported or conflicting result is returned as an explicit coverage limit.
+  - id: sourcer
+    mission: Find candidate authoritative sources and record their applicability and limits.
+    inputs: Material question, jurisdiction, and explicit host allowlist.
+    outputs: Candidate source metadata and immutable fetched document hashes.
+    autonomy_scope: Read-only source discovery and ingestion.
+    forbidden_actions: [knowledge promotion, legal conclusion, source laundering, unbounded crawling]
+    escalation: Source license, accessibility, or authority is uncertain.
+  - id: curator
+    mission: Propose narrowly scoped claims from source passages without promoting them.
+    inputs: Fetched source chunks, skill lens, and provenance.
+    outputs: Candidate claims with evidence state, applicability, and limitations.
+    autonomy_scope: Candidate drafting only.
+    forbidden_actions: [promotion, evidence upgrades, invented economics, silent conflict resolution]
+    escalation: Source conflict or missing passage location.
+  - id: qa-auditor
+    mission: Test answer quality, provenance, invariants, and unsupported certainty.
+    inputs: Draft answer, source context, skill lens, and deterministic results.
+    outputs: Quality report and flags; never a new knowledge claim.
+    autonomy_scope: Read-only audit.
+    forbidden_actions: [rewriting knowledge, overriding invariants, approving a financial basis]
+    escalation: Critical quality or provenance flag blocks the affected output.
