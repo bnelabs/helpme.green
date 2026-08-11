@@ -251,7 +251,7 @@ class ConversationAgent:
         reply = response.get("reply")
         if not isinstance(reply, str) or not reply.strip():
             raise ProviderUnavailable("Conversation response did not contain a reply.")
-        return reply.strip()[:6000]
+        return reply.strip()
 
     @staticmethod
     def _hearing(value: Any) -> dict[str, str]:
