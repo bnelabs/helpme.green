@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from helpme_green.console import CommandProcessor
+from helpme_green.conversation import ConversationAgent
 from helpme_green.domain import CaseFact, ConfirmationLabel, EvidenceState, canonical_json
 from helpme_green.engine import DeterministicEngine, LandscapeStatus
 from helpme_green.intake import IntakeAgent
@@ -513,6 +514,12 @@ def test_default_model_identity_is_provider_auto(monkeypatch) -> None:
 
     assert ModelRouter().selection.identity == "localai:auto"
     assert SessionState.new(material="plastic", geography="EU").model_identity == "localai:auto"
+
+
+def test_user_facing_reply_is_not_truncated_by_application() -> None:
+    reply = "A" * 7000
+
+    assert ConversationAgent._reply({"reply": reply}) == reply
 
 
 def test_console_uses_ai_to_normalize_a_natural_language_answer(

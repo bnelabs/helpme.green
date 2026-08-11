@@ -57,7 +57,10 @@ export HELPME_MODEL_PROFILES='{"localai:<model-id>":{"temperature":1.0,"top_p":0
 ```
 
 Add provider-specific fields such as `chat_template_kwargs` only when that model documents them.
-The application does not send them to unrelated models.
+The application does not send them to unrelated models. The natural-language conversation does not
+add a hidden output-token default or truncate the user-facing reply; the provider or the selected
+model profile controls how much it generates. Internal critics may use their own bounded requests,
+but they cannot replace or shorten the user answer.
 
 Open [http://localhost:8080](http://localhost:8080). The useful first action is simply to write a
 sentence, for example:
