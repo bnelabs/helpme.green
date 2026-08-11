@@ -8,9 +8,10 @@ from cryptography.fernet import Fernet
 
 from helpme_green.application import ApplicationProcessor
 from helpme_green.conversation import ConversationAgent
+from helpme_green.expert_skills import SkillRegistry
 from helpme_green.knowledge import KnowledgeBase
 from helpme_green.mcp import ReadOnlyMCP, ReadOnlyViolation
-from helpme_green.model_gateway import ModelRouter, ModelSelection
+from helpme_green.model_gateway import ModelRouter, ModelSelection, ProviderUnavailable
 from helpme_green.persistence import SecretStore, SessionState, SessionStore
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -151,6 +152,31 @@ def test_model_profile_is_scoped_to_the_selected_model(monkeypatch) -> None:
 
 def test_user_facing_reply_is_not_truncated() -> None:
     assert ConversationAgent._reply({"reply": "A" * 7000}) == "A" * 7000
+
+
+def test_model_failure_has_a_plain_user_facing_fallback(tmp_path: Path) -> None:
+    knowledge = KnowledgeBase.from_repository(ROOT)
+    store = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
+    router = ModelRouter(ModelSelection("localai", "test-model"))
+
+    def fail_to_complete(*args, **kwargs):
+        del args, kwargs
+        raise ProviderUnavailable("test provider failure")
+
+    router.complete_json = fail_to_complete
+    agent = ConversationAgent(
+        router,
+        store,
+        skill_registry=SkillRegistry.from_repository(ROOT),
+    )
+
+    result = agent.respond(SessionState.new(topic="", geography=""), "glass")
+
+    assert (
+        result.text == "I couldn’t get a response from the local model just now. Please try again."
+    )
+    assert "recommendation" not in result.text.casefold()
+    assert "evidence" not in result.text.casefold()
 
 
 def test_unrelated_local_reference_is_not_sent_to_the_model(tmp_path: Path, monkeypatch) -> None:

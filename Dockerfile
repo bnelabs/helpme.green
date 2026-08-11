@@ -11,7 +11,6 @@ COPY pyproject.toml ./
 COPY src ./src
 COPY knowledge ./knowledge
 COPY skills ./skills
-COPY vendor ./vendor
 RUN pip install --no-cache-dir .
 
 RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin helpme \
