@@ -54,7 +54,10 @@ excluded from search and curation.
 The curator cannot promote claims, change evidence state, resolve conflicts, or make a case
 decision. Promotion requires independent reviews under the repository contract. Embeddings are
 optional and provider-independent; use `--embed` only with an explicitly configured
-OpenAI-compatible endpoint.
+OpenAI-compatible endpoint. Existing extracted documents are repaired incrementally: a digest run
+does not need to redownload a document merely because its chunks lack vectors. Search can fuse FTS
+and embeddings, while an opt-in reranker only reorders a bounded candidate pool. See
+`docs/knowledge-retrieval.md` for the retrieval contract and benchmark.
 
 ## Why the DB is not committed
 

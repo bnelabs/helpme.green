@@ -1,111 +1,221 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-11T07:29:36.541035+00:00",
-  "digest": "76c14657bdc9762516931ba21ee44b8882dc577a45b018204e83cfdb3449cbcd",
+  "generatedAt": "2026-08-11T09:48:27.442306+00:00",
+  "digest": "e8180263ecc966a66e0acf276e14e00324eccfcf1393cb6a4e738b46ce5ed0c9",
   "ingestion": {
     "sources": {
-      "total": 94,
+      "total": 153,
       "byStatus": {
-        "candidate": 94
+        "candidate": 153
       }
     },
     "documents": {
-      "total": 107,
+      "total": 131,
       "byExtractionStatus": {
         "blocked:access-challenge": 10,
-        "extracted": 97
+        "extracted": 121
       }
     },
     "retrieval": {
-      "latestExtractedSources": 86,
-      "sourcesWithoutLatestDocument": 8,
-      "sourcesWithBlockedLatestDocument": 0
+      "latestExtractedSources": 102,
+      "sourcesWithoutLatestDocument": 51,
+      "sourcesWithBlockedLatestDocument": 0,
+      "latestSearchableChunks": 6069,
+      "latestEmbeddedChunks": 6069
     },
     "chunks": {
-      "total": 5911,
-      "searchable": 5901,
-      "embedded": 0
+      "total": 7031,
+      "searchable": 7021,
+      "embedded": 6087
+    },
+    "embeddingModels": {
+      "nvidia/nemotron-3-embed-1b:free": 6087
     },
     "claims": {
       "total": 0,
       "byStatus": {}
     },
     "runs": {
-      "total": 394,
+      "total": 897,
       "byOutcome": {
-        "failed": 66,
-        "ingested": 328
+        "failed": 178,
+        "ingested": 719
       },
       "failures": [
         {
-          "sourceId": "starlinger-recostar-sheet",
-          "title": "Starlinger recoSTAR dynamic art technical sheet",
+          "sourceId": "plastic-to-x-pathways-pet-2023",
+          "title": "Comparing parallel plastic-to-X pathways for PET bottles",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:24:21.915760+00:00"
+          "finishedAt": "2026-08-11T09:46:16.279407+00:00"
         },
         {
-          "sourceId": "starlinger-recycling-brochure",
-          "title": "Starlinger post-consumer recycling technology brochure",
+          "sourceId": "hydrothermal-waste-plastics-lca-2023",
+          "title": "Hydrothermal treatment of waste plastics: an environmental impact study",
+          "outcome": "failed",
+          "detail": "Redirect target is outside the explicit HTTPS allowlist.",
+          "finishedAt": "2026-08-11T09:46:13.791045+00:00"
+        },
+        {
+          "sourceId": "plastic-gasification-tea-lca-2023",
+          "title": "Techno-economic analysis and life-cycle assessment of mixed-plastic gasification",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:24:21.643834+00:00"
+          "finishedAt": "2026-08-11T09:46:12.344313+00:00"
         },
         {
-          "sourceId": "tomra-holygrail",
-          "title": "TOMRA chemical tracers and digital watermark sorting context",
+          "sourceId": "global-plastic-waste-pathways-2024",
+          "title": "Pathways to reduce global plastic waste mismanagement and greenhouse gas emissions by 2050",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:24:17.652250+00:00"
+          "finishedAt": "2026-08-11T09:46:11.263714+00:00"
         },
         {
-          "sourceId": "tomra-gainnext",
-          "title": "TOMRA GAINnext deep-learning sorting system",
+          "sourceId": "microplastics-food-regulatory-science-2024",
+          "title": "Regulatory science perspective on microplastics and nanoplastics in human food",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:24:17.447895+00:00"
+          "finishedAt": "2026-08-11T09:46:09.849993+00:00"
         },
         {
-          "sourceId": "tomra-plastics-sorting",
-          "title": "TOMRA plastics sorting applications",
+          "sourceId": "plastic-recycling-cascade-2024",
+          "title": "Plastic recycling stripped naked: circular product to circular industry with recycling cascade",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:24:17.222546+00:00"
+          "finishedAt": "2026-08-11T09:46:03.461503+00:00"
         },
         {
-          "sourceId": "erema-regrindpro-technical-sheet",
-          "title": "EREMA INTAREMA RegrindPro technical data",
-          "outcome": "failed",
-          "detail": "Source returned an access challenge instead of its content.",
-          "finishedAt": "2026-08-11T07:24:11.464726+00:00"
-        },
-        {
-          "sourceId": "precious-plastic-machines",
-          "title": "Precious Plastic machine overview",
+          "sourceId": "nir-polyolefin-bulk-properties-2023",
+          "title": "Correlating near-infrared spectra to bulk properties in polyolefins",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:23:56.695592+00:00"
+          "finishedAt": "2026-08-11T09:46:01.282411+00:00"
         },
         {
-          "sourceId": "echa-safety-data-sheets",
-          "title": "ECHA safety data sheet guidance",
+          "sourceId": "nir-polyolefin-differentiation-2026",
+          "title": "Predicting polyolefin properties from near-infrared spectra with machine learning",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:23:53.966232+00:00"
+          "finishedAt": "2026-08-11T09:45:59.972242+00:00"
         },
         {
-          "sourceId": "echa-plastic-additives-mapping",
-          "title": "ECHA mapping exercise on plastic additives",
+          "sourceId": "pet-degradation-recycling-review-2024",
+          "title": "Molecular and material property variations during PET degradation and mechanical recycling",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:23:38.982419+00:00"
+          "finishedAt": "2026-08-11T09:45:58.675226+00:00"
         },
         {
-          "sourceId": "sciencedirect-plastic-recycling-open-access",
-          "title": "Open-access engineering review of plastic recycling routes",
+          "sourceId": "mixed-polyester-recycling-lca-2024",
+          "title": "Mixed polyester recycling can enable a circular plastic economy",
+          "outcome": "failed",
+          "detail": "Redirect target is outside the explicit HTTPS allowlist.",
+          "finishedAt": "2026-08-11T09:45:57.437594+00:00"
+        },
+        {
+          "sourceId": "polyolefin-waste-light-olefins-2024",
+          "title": "Polyolefin waste to light olefins with ethylene and base-metal catalysts",
           "outcome": "failed",
           "detail": "Source fetch failed safely.",
-          "finishedAt": "2026-08-11T07:23:31.234686+00:00"
+          "finishedAt": "2026-08-11T09:45:56.564860+00:00"
+        },
+        {
+          "sourceId": "pp-mechanical-solvent-recycling-2023",
+          "title": "Complementary roles for mechanical and solvent-based recycling in circular polypropylene",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:55.293823+00:00"
+        },
+        {
+          "sourceId": "recycled-plastics-safety-assessment-2023",
+          "title": "Safety assessment of recycled plastics from post-consumer waste",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:53.146534+00:00"
+        },
+        {
+          "sourceId": "polyethylene-recycling-degradation-quality-2024",
+          "title": "Defining quality by quantifying degradation in mechanical recycling of polyethylene",
+          "outcome": "failed",
+          "detail": "Redirect target is outside the explicit HTTPS allowlist.",
+          "finishedAt": "2026-08-11T09:45:51.513998+00:00"
+        },
+        {
+          "sourceId": "advanced-plastics-recycling-analysis-2024",
+          "title": "Analyses of circular solutions for advanced plastics waste recycling",
+          "outcome": "failed",
+          "detail": "Redirect target is outside the explicit HTTPS allowlist.",
+          "finishedAt": "2026-08-11T09:45:51.094727+00:00"
+        },
+        {
+          "sourceId": "plastics-additives-complexity-2024",
+          "title": "Untangling the chemical complexity of plastics to improve life-cycle outcomes",
+          "outcome": "failed",
+          "detail": "Redirect target is outside the explicit HTTPS allowlist.",
+          "finishedAt": "2026-08-11T09:45:50.601551+00:00"
+        },
+        {
+          "sourceId": "advanced-post-sorting-tradeoffs-2026",
+          "title": "Analysis of trade-offs of post-sorting plastic packaging",
+          "outcome": "failed",
+          "detail": "Redirect target is outside the explicit HTTPS allowlist.",
+          "finishedAt": "2026-08-11T09:45:50.230512+00:00"
+        },
+        {
+          "sourceId": "flexible-single-stream-feasibility-2023",
+          "title": "Economic and environmental feasibility of recycling flexible packaging from single-stream collection",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:49.814092+00:00"
+        },
+        {
+          "sourceId": "flexible-recycling-quality-economics-2022",
+          "title": "Quality evaluation and economic assessment of improved flexible-plastics recycling",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:48.704347+00:00"
+        },
+        {
+          "sourceId": "flexible-recycling-process-mfa-2022",
+          "title": "Material flow analysis and recycling performance of improved flexible-plastics recycling",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:47.394869+00:00"
+        },
+        {
+          "sourceId": "recycling-quality-alignment-2025",
+          "title": "Perceptions and alignment on quality along the circular plastics chain",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:46.250008+00:00"
+        },
+        {
+          "sourceId": "recyqmeter-recycled-quality-2025",
+          "title": "RecyQMeter application-specific quality of recycled plastics",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:45.125899+00:00"
+        },
+        {
+          "sourceId": "flexible-film-inks-recycling-2024",
+          "title": "Mechanical recycling of printed flexible plastic packaging",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:44.002141+00:00"
+        },
+        {
+          "sourceId": "rhdpe-toys-safety-2024",
+          "title": "Designing safe recycled HDPE for child toys",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:42.699787+00:00"
+        },
+        {
+          "sourceId": "hdpe-repeated-recycling-2023",
+          "title": "Simulating repeated recycling of HDPE milk bottles",
+          "outcome": "failed",
+          "detail": "Source fetch failed safely.",
+          "finishedAt": "2026-08-11T09:45:41.570158+00:00"
         }
       ]
     }
@@ -132,7 +242,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "66bc497b43538d63e6f99b2050e5741d28215f441b7c0b3e4ad38a0410da9425",
-      "fetchedAt": "2026-08-11T07:24:33.211059+00:00"
+      "fetchedAt": "2026-08-11T09:44:35.950451+00:00"
     },
     {
       "id": "andritz-mechanical-textile-brochure",
@@ -154,7 +264,7 @@
       "scale": "pilot-to-industrial",
       "accessMode": "pdf",
       "contentSha256": "756369ba35bacf68c10de8668cae4daec18584fcc4e85485cca8616e6a5ad795",
-      "fetchedAt": "2026-08-11T07:24:26.819721+00:00"
+      "fetchedAt": "2026-08-11T09:44:34.953043+00:00"
     },
     {
       "id": "andritz-paper-reject-equipment",
@@ -177,7 +287,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "dc8d49ad08c9294d8088d3582c6f05d5152f0e64bc83ec6027016606919756a6",
-      "fetchedAt": "2026-08-11T07:24:34.264129+00:00"
+      "fetchedAt": "2026-08-11T09:44:36.480102+00:00"
     },
     {
       "id": "andritz-textile-recycling",
@@ -201,7 +311,7 @@
       "scale": "pilot-to-industrial",
       "accessMode": "web",
       "contentSha256": "bb15d6f2fe09cf4ea37074b475c41d27d9d6f82ae859685ae8da4a5779a7eb89",
-      "fetchedAt": "2026-08-11T07:24:24.965559+00:00"
+      "fetchedAt": "2026-08-11T09:44:32.323480+00:00"
     },
     {
       "id": "andritz-textile-technical-centre",
@@ -223,7 +333,32 @@
       "scale": "pilot and industrial trials",
       "accessMode": "web",
       "contentSha256": "85fd0dc5eebbafe519c30b74fa8862fda9fbde609404dda88f36c8dc0da16f98",
-      "fetchedAt": "2026-08-11T07:24:30.040835+00:00"
+      "fetchedAt": "2026-08-11T09:44:35.387648+00:00"
+    },
+    {
+      "id": "flexible-packaging-waste-flows-2025",
+      "title": "Addressing favorable and challenging flexible plastic packaging waste flows",
+      "url": "https://aiche.onlinelibrary.wiley.com/doi/epdf/10.1002/amp2.70014",
+      "publisher": "Journal of Advanced Manufacturing and Processing / Wiley",
+      "sourceType": "PEER_REVIEWED_FLEXIBLE_PACKAGING_MFA",
+      "jurisdiction": "United States and comparable-economy material-flow context",
+      "licenseNote": "Peer-reviewed article PDF; retain citation and respect the article licence.",
+      "limitations": "US and comparable-economy flows are not a local feedstock forecast; the reported recyclable fraction is scenario-dependent.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "films",
+        "packaging",
+        "collection",
+        "mechanical-recycling",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "national and comparative material-flow analysis",
+      "accessMode": "pdf",
+      "contentSha256": "4d696706029d824f8cadcf0e137851e4043a8b8f6dd43118e6e2f907f632b96c",
+      "fetchedAt": "2026-08-11T09:46:06.476759+00:00"
     },
     {
       "id": "us-epa-plastics-advanced-recycling",
@@ -242,7 +377,59 @@
       "scale": "policy and process background",
       "accessMode": "web",
       "contentSha256": "b0f62146f58b5f805832178827a868e4c739eec48c7b2d4ddf3a7305a3630051",
-      "fetchedAt": "2026-08-11T07:23:26.362642+00:00"
+      "fetchedAt": "2026-08-11T09:43:00.864760+00:00"
+    },
+    {
+      "id": "advanced-plastics-recycling-analysis-2024",
+      "title": "Analyses of circular solutions for advanced plastics waste recycling",
+      "url": "https://www.nature.com/articles/s44286-024-00121-6",
+      "publisher": "Nature Chemical Engineering / Springer Nature",
+      "sourceType": "PEER_REVIEWED_ADVANCED_RECYCLING_ANALYSIS",
+      "jurisdiction": "International research and industrial pilot context",
+      "licenseNote": "Peer-reviewed perspective landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Analysis framework and pilot lessons do not establish a route, permit, or economic case for a specific facility.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "pe",
+        "pp",
+        "chemical-recycling",
+        "mechanical-recycling",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and industrial pilot analysis",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "advanced-post-sorting-tradeoffs-2026",
+      "title": "Analysis of trade-offs of post-sorting plastic packaging",
+      "url": "https://www.nature.com/articles/s41586-026-10606-4",
+      "publisher": "Nature / Springer Nature",
+      "sourceType": "PEER_REVIEWED_POST_SORTING_CONTAMINATION_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Post-sorting trade-offs are system-specific; findings do not establish a facility design or substitute for representative sampling.",
+      "materialFamilies": [
+        "plastics",
+        "pp",
+        "pe",
+        "hdpe",
+        "films",
+        "contaminants",
+        "metals",
+        "vocs",
+        "mechanical-recycling"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "material-flow and contamination study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "basel-plastic-recycling-compilation",
@@ -263,7 +450,52 @@
       "scale": "policy and technical guidance",
       "accessMode": "pdf",
       "contentSha256": "49233d6d722a7793f3513ec258c1071c0788fb649d9cd0baf52a1a7908576ea7",
-      "fetchedAt": "2026-08-11T07:24:03.494964+00:00"
+      "fetchedAt": "2026-08-11T09:43:56.363640+00:00"
+    },
+    {
+      "id": "bg-wma-official-2022",
+      "title": "Bulgarian Waste Management Act official English translation",
+      "url": "https://www.moew.government.bg/static/media/ups/tiny/Waste_Management_Act.pdf",
+      "publisher": "Bulgarian Ministry of Environment and Water",
+      "sourceType": "OFFICIAL_BULGARIAN_WASTE_LAW_TRANSLATION",
+      "jurisdiction": "Bulgaria",
+      "licenseNote": "Bulgarian public-authority publication; verify the current Bulgarian-language law before relying on an obligation.",
+      "limitations": "English translation lists amendments only through March 2022 and cannot establish current 2026 obligations, site authorization, waste code, or competent-authority position.",
+      "materialFamilies": [
+        "waste",
+        "plastics",
+        "metals",
+        "e-waste"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "national legal orientation",
+      "accessMode": "pdf",
+      "contentSha256": "d7e72929cf957389b6f0e81aa82ea10cfe645e26759c35e9e69087014c2d6bc1",
+      "fetchedAt": "2026-08-11T09:44:53.948882+00:00"
+    },
+    {
+      "id": "bg-moew-wsr-notice-2026",
+      "title": "Bulgarian notice on new EU waste-transport rules and electronic system",
+      "url": "https://www.moew.government.bg/en/new-rules-on-waste-transport-in-the-eu-and-a-mandatory-electronic-system-to-be-introduced-from-21-may/",
+      "publisher": "Bulgarian Ministry of Environment and Water",
+      "sourceType": "OFFICIAL_ADMINISTRATIVE_WASTE_SHIPMENT_NOTICE",
+      "jurisdiction": "Bulgaria and European Union",
+      "licenseNote": "Bulgarian public-authority notice; retain publication date and verify the current procedure.",
+      "limitations": "Public notice, not a permit, classification, or procedure decision for a specific shipment.",
+      "materialFamilies": [
+        "waste",
+        "shipments",
+        "plastics",
+        "metals",
+        "e-waste"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "national administrative guidance",
+      "accessMode": "web",
+      "contentSha256": "849447c6c891ef03c394c8d95ddd8e05f9207cde1ba329ed97e2538c25379d1c",
+      "fetchedAt": "2026-08-11T09:44:54.957274+00:00"
     },
     {
       "id": "buehler-sortex-multivision",
@@ -285,7 +517,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "5d332d8839a884fb3644ff86c114fe062029f0bb14b50b6a4026d55a1b2e95d0",
-      "fetchedAt": "2026-08-11T07:24:23.948356+00:00"
+      "fetchedAt": "2026-08-11T09:44:31.569456+00:00"
     },
     {
       "id": "buehler-sortex-plastic-sorting",
@@ -309,7 +541,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "e407b1b507ceb7640d14a0a5080906b6181e2561b8c7600eb64279bf074d81ab",
-      "fetchedAt": "2026-08-11T07:24:23.611883+00:00"
+      "fetchedAt": "2026-08-11T09:44:31.050617+00:00"
     },
     {
       "id": "pmc-plastic-chemical-recycling-review",
@@ -330,7 +562,7 @@
       "scale": "lab and pilot research",
       "accessMode": "api",
       "contentSha256": "5b6004c6650a4b570837422dd8ac41d5c192e8db861095116b668130bcf9542b",
-      "fetchedAt": "2026-08-11T07:23:31.129039+00:00"
+      "fetchedAt": "2026-08-11T09:43:09.444359+00:00"
     },
     {
       "id": "pmc-textile-chemical-recycling",
@@ -353,7 +585,102 @@
       "scale": "lab and pilot research",
       "accessMode": "api",
       "contentSha256": "ea2ee8813bfc982ea24ae4a9122c8f4418bf4a4680cad93ac83203ee88945e11",
-      "fetchedAt": "2026-08-11T07:23:33.750328+00:00"
+      "fetchedAt": "2026-08-11T09:43:14.067869+00:00"
+    },
+    {
+      "id": "eu-plastics-recycling-terminology-2023",
+      "title": "Clarifying European terminology in plastics recycling",
+      "url": "https://www.sciencedirect.com/science/article/pii/S2452223623001190?via%3Dihub",
+      "publisher": "Current Opinion in Green and Sustainable Chemistry / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLING_TERMINOLOGY_REVIEW",
+      "jurisdiction": "European Union and international literature",
+      "licenseNote": "Peer-reviewed article landing page; retrieve only lawfully accessible text or metadata and retain the citation.",
+      "limitations": "Terminology and taxonomy review; it does not prove route feasibility, plant performance, permit status, or product acceptance.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "pet",
+        "mechanical-recycling",
+        "chemical-recycling"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "research and policy terminology",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "pp-yogurt-cup-closed-loop-2024",
+      "title": "Closed-loop recycling of polypropylene yogurt cups",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0921344924001320?via%3Dihub",
+      "publisher": "Resources, Conservation and Recycling / Elsevier",
+      "sourceType": "PEER_REVIEWED_CLOSED_LOOP_PP_CASE_STUDY",
+      "jurisdiction": "Austria case study",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Separately collected yogurt cups are materially different from mixed, dirty, or pesticide-exposed feedstock.",
+      "materialFamilies": [
+        "plastics",
+        "pp",
+        "mechanical-recycling",
+        "food-packaging",
+        "circular-economy"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "closed-loop case study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "plastic-to-x-pathways-pet-2023",
+      "title": "Comparing parallel plastic-to-X pathways for PET bottles",
+      "url": "https://onlinelibrary.wiley.com/doi/full/10.1002/adsu.202300068",
+      "publisher": "Advanced Sustainable Systems / Wiley",
+      "sourceType": "PEER_REVIEWED_PET_ROUTE_LCA_TEA",
+      "jurisdiction": "Research and process-model context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "PET bottle route comparison is not transferable to mixed polyolefin film or contaminated bales without new data.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "mechanical-recycling",
+        "depolymerization",
+        "chemical-recycling",
+        "lca",
+        "techno-economics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "route comparison and modelling",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "pp-mechanical-solvent-recycling-2023",
+      "title": "Complementary roles for mechanical and solvent-based recycling in circular polypropylene",
+      "url": "https://www.pnas.org/doi/suppl/10.1073/pnas.2306902120",
+      "publisher": "Proceedings of the National Academy of Sciences",
+      "sourceType": "PEER_REVIEWED_PP_ROUTE_COMPARISON_LCA",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article and supplement landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Route comparison is not a process design, feedstock acceptance specification, or local economic case.",
+      "materialFamilies": [
+        "plastics",
+        "pp",
+        "mechanical-recycling",
+        "dissolution",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "route and life-cycle comparison",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "us-epa-composting",
@@ -375,7 +702,7 @@
       "scale": "public guidance",
       "accessMode": "web",
       "contentSha256": "c877ab69a109bb00bd316f920022ea17fa97854434e9b6c97adbebf67b0a79d6",
-      "fetchedAt": "2026-08-11T07:23:29.964828+00:00"
+      "fetchedAt": "2026-08-11T09:43:07.776273+00:00"
     },
     {
       "id": "us-epa-paper-products",
@@ -397,7 +724,7 @@
       "scale": "procurement guidance",
       "accessMode": "web",
       "contentSha256": "2e28bb693b8ebf8fa6482c993fff6197e37e3e9b685ab6ee45da8e7b14da16d6",
-      "fetchedAt": "2026-08-11T07:23:28.141890+00:00"
+      "fetchedAt": "2026-08-11T09:43:03.206248+00:00"
     },
     {
       "id": "pmc-glass-computer-vision",
@@ -418,7 +745,7 @@
       "scale": "lab and pilot research",
       "accessMode": "api",
       "contentSha256": "9d869cee10f32a728346368363594854ace90c1679a3a2fbb99d097fd472fe26",
-      "fetchedAt": "2026-08-11T07:23:35.700130+00:00"
+      "fetchedAt": "2026-08-11T09:43:16.935462+00:00"
     },
     {
       "id": "hse-plastics-fume-ppis13",
@@ -440,7 +767,105 @@
       "scale": "process HSE",
       "accessMode": "pdf",
       "contentSha256": "97649b11cc73f2b70e6fad81477eb716f2536403c17d1311e26370b0a499b731",
-      "fetchedAt": "2026-08-11T07:23:54.600952+00:00"
+      "fetchedAt": "2026-08-11T09:43:43.954953+00:00"
+    },
+    {
+      "id": "nir-polyolefin-bulk-properties-2023",
+      "title": "Correlating near-infrared spectra to bulk properties in polyolefins",
+      "url": "https://pubs.acs.org/doi/10.1021/acs.macromol.3c02290?ref=PDF",
+      "publisher": "Macromolecules / American Chemical Society",
+      "sourceType": "PEER_REVIEWED_NIR_POLYOLEFIN_CHARACTERIZATION",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Correlation models are not a substitute for representative sampling or confirmatory laboratory analysis.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "hdpe",
+        "nir",
+        "polymer-characterization",
+        "sorting"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory and computational characterization",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "hdpe-recyclate-characterization-2024",
+      "title": "Data-driven analysis of HDPE post-consumer recyclate for bottle packaging",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0921344924001332?via%3Dihub",
+      "publisher": "Resources, Conservation and Recycling / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLED_HDPE_CHARACTERIZATION",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Characterization protocol and selected PCR samples do not establish compliance for a new lot or product category.",
+      "materialFamilies": [
+        "plastics",
+        "hdpe",
+        "polymer-characterization",
+        "ftir",
+        "dsc",
+        "tga",
+        "rheology"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory characterization",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "polyethylene-recycling-degradation-quality-2024",
+      "title": "Defining quality by quantifying degradation in mechanical recycling of polyethylene",
+      "url": "https://www.nature.com/articles/s41467-024-52856-8",
+      "publisher": "Nature Communications / Springer Nature",
+      "sourceType": "PEER_REVIEWED_POLYETHYLENE_DEGRADATION_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Controlled polyethylene degradation and rheology do not establish performance for mixed polymers, PVC, metals, or pesticide residues.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "hdpe",
+        "degradation",
+        "rheology",
+        "mechanical-recycling"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory materials study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "rhdpe-toys-safety-2024",
+      "title": "Designing safe recycled HDPE for child toys",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0304389424020612?via%3Dihub",
+      "publisher": "Journal of Hazardous Materials / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLED_PLASTICS_SAFETY_STUDY",
+      "jurisdiction": "Research and product-safety context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Toy and migration scenario; it is not a generic safety clearance for recycled polymers or food-contact applications.",
+      "materialFamilies": [
+        "plastics",
+        "hdpe",
+        "contaminants",
+        "nias",
+        "hse",
+        "product-safety"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory product-safety study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "eu-atex-2014-34",
@@ -462,7 +887,7 @@
       "scale": "equipment and workplace regulation",
       "accessMode": "web",
       "contentSha256": "7c26f073d84b09d965a47f4c40a95adda2027f9a5bdd7dcee37bf297d9243c4f",
-      "fetchedAt": "2026-08-11T07:23:42.840179+00:00"
+      "fetchedAt": "2026-08-11T09:43:29.250714+00:00"
     },
     {
       "id": "echa-plastic-additives-mapping",
@@ -530,7 +955,7 @@
       "scale": "small-scale and industrial",
       "accessMode": "pdf",
       "contentSha256": "41934d3e76cd2edc0647f40fbec329d43f6a922b8b258d65dcad9fda5f83996f",
-      "fetchedAt": "2026-08-11T07:24:38.429467+00:00"
+      "fetchedAt": "2026-08-11T09:44:41.825185+00:00"
     },
     {
       "id": "eldan-redoma-cable-systems",
@@ -554,7 +979,7 @@
       "scale": "small-to-industrial",
       "accessMode": "web",
       "contentSha256": "1f91944db1cce7e72e345a536d8254eb68626ac2436ed89947f144b0d80398ef",
-      "fetchedAt": "2026-08-11T07:24:37.849762+00:00"
+      "fetchedAt": "2026-08-11T09:44:41.089325+00:00"
     },
     {
       "id": "eldan-separator",
@@ -578,7 +1003,7 @@
       "scale": "small-to-industrial",
       "accessMode": "pdf",
       "contentSha256": "ebcfaabdbed4d170419a305e8940799fd01fd00fdabfb7f41f4d3cb074fc09a1",
-      "fetchedAt": "2026-08-11T07:24:38.916774+00:00"
+      "fetchedAt": "2026-08-11T09:44:42.552424+00:00"
     },
     {
       "id": "eldan-turbo-mill",
@@ -602,7 +1027,7 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "bd1034b01c8d992fa927c8e0c0b9972b9bf576061af045bd7c9d91b86511d0a9",
-      "fetchedAt": "2026-08-11T07:24:39.776739+00:00"
+      "fetchedAt": "2026-08-11T09:44:43.327037+00:00"
     },
     {
       "id": "erema-regrindpro-technical-sheet",
@@ -652,7 +1077,241 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "a089e231ce7a10056b8523745cc828a2322237b44dbc9818ff241b3c64cdf5b6",
-      "fetchedAt": "2026-08-11T07:24:12.194735+00:00"
+      "fetchedAt": "2026-08-11T09:44:09.218827+00:00"
+    },
+    {
+      "id": "erema-regrindpro-technical-data-current",
+      "title": "EREMA RegrindPro technical data and application limits",
+      "url": "https://www.erema.com/en/regrind_pro_technical_data/",
+      "publisher": "EREMA",
+      "sourceType": "MACHINE_MANUFACTURER_TECHNICAL_DATA",
+      "jurisdiction": "International vendor reference",
+      "licenseNote": "Manufacturer technical page; retain source URL and verify the current model and test basis.",
+      "limitations": "Published throughput depends on material condition and is not a project guarantee; page scope is primarily clean mono-polymer regrind.",
+      "materialFamilies": [
+        "plastics",
+        "ldpe",
+        "hdpe",
+        "pp",
+        "abs",
+        "ps",
+        "regrind",
+        "machinery"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "industrial",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-waste-treatment-bat-2018",
+      "title": "EU BAT conclusions for waste treatment",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02018D1147-20180817",
+      "publisher": "European Commission",
+      "sourceType": "BINDING_EU_BAT_CONCLUSIONS",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; check installation scope and current permit conditions.",
+      "limitations": "Applies only to defined activities and installations; industrial controls do not prove small-scale authorization, performance, or economics.",
+      "materialFamilies": [
+        "waste",
+        "metals",
+        "plastics",
+        "e-waste",
+        "machinery",
+        "HSE"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "industrial environmental control",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-ecodesign-sustainable-products-regulation-2024",
+      "title": "EU Ecodesign for Sustainable Products Regulation",
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1781/oj",
+      "publisher": "European Parliament and Council of the European Union",
+      "sourceType": "BINDING_EU_PRODUCT_CIRCULARITY_REGULATION",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; verify product-specific delegated acts and application dates.",
+      "limitations": "Product-policy framework does not establish a recycling process, feedstock route, plant authorization, or buyer acceptance.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "textiles",
+        "metals",
+        "product-design"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "EU product policy and design",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-pops-regulation-2025",
+      "title": "EU POPs Regulation consolidated 4 August 2025",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02019R1021-20250804",
+      "publisher": "European Parliament and Council of the European Union",
+      "sourceType": "BINDING_EU_PERSISTENT_ORGANIC_POLLUTANTS_LAW",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; retain the consolidated-date reference and verify current annexes.",
+      "limitations": "Applicability, concentration limits, sampling, classification, and dates require qualified review; no actual stream is classified by this source.",
+      "materialFamilies": [
+        "waste",
+        "e-waste",
+        "plastics",
+        "additives",
+        "HSE"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "chemical and waste law",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-packaging-packaging-waste-regulation-2025",
+      "title": "EU Packaging and Packaging Waste Regulation",
+      "url": "https://eur-lex.europa.eu/eli/reg/2025/40/oj",
+      "publisher": "European Parliament and Council of the European Union",
+      "sourceType": "BINDING_EU_PACKAGING_REGULATION",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; verify application dates, delegated acts, and current national implementation.",
+      "limitations": "Legal framework only; it does not classify a specific waste stream or prove recyclability, yield, or product acceptance.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "recycled-content",
+        "waste"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "EU product and waste law",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-wsr-2024-1157",
+      "title": "EU Regulation on shipments of waste",
+      "url": "https://eur-lex.europa.eu/eli/reg/2024/1157/oj",
+      "publisher": "European Parliament and Council of the European Union",
+      "sourceType": "BINDING_EU_WASTE_SHIPMENT_LAW",
+      "jurisdiction": "European Union and covered international movements",
+      "licenseNote": "Official EU legal text; verify transition provisions and current competent-authority practice.",
+      "limitations": "Control route depends on classification, destination, transition provisions, and shipment facts; it is not a batch-level shipment determination.",
+      "materialFamilies": [
+        "waste",
+        "plastics",
+        "metals",
+        "e-waste",
+        "shipments"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "cross-border legal framework",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-weee-directive-2012",
+      "title": "EU Waste Electrical and Electronic Equipment Directive",
+      "url": "https://eur-lex.europa.eu/eli/dir/2012/19/oj/eng",
+      "publisher": "European Parliament and Council of the European Union",
+      "sourceType": "BINDING_EU_WEEE_LAW",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; verify national implementation and current guidance.",
+      "limitations": "Applies only to WEEE within scope; actual component inventory, treatment route, and national implementation require qualified review.",
+      "materialFamilies": [
+        "e-waste",
+        "plastics",
+        "metals",
+        "cables",
+        "machinery"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "EU product and waste law",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-copper-eow-715-2013",
+      "title": "EU end-of-waste criteria for copper scrap",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=CELEX:32013R0715",
+      "publisher": "European Commission",
+      "sourceType": "BINDING_EU_END_OF_WASTE_LAW",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; retain the Official Journal reference.",
+      "limitations": "Applies only when every input, treatment, quality-management, grading, analysis, and statement-of-conformity criterion is satisfied; it does not classify untreated cable or untested output.",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "legal and output qualification",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "eu-wt-bat-2018",
+      "title": "EU waste-treatment BAT conclusions alias for governed cable register",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02018D1147-20180817",
+      "publisher": "European Commission",
+      "sourceType": "BINDING_EU_BAT_CONCLUSIONS_ALIAS",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; retained as a separate source ID for the governed cable register.",
+      "limitations": "Duplicate legal content is intentionally retained for source-register compatibility; applicability depends on installation scope and permit.",
+      "materialFamilies": [
+        "waste",
+        "metals",
+        "plastics",
+        "e-waste",
+        "machinery",
+        "HSE"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "industrial environmental control",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "flexible-single-stream-feasibility-2023",
+      "title": "Economic and environmental feasibility of recycling flexible packaging from single-stream collection",
+      "url": "https://www.sciencedirect.com/science/article/abs/pii/S0921344923000459?via%3Dihub",
+      "publisher": "Resources, Conservation and Recycling / Elsevier",
+      "sourceType": "PEER_REVIEWED_FLEXIBLE_PACKAGING_TEA_LCA",
+      "jurisdiction": "Research and single-stream collection context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Economic feasibility is highly sensitive to collection, contamination, yield, energy, and end-market assumptions.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "films",
+        "collection",
+        "mechanical-recycling",
+        "lca",
+        "techno-economics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "system and process assessment",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "us-epa-ferrous-metals-data",
@@ -672,7 +1331,7 @@
       "scale": "national statistics",
       "accessMode": "web",
       "contentSha256": "64480e30e98589b9ecbd873c9a1622e2495509c5c7e9f2640355e5f8e1a99427",
-      "fetchedAt": "2026-08-11T07:23:27.346109+00:00"
+      "fetchedAt": "2026-08-11T09:43:02.219218+00:00"
     },
     {
       "id": "genox-brochure-library",
@@ -695,7 +1354,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "0c5ebd550e3f51345ab9e99c6af341c97f0c6dfef66f8f54136609f7652ced94",
-      "fetchedAt": "2026-08-11T07:24:15.303107+00:00"
+      "fetchedAt": "2026-08-11T09:44:13.018243+00:00"
     },
     {
       "id": "pmc-glass-recycling-review",
@@ -716,7 +1375,7 @@
       "scale": "lab and industrial research",
       "accessMode": "api",
       "contentSha256": "8906094254eb526504cd8c8103ca699f168ef4efdc2fa8aea7cc9a1e40cb2032",
-      "fetchedAt": "2026-08-11T07:23:35.057204+00:00"
+      "fetchedAt": "2026-08-11T09:43:15.909615+00:00"
     },
     {
       "id": "guidetti-sincro-eko",
@@ -739,7 +1398,7 @@
       "scale": "small-scale",
       "accessMode": "web",
       "contentSha256": "8f96ec717dc38c08521a00ec7de4ff6058baec4c1b2b7f228b2d316620c289e7",
-      "fetchedAt": "2026-08-11T07:24:40.755531+00:00"
+      "fetchedAt": "2026-08-11T09:44:44.953211+00:00"
     },
     {
       "id": "guidetti-wire-pro",
@@ -763,7 +1422,7 @@
       "scale": "small-to-industrial",
       "accessMode": "web",
       "contentSha256": "41bd6207b788aafa17bed5e4b4773ba2ec87e41977a0cfd371f77e1ad76a00f7",
-      "fetchedAt": "2026-08-11T07:24:40.340123+00:00"
+      "fetchedAt": "2026-08-11T09:44:44.365391+00:00"
     },
     {
       "id": "hse-plastics-industry",
@@ -785,7 +1444,7 @@
       "scale": "workplace safety",
       "accessMode": "web",
       "contentSha256": "3d4b6fc55b894b77514b4256fa246228ba37fd6c61644719230ad132ee84e433",
-      "fetchedAt": "2026-08-11T07:23:54.321219+00:00"
+      "fetchedAt": "2026-08-11T09:43:43.652095+00:00"
     },
     {
       "id": "herbold-sml-technical-sheet",
@@ -808,7 +1467,7 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "4a4425472ceb98a168ead62b607d1c6b7f7dea5cb95cc5e1682aa0161f705eca",
-      "fetchedAt": "2026-08-11T07:24:07.095038+00:00"
+      "fetchedAt": "2026-08-11T09:43:59.856548+00:00"
     },
     {
       "id": "herbold-plastics-recycling",
@@ -830,7 +1489,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "ff6d94f78825ae5e9ce0deb7f92e785829d23ec3af6556e5af4cef926086c7ed",
-      "fetchedAt": "2026-08-11T07:24:07.867769+00:00"
+      "fetchedAt": "2026-08-11T09:44:00.774316+00:00"
     },
     {
       "id": "us-epa-common-recyclables",
@@ -855,7 +1514,32 @@
       "scale": "public guidance",
       "accessMode": "web",
       "contentSha256": "e4383a66e56b3a85d6b04ef231a7bad199b6ab67c74235370dd067a2c9648dae",
-      "fetchedAt": "2026-08-11T07:23:29.687055+00:00"
+      "fetchedAt": "2026-08-11T09:43:07.365421+00:00"
+    },
+    {
+      "id": "hydrothermal-waste-plastics-lca-2023",
+      "title": "Hydrothermal treatment of waste plastics: an environmental impact study",
+      "url": "https://link.springer.com/article/10.1007/s10924-023-02792-3",
+      "publisher": "Journal of Polymers and the Environment / Springer",
+      "sourceType": "PEER_REVIEWED_HYDROTHERMAL_PLASTICS_LCA",
+      "jurisdiction": "Research and process-model context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Environmental comparison depends on allocation, energy, product displacement, and plant assumptions; it is not an equipment or permit basis.",
+      "materialFamilies": [
+        "plastics",
+        "pp",
+        "pe",
+        "hdpe",
+        "hydrothermal",
+        "chemical-recycling",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and life-cycle modelling",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "eu-jrc-plastics-flows",
@@ -876,7 +1560,7 @@
       "scale": "EU systems research",
       "accessMode": "web",
       "contentSha256": "c6d767bc806b4da4bcf505668fd542feab2322655da40ee03f9cb3ed4778ae41",
-      "fetchedAt": "2026-08-11T07:23:39.891555+00:00"
+      "fetchedAt": "2026-08-11T09:43:26.099835+00:00"
     },
     {
       "id": "eu-jrc-end-of-waste",
@@ -899,7 +1583,7 @@
       "scale": "regulatory and policy",
       "accessMode": "web",
       "contentSha256": "a0f6e001e14dd961f5cea828d628e1ec405052e977a55e46fb9793c9767f2243",
-      "fetchedAt": "2026-08-11T07:23:40.226605+00:00"
+      "fetchedAt": "2026-08-11T09:43:26.408108+00:00"
     },
     {
       "id": "eu-jrc-critical-raw-material-recovery",
@@ -921,7 +1605,30 @@
       "scale": "research and policy",
       "accessMode": "web",
       "contentSha256": "6f16402d9e4c8b9006d0035280e5ffd2354263e04ce89efe9befea135284cd60",
-      "fetchedAt": "2026-08-11T07:23:27.768218+00:00"
+      "fetchedAt": "2026-08-11T09:43:02.806348+00:00"
+    },
+    {
+      "id": "jrc-weee-plastics-2016",
+      "title": "JRC methods for material efficiency and WEEE polymers",
+      "url": "https://publications.jrc.ec.europa.eu/repository/handle/JRC104065",
+      "publisher": "Joint Research Centre of the European Commission",
+      "sourceType": "OFFICIAL_JRC_TECHNICAL_PUBLICATION",
+      "jurisdiction": "European Union",
+      "licenseNote": "European Commission publication; retain the repository record and original authorship.",
+      "limitations": "Product-policy research, not a buyer specification or proof that a particular fraction is recyclable; technology and product mix vary.",
+      "materialFamilies": [
+        "e-waste",
+        "plastics",
+        "polymers",
+        "additives",
+        "flame-retardants"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "technical research and policy",
+      "accessMode": "web",
+      "contentSha256": "598291207cdf763c697b64bac6d5ad8f72861d9ffd06a226e6e3c93674e4cf23",
+      "fetchedAt": "2026-08-11T09:44:56.546314+00:00"
     },
     {
       "id": "eu-jrc-textile-study",
@@ -942,7 +1649,77 @@
       "scale": "EU research and policy",
       "accessMode": "web",
       "contentSha256": "cf4fbfdadee4f3a54b059e4668f450e6718d0bdcf9c460b1e3ba9f15a748969d",
-      "fetchedAt": "2026-08-11T07:23:39.468177+00:00"
+      "fetchedAt": "2026-08-11T09:43:25.592060+00:00"
+    },
+    {
+      "id": "jrc-copper-eow-2011",
+      "title": "JRC technical proposals for copper and copper-alloy scrap end-of-waste",
+      "url": "https://publications.jrc.ec.europa.eu/repository/handle/JRC64207",
+      "publisher": "Joint Research Centre of the European Commission",
+      "sourceType": "OFFICIAL_JRC_TECHNICAL_STUDY",
+      "jurisdiction": "European Union",
+      "licenseNote": "European Commission publication; subordinate to later binding law where applicable.",
+      "limitations": "Predates Regulation (EU) No 715/2013 and supplies no project-specific yield, cost, or buyer acceptance evidence.",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "sector technical history",
+      "accessMode": "web",
+      "contentSha256": "ab31d5c260421c66fc3f46953d782df94fd715f8f3ec4096f0ece61acf2a6018",
+      "fetchedAt": "2026-08-11T09:44:57.054900+00:00"
+    },
+    {
+      "id": "king-county-mrf-assessment-2022",
+      "title": "King County 2022 Material Recovery Facility Assessment",
+      "url": "https://your.kingcounty.gov/dnrp/library/solid-waste/Solid-waste-planning-monitoring/Solid-waste-monitoring/MRF-assessment-2022.pdf",
+      "publisher": "King County Solid Waste Division",
+      "sourceType": "MRF_MATERIAL_CHARACTERIZATION_REPORT",
+      "jurisdiction": "King County, Washington, United States",
+      "licenseNote": "Public-sector report; retain attribution and verify the reporting scope before applying findings elsewhere.",
+      "limitations": "Regional curbside and MRF data are not a representative sample of a Bulgarian or industrial feedstock; they do not establish project yield, composition, or economics.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "hdpe",
+        "pp",
+        "metals",
+        "non-plastics",
+        "mixed-waste"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "regional MRF study",
+      "accessMode": "pdf",
+      "contentSha256": "984d2bfe2fdbfecc5b006894b016f776c50d7fe20f09e9b41e4d47e8a58a9aad",
+      "fetchedAt": "2026-08-11T09:45:32.455847+00:00"
+    },
+    {
+      "id": "plastic-pyrolysis-lca-2023",
+      "title": "Life-cycle analysis of post-use plastic to plastic via pyrolysis",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0959652623030251?via%3Dihub",
+      "publisher": "Journal of Cleaner Production / Elsevier",
+      "sourceType": "PEER_REVIEWED_PYROLYSIS_LCA",
+      "jurisdiction": "Research and process-model context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Modelled pyrolysis pathways depend on feed quality, allocation, energy, upgrading, and plant assumptions; not a process guarantee.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "hdpe",
+        "pyrolysis",
+        "chemical-recycling",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and life-cycle modelling",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "lindner-film-examiner",
@@ -966,7 +1743,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "1ca0b8f0b3ecfb572e6e3db7c53b3b5cc10031756deae58b6e08600734c0c6cd",
-      "fetchedAt": "2026-08-11T07:24:06.412068+00:00"
+      "fetchedAt": "2026-08-11T09:43:59.058798+00:00"
     },
     {
       "id": "lindner-srf-sorting",
@@ -989,7 +1766,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "b652779c112b116fb6245f45a5b70b9940bdd202d86907f9a0755d8c9a84e6ff",
-      "fetchedAt": "2026-08-11T07:24:06.046705+00:00"
+      "fetchedAt": "2026-08-11T09:43:58.608283+00:00"
     },
     {
       "id": "mtb-cablebox",
@@ -1013,7 +1790,7 @@
       "scale": "small-to-industrial",
       "accessMode": "pdf",
       "contentSha256": "f463c24c692e7f5e30daf3d055c54bb35394499cbb464aced6f2eabd8fb6e9f9",
-      "fetchedAt": "2026-08-11T07:24:37.273687+00:00"
+      "fetchedAt": "2026-08-11T09:44:40.385501+00:00"
     },
     {
       "id": "mtb-upgrade-box",
@@ -1036,7 +1813,7 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "00330c558241e42396dde7ccaf7fa7e3d42140d94d55040028f9a641daf15e23",
-      "fetchedAt": "2026-08-11T07:24:36.703401+00:00"
+      "fetchedAt": "2026-08-11T09:44:39.720832+00:00"
     },
     {
       "id": "mtb-corporate-brochure",
@@ -1060,7 +1837,7 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "7895ce6760d5fa4544f241d3b24303696ecb6d72a09587cc7a441672e91dd741",
-      "fetchedAt": "2026-08-11T07:24:35.771334+00:00"
+      "fetchedAt": "2026-08-11T09:44:38.160986+00:00"
     },
     {
       "id": "hse-plastics-safety-basics",
@@ -1082,7 +1859,78 @@
       "scale": "workplace safety",
       "accessMode": "web",
       "contentSha256": "6db5bbf5cb54e092977edaef5a27f04ea348370138a6dca01f92b6cfc633ac55",
-      "fetchedAt": "2026-08-11T07:23:54.146178+00:00"
+      "fetchedAt": "2026-08-11T09:43:43.472641+00:00"
+    },
+    {
+      "id": "flexible-recycling-process-mfa-2022",
+      "title": "Material flow analysis and recycling performance of improved flexible-plastics recycling",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0956053X22004470?via%3Dihub",
+      "publisher": "Waste Management / Elsevier",
+      "sourceType": "PEER_REVIEWED_FLEXIBLE_PLASTICS_MFA_TEA_STUDY",
+      "jurisdiction": "Research and CEFLEX context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Process and material-flow results depend on the defined flexible stream, wash, filtration, and product targets.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "films",
+        "mechanical-recycling",
+        "yield",
+        "techno-economics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and material-flow study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "flexible-film-inks-recycling-2024",
+      "title": "Mechanical recycling of printed flexible plastic packaging",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0304389424009543?via%3Dihub",
+      "publisher": "Journal of Hazardous Materials / Elsevier",
+      "sourceType": "PEER_REVIEWED_PRINTED_FILM_CONTAMINATION_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Printed flexible packaging case study; contamination, ink chemistry, filtration, degassing, and end-use requirements vary by line.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "films",
+        "inks",
+        "pigments",
+        "vocs",
+        "hse"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory mechanical-recycling study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "lee-cable-separation-2016",
+      "title": "Mechanical separation of waste jelly-filled communication cables",
+      "url": "https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART002119652",
+      "publisher": "Korean Institute of Resources Recycling",
+      "sourceType": "PEER_REVIEWED_CABLE_SEPARATION_STUDY",
+      "jurisdiction": "Republic of Korea research context",
+      "licenseNote": "Peer-reviewed publication; verify reuse rights and cite the original authors.",
+      "limitations": "One cable type and equipment configuration; it does not validate manual productivity, other geometries, local safety, annual scale, or economics.",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables",
+        "plastics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory and pilot research",
+      "accessMode": "web",
+      "contentSha256": "2442ee26dfb0e8c1dfa211a0267827f80dd214c1960b3c1c11e6894db830b3bc",
+      "fetchedAt": "2026-08-11T09:45:00.717307+00:00"
     },
     {
       "id": "pmc-textile-mechanical-recycling",
@@ -1105,7 +1953,7 @@
       "scale": "lab and pilot research",
       "accessMode": "api",
       "contentSha256": "9ba36077b5479caabbfad3682551f58dc0f82bcde614ee2571e65116d8ddcc3f",
-      "fetchedAt": "2026-08-11T07:23:32.976044+00:00"
+      "fetchedAt": "2026-08-11T09:43:12.947244+00:00"
     },
     {
       "id": "pmc-metal-recovery-energy",
@@ -1127,7 +1975,55 @@
       "scale": "lab and systems research",
       "accessMode": "api",
       "contentSha256": "0c8af0623f902f5be0402f5af5c0129e48c192303fc71fbfad31eded246effa4",
-      "fetchedAt": "2026-08-11T07:23:36.984056+00:00"
+      "fetchedAt": "2026-08-11T09:43:19.565339+00:00"
+    },
+    {
+      "id": "mixed-polyester-recycling-lca-2024",
+      "title": "Mixed polyester recycling can enable a circular plastic economy",
+      "url": "https://www.cell.com/one-earth/fulltext/S2590-3322(24)00583-9?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2590332224005839%3Fshowall%3Dtrue",
+      "publisher": "One Earth / Cell Press",
+      "sourceType": "PEER_REVIEWED_MIXED_POLYESTER_SOLVOLYSIS_LCA",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Mixed-polyester solvolysis and separation assumptions are not transferable to a mixed polyolefin or pesticide-contaminated stream.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "pla",
+        "pbat",
+        "depolymerization",
+        "solvolysis",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and life-cycle modelling",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "pet-degradation-recycling-review-2024",
+      "title": "Molecular and material property variations during PET degradation and mechanical recycling",
+      "url": "https://pubs.rsc.org/en/content/articlelanding/2024/su/d4su00485j",
+      "publisher": "RSC Sustainability / Royal Society of Chemistry",
+      "sourceType": "PEER_REVIEWED_PET_DEGRADATION_REVIEW",
+      "jurisdiction": "International research context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "PET-specific degradation review; it does not answer the route or quality question for PE/PP/PVC mixtures.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "degradation",
+        "mechanical-recycling",
+        "chemical-recycling"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "materials and degradation review",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "nist-polymer-thermal-decomposition",
@@ -1148,8 +2044,8 @@
       "authorityTier": "primary",
       "scale": "laboratory research",
       "accessMode": "web",
-      "contentSha256": "19e744e589ec746f007fa4b6b20d17c6ca0f73e2e181ff47aced90e92904c888",
-      "fetchedAt": "2026-08-11T07:23:38.760433+00:00"
+      "contentSha256": "3b3cb514afbaba09ea60b30735467a8cddcb94beda465b9a4dbd0e50c5f5d6aa",
+      "fetchedAt": "2026-08-11T09:43:22.996581+00:00"
     },
     {
       "id": "ngr-cgran-twin",
@@ -1172,7 +2068,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "299b88c01e846a9c18f9416b8e1571157cb44d3956998d2303f9faef12293c48",
-      "fetchedAt": "2026-08-11T07:24:19.864469+00:00"
+      "fetchedAt": "2026-08-11T09:44:23.023708+00:00"
     },
     {
       "id": "ngr-cgran",
@@ -1196,7 +2092,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "195bcf845ddf584abb689faf4dcb1971a725102ca4d18866b62383423803041c",
-      "fetchedAt": "2026-08-11T07:24:19.386954+00:00"
+      "fetchedAt": "2026-08-11T09:44:22.322698+00:00"
     },
     {
       "id": "nist-chemistry-webbook",
@@ -1218,7 +2114,7 @@
       "scale": "laboratory reference",
       "accessMode": "web",
       "contentSha256": "d6c13fff5305333dd043bd91e06f04de634dade7266d2af95cc968194ee23bb1",
-      "fetchedAt": "2026-08-11T07:23:38.226288+00:00"
+      "fetchedAt": "2026-08-11T09:43:22.358197+00:00"
     },
     {
       "id": "nist-polymers-plastics",
@@ -1239,7 +2135,51 @@
       "scale": "research and metrology",
       "accessMode": "web",
       "contentSha256": "1e5a118331e2fdc612b1f8056fb80c1683947169d1b82095e39b4ab515b6f1d1",
-      "fetchedAt": "2026-08-11T07:23:37.699096+00:00"
+      "fetchedAt": "2026-08-11T09:43:21.420782+00:00"
+    },
+    {
+      "id": "oecd-global-plastics-outlook",
+      "title": "OECD Global Plastics Outlook",
+      "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/02/global-plastics-outlook_a653d1c9/de747aef-en.pdf",
+      "publisher": "Organisation for Economic Co-operation and Development",
+      "sourceType": "INTERGOVERNMENTAL_PLASTICS_SYSTEMS_RESEARCH",
+      "jurisdiction": "International and OECD policy context",
+      "licenseNote": "OECD publication; retain attribution and follow the publication licence.",
+      "limitations": "Global and regional scenarios do not substitute for representative sampling, plant data, current local law, or buyer specifications.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "policy",
+        "circular-economy"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "global systems research",
+      "accessMode": "pdf",
+      "contentSha256": "8b9a1b703d2999e1bfa4a07132928d2f2e2814cae0447067ce3c6e17190ce874",
+      "fetchedAt": "2026-08-11T09:45:13.813359+00:00"
+    },
+    {
+      "id": "oecd-recycled-content-requirements",
+      "title": "OECD plastics recycled-content requirements report",
+      "url": "https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/05/plastics-recycled-content-requirements_c6de64b7/b311ee60-en.pdf",
+      "publisher": "Organisation for Economic Co-operation and Development",
+      "sourceType": "INTERGOVERNMENTAL_PLASTICS_POLICY_RESEARCH",
+      "jurisdiction": "International and OECD policy context",
+      "licenseNote": "OECD publication; retain attribution and follow the publication licence.",
+      "limitations": "Policy and market analysis does not establish local material composition, route feasibility, permit status, or product compliance.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "policy",
+        "recycled-content"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "policy and market research",
+      "accessMode": "pdf",
+      "contentSha256": "d20cd2019a1d8937e5694c359f53403abd55c4171bb4c5fe4b931494e9ea14d2",
+      "fetchedAt": "2026-08-11T09:45:06.670238+00:00"
     },
     {
       "id": "osha-lockout-tagout",
@@ -1261,7 +2201,7 @@
       "scale": "workplace regulation",
       "accessMode": "web",
       "contentSha256": "ea47f6190bb57a2953b1312cc3cc53ded4e61d5dd51eb7ba71b584efd736f580",
-      "fetchedAt": "2026-08-11T07:23:55.830523+00:00"
+      "fetchedAt": "2026-08-11T09:43:45.958318+00:00"
     },
     {
       "id": "osha-combustible-dust",
@@ -1286,7 +2226,7 @@
       "scale": "workplace fire and explosion safety",
       "accessMode": "web",
       "contentSha256": "eb285f8e764174c7ca4b277407514395851323c16cb5e8594c164d3500136e61",
-      "fetchedAt": "2026-08-11T07:23:56.158953+00:00"
+      "fetchedAt": "2026-08-11T09:43:46.997235+00:00"
     },
     {
       "id": "osha-hazard-communication",
@@ -1309,7 +2249,7 @@
       "scale": "workplace regulation",
       "accessMode": "web",
       "contentSha256": "c69c3aa7a216d9ae9dbb56a35ab44b433889ecddc88888b01dcfe489551d9520",
-      "fetchedAt": "2026-08-11T07:23:56.586747+00:00"
+      "fetchedAt": "2026-08-11T09:43:47.532430+00:00"
     },
     {
       "id": "osha-plastics-machine-guarding",
@@ -1330,7 +2270,7 @@
       "scale": "workplace safety",
       "accessMode": "web",
       "contentSha256": "ef85feb0d8116b4b58e1d5c66f6814fd593e1c9099b01ec7dca18696c53c7565",
-      "fetchedAt": "2026-08-11T07:23:55.405512+00:00"
+      "fetchedAt": "2026-08-11T09:43:45.572846+00:00"
     },
     {
       "id": "sciencedirect-plastic-recycling-open-access",
@@ -1377,7 +2317,32 @@
       "scale": "small-to-industrial",
       "accessMode": "web",
       "contentSha256": "9927d0ac152a1b995ffa5d98bf808203319a900e10ee14d06fdfab65ecd30bea",
-      "fetchedAt": "2026-08-11T07:24:18.873196+00:00"
+      "fetchedAt": "2026-08-11T09:44:21.616731+00:00"
+    },
+    {
+      "id": "global-plastic-waste-pathways-2024",
+      "title": "Pathways to reduce global plastic waste mismanagement and greenhouse gas emissions by 2050",
+      "url": "https://www.science.org/doi/10.1126/science.adr3837",
+      "publisher": "Science / AAAS",
+      "sourceType": "PEER_REVIEWED_PLASTICS_SYSTEMS_MODEL",
+      "jurisdiction": "Global model context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Global scenario model; it does not determine local collection, plant route, permit, yield, or economics.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "pe",
+        "hdpe",
+        "pp",
+        "policy",
+        "lca"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "global systems modelling",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "pellencst-aisee",
@@ -1400,7 +2365,7 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "b385d3d8a6707df2b12bde6016ce8dda0eeced53533b54988772ac9d0c697bff",
-      "fetchedAt": "2026-08-11T07:24:20.331848+00:00"
+      "fetchedAt": "2026-08-11T09:44:23.609635+00:00"
     },
     {
       "id": "pellencst-smart-share",
@@ -1423,7 +2388,32 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "dd128e8d1a26d44c2a6f531a2e6212655ecc9884bd39ec22bf5482b7293b54b7",
-      "fetchedAt": "2026-08-11T07:24:20.690690+00:00"
+      "fetchedAt": "2026-08-11T09:44:24.095015+00:00"
+    },
+    {
+      "id": "recycling-quality-alignment-2025",
+      "title": "Perceptions and alignment on quality along the circular plastics chain",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0956053X25001631?via%3Dihub",
+      "publisher": "Waste Management / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLING_VALUE_CHAIN_QUALITY_STUDY",
+      "jurisdiction": "International value-chain research context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Stakeholder perceptions do not establish a numeric specification or commercial acceptance for a given buyer.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "pp",
+        "pe",
+        "films",
+        "mechanical-recycling",
+        "chemical-recycling"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "value-chain study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "plastic-odyssey-recycled-boards",
@@ -1445,7 +2435,34 @@
       "scale": "small-scale",
       "accessMode": "pdf",
       "contentSha256": "78c5141d2445975bff64f5a0bda8f1be5815a9afce06451a24f04d03bb00b649",
-      "fetchedAt": "2026-08-11T07:24:02.393809+00:00"
+      "fetchedAt": "2026-08-11T09:43:54.700725+00:00"
+    },
+    {
+      "id": "plastic-recycling-cascade-2024",
+      "title": "Plastic recycling stripped naked: circular product to circular industry with recycling cascade",
+      "url": "https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cssc.202301320",
+      "publisher": "ChemSusChem / Chemistry Europe",
+      "sourceType": "PEER_REVIEWED_PLASTICS_RECYCLING_CASCADE_PERSPECTIVE",
+      "jurisdiction": "International research and industrial context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Perspective on route cascades; it does not establish plant economics, HSE, or legal acceptance for a specific stream.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pet",
+        "pp",
+        "mechanical-recycling",
+        "dissolution",
+        "depolymerization",
+        "pyrolysis",
+        "gasification"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "route strategy and life-cycle perspective",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "us-epa-plastics-data",
@@ -1464,7 +2481,7 @@
       "scale": "national statistics",
       "accessMode": "web",
       "contentSha256": "827a3d2221a699e7096cfb0a56a963fb6c911b7cf72cc2b5f2b4febd6a5f766b",
-      "fetchedAt": "2026-08-11T07:23:26.685191+00:00"
+      "fetchedAt": "2026-08-11T09:43:01.235703+00:00"
     },
     {
       "id": "eu-plastics-strategy",
@@ -1484,7 +2501,31 @@
       "scale": "policy",
       "accessMode": "web",
       "contentSha256": "dd72c7ce8dccda9a16caf43ba20d911134e9fc28aade0af2f48b2b5a43feb821",
-      "fetchedAt": "2026-08-11T07:23:27.086803+00:00"
+      "fetchedAt": "2026-08-11T09:43:01.735456+00:00"
+    },
+    {
+      "id": "pre-european-plastics-recycling-2022",
+      "title": "Plastics recycling industry in Europe 2022 data",
+      "url": "https://www.plasticsrecyclers.eu/wp-content/uploads/2024/01/Plastics-Recycling-Industry-in-Europe-2022-data.pdf",
+      "publisher": "Plastics Recyclers Europe",
+      "sourceType": "INDUSTRY_RECYCLING_STATISTICS",
+      "jurisdiction": "Europe",
+      "licenseNote": "Industry association publication; retain attribution and verify the reporting year before use.",
+      "limitations": "Industry aggregates are context only and do not establish a specific facility’s yield, quality, price, authorization, or economics.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "pe",
+        "pp",
+        "pet",
+        "recycling-industry"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "European recycling industry",
+      "accessMode": "pdf",
+      "contentSha256": "a7d3a8c115760a0bfb925252b271fd32ed31e60436badd11d09e5034c9fe6972",
+      "fetchedAt": "2026-08-11T09:45:14.355672+00:00"
     },
     {
       "id": "pmc-polymer-recycling-review",
@@ -1505,7 +2546,31 @@
       "scale": "lab and technology review",
       "accessMode": "api",
       "contentSha256": "d8e26efb48264a1bd41761361aebb73eee5bdf0da33b5401bd19067b6803ade0",
-      "fetchedAt": "2026-08-11T07:23:30.566656+00:00"
+      "fetchedAt": "2026-08-11T09:43:08.740540+00:00"
+    },
+    {
+      "id": "polyolefin-waste-light-olefins-2024",
+      "title": "Polyolefin waste to light olefins with ethylene and base-metal catalysts",
+      "url": "https://www.science.org/doi/10.1126/science.adq7316",
+      "publisher": "Science / AAAS",
+      "sourceType": "PEER_REVIEWED_POLYOLEFIN_CHEMICAL_RECYCLING",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Laboratory catalyst results are not an industrial process guarantee and do not address mixed contaminants, permits, or economics.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "hdpe",
+        "chemical-recycling",
+        "catalysis"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory chemical-recycling research",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "practical-action-recycling-book",
@@ -1529,7 +2594,7 @@
       "scale": "small-scale and community",
       "accessMode": "pdf",
       "contentSha256": "918e71975fb50d01b2a10947691b5f9f2ab5c8691097d42beb0785c7c8c190ef",
-      "fetchedAt": "2026-08-11T07:24:01.158194+00:00"
+      "fetchedAt": "2026-08-11T09:43:53.348861+00:00"
     },
     {
       "id": "practical-action-plastics-recycling",
@@ -1551,7 +2616,7 @@
       "scale": "small-scale and community",
       "accessMode": "pdf",
       "contentSha256": "bda4d4ab9fdcde74b8ff815312e9d6a448fce74c78cd4e3e96b2489b14a0f24f",
-      "fetchedAt": "2026-08-11T07:23:59.816415+00:00"
+      "fetchedAt": "2026-08-11T09:43:51.874744+00:00"
     },
     {
       "id": "precious-plastic-download-kit",
@@ -1572,8 +2637,8 @@
       "authorityTier": "community",
       "scale": "small-scale",
       "accessMode": "web",
-      "contentSha256": "45eb621fbd6fad3e5faa913d9d121dbf8583d7452e9f1dcec4a79a497e4d9509",
-      "fetchedAt": "2026-08-11T07:23:57.468733+00:00"
+      "contentSha256": "65cd4ab463b6bf32dd919bd337edcd210abc5a297843cdea99c91e43c3bba486",
+      "fetchedAt": "2026-08-11T09:43:49.709919+00:00"
     },
     {
       "id": "precious-plastic-machines",
@@ -1615,7 +2680,33 @@
       "scale": "small-scale",
       "accessMode": "web",
       "contentSha256": "8823855ba0113e6e8a7ebfea544900d5a45c0cd0a63cdb50e5f723c5b3b75fe2",
-      "fetchedAt": "2026-08-11T07:23:56.806335+00:00"
+      "fetchedAt": "2026-08-11T09:43:48.918049+00:00"
+    },
+    {
+      "id": "nir-polyolefin-differentiation-2026",
+      "title": "Predicting polyolefin properties from near-infrared spectra with machine learning",
+      "url": "https://pubs.acs.org/doi/10.1021/acspolymersau.5c00131",
+      "publisher": "ACS Polymers Au / American Chemical Society",
+      "sourceType": "PEER_REVIEWED_NIR_SORTING_ML_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Model performance depends on spectra, calibration, sample presentation, and validation; it is not a drop-in sorter specification.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "hdpe",
+        "films",
+        "nir",
+        "sorting",
+        "machine-learning"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory and computational sorting research",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "pmc-pcb-metals-recovery",
@@ -1638,7 +2729,58 @@
       "scale": "lab and pilot research",
       "accessMode": "api",
       "contentSha256": "fffa62a8d13c18248fda412db52c37e29134d7fe28a56f21abe0086e88c187ac",
-      "fetchedAt": "2026-08-11T07:23:36.428274+00:00"
+      "fetchedAt": "2026-08-11T09:43:18.708624+00:00"
+    },
+    {
+      "id": "flexible-recycling-quality-economics-2022",
+      "title": "Quality evaluation and economic assessment of improved flexible-plastics recycling",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0956053X22004275?via%3Dihub",
+      "publisher": "Waste Management / Elsevier",
+      "sourceType": "PEER_REVIEWED_FLEXIBLE_PLASTICS_QUALITY_TEA_STUDY",
+      "jurisdiction": "Research and CEFLEX context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Hot and cold washing, filtration, degassing, and deodorization results depend on feedstock and equipment configuration.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "films",
+        "mechanical-recycling",
+        "washing",
+        "filtration",
+        "degassing",
+        "techno-economics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and quality study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "recycled-content-quantification-review-2025",
+      "title": "Quantification of recycled content in plastics: a review",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0921344925003040?via%3Dihub",
+      "publisher": "Resources, Conservation and Recycling / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLED_CONTENT_METHODS_REVIEW",
+      "jurisdiction": "International methods and policy context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Review of methods and policy; measurement uncertainty and chain-of-custody requirements remain application-specific.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "pe",
+        "pp",
+        "recycled-content",
+        "polymer-characterization",
+        "regulation"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "analytical methods and policy",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "eu-reach-and-clp",
@@ -1661,7 +2803,31 @@
       "scale": "chemicals regulation",
       "accessMode": "pdf",
       "contentSha256": "bb4f8b53afe303addfb2873baf23b48a92eb66c35cf896dbbf8673485f1db1db",
-      "fetchedAt": "2026-08-11T07:23:46.419502+00:00"
+      "fetchedAt": "2026-08-11T09:43:32.915857+00:00"
+    },
+    {
+      "id": "eldan-powerkat-b-2026",
+      "title": "REDOMA Powerkat B cable plant technical sheet",
+      "url": "https://eldan-recycling.com/wp-content/uploads/2021/06/Powerkat-B-Cable-Plant.pdf",
+      "publisher": "ELDAN Recycling / REDOMA",
+      "sourceType": "MACHINE_MANUFACTURER_TECHNICAL_SHEET",
+      "jurisdiction": "Danish manufacturer and international market",
+      "licenseNote": "Manufacturer PDF; retain source URL and verify current model and offer.",
+      "limitations": "Commercial declaration for a specific line and stated cable basis; it does not establish project feed performance, annual utilization, energy, crew, wear, or cost.",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "aluminium",
+        "cables",
+        "plastics",
+        "machinery"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "industrial",
+      "accessMode": "pdf",
+      "contentSha256": "f3d4ef8d93162a7c0de8ca8324d1a18d307ab395f60f86802849145b05edb69d",
+      "fetchedAt": "2026-08-11T09:45:03.754215+00:00"
     },
     {
       "id": "rema-apr-plastic-specifications",
@@ -1682,7 +2848,7 @@
       "scale": "commercial and industrial",
       "accessMode": "web",
       "contentSha256": "48539bafadffb98561a2140290f7662f978365efda80d8636b602c3fc072b13e",
-      "fetchedAt": "2026-08-11T07:24:04.620199+00:00"
+      "fetchedAt": "2026-08-11T09:43:57.032568+00:00"
     },
     {
       "id": "pmc-paper-recycling-review",
@@ -1704,7 +2870,104 @@
       "scale": "lab and process research",
       "accessMode": "api",
       "contentSha256": "6b1142f480d0fdf932b2c380d5d384cbbd2bde85e000f0f14182e3533666b03e",
-      "fetchedAt": "2026-08-11T07:23:34.390541+00:00"
+      "fetchedAt": "2026-08-11T09:43:14.923883+00:00"
+    },
+    {
+      "id": "hdpe-recovery-pathways-2024",
+      "title": "Recovery pathway assessment of recycled HDPE for circular economy",
+      "url": "https://www.sciencedirect.com/science/article/pii/S2212827124000763",
+      "publisher": "Procedia CIRP / Elsevier",
+      "sourceType": "PEER_REVIEWED_HDPE_LCA_TEA_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Case-specific recycled HDPE pathway comparison; it does not establish the quality, cost, or market for an unknown feedstock.",
+      "materialFamilies": [
+        "plastics",
+        "hdpe",
+        "mechanical-recycling",
+        "lca",
+        "techno-economics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "product pathway assessment",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "recyclass-design-guidelines",
+      "title": "RecyClass Design for Recycling Guidelines",
+      "url": "https://recyclass.eu/protocols-guidelines/design-for-recycling-guidelines/",
+      "publisher": "RecyClass / Plastics Recyclers Europe",
+      "sourceType": "INDUSTRY_DESIGN_FOR_RECYCLING_GUIDANCE",
+      "jurisdiction": "European Union and packaging value chain",
+      "licenseNote": "Industry technical guidance; retain the source URL and verify the current revision and application scope.",
+      "limitations": "Packaging design guidance is not a feedstock acceptance specification, plant permit, or guarantee for a contaminated waste lot.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "pe",
+        "pp",
+        "pet",
+        "pvc"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "packaging design and recycling chain",
+      "accessMode": "web",
+      "contentSha256": "cc7684d5aacb2cf83ae5de2cff70a6b2635c866972298829526c9becd702720d",
+      "fetchedAt": "2026-08-11T09:45:04.145103+00:00"
+    },
+    {
+      "id": "recyclass-methodology",
+      "title": "RecyClass methodology for recyclability assessment",
+      "url": "https://recyclass.eu/our-approach/recyclass-methodology/",
+      "publisher": "RecyClass / Plastics Recyclers Europe",
+      "sourceType": "INDUSTRY_RECYCLABILITY_ASSESSMENT_METHOD",
+      "jurisdiction": "European Union and packaging value chain",
+      "licenseNote": "Industry methodology; retain the source URL and current revision.",
+      "limitations": "Assessment methodology is not a certification for an unknown object or a process design basis for a recycling plant.",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "pe",
+        "pp",
+        "pet",
+        "pvc",
+        "additives"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "laboratory protocol and value chain",
+      "accessMode": "web",
+      "contentSha256": "54d6fa55e22af4d8903b069c980e026331a317fd23566b37073eb3360d28f2c4",
+      "fetchedAt": "2026-08-11T09:45:04.469916+00:00"
+    },
+    {
+      "id": "recyqmeter-recycled-quality-2025",
+      "title": "RecyQMeter application-specific quality of recycled plastics",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0956053X25002570?via%3Dihub",
+      "publisher": "Waste Management / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLED_PLASTICS_QUALITY_METRIC",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "A quality scoring concept is not a buyer specification, certification, or guarantee for a particular product route.",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "pp",
+        "pe",
+        "hdpe",
+        "recycled-content",
+        "technical-quality"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "application-specific quality assessment",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "eu-clp-regulation-1272-2008",
@@ -1726,7 +2989,7 @@
       "scale": "chemicals regulation",
       "accessMode": "web",
       "contentSha256": "4d2ee22c0671595025f27fefeeb2d35044333429d2a9bd9fcb090b7cfa270810",
-      "fetchedAt": "2026-08-11T07:23:47.396726+00:00"
+      "fetchedAt": "2026-08-11T09:43:33.815737+00:00"
     },
     {
       "id": "eu-recycled-plastic-food-contact",
@@ -1747,7 +3010,7 @@
       "scale": "product and process regulation",
       "accessMode": "pdf",
       "contentSha256": "b4394da950c92018d059a2c24e1cd97b1e37c560099f53b7edf8c1404b6ab151",
-      "fetchedAt": "2026-08-11T07:23:50.393568+00:00"
+      "fetchedAt": "2026-08-11T09:43:36.991936+00:00"
     },
     {
       "id": "eu-machinery-regulation-2023-1230",
@@ -1768,7 +3031,7 @@
       "scale": "machinery regulation",
       "accessMode": "pdf",
       "contentSha256": "ddb95742007c6db6a78b03a67dfefc5a37f19666343d781063ccaa97e8367270",
-      "fetchedAt": "2026-08-11T07:23:41.797703+00:00"
+      "fetchedAt": "2026-08-11T09:43:28.121690+00:00"
     },
     {
       "id": "eu-waste-shipments-2024-1157",
@@ -1791,7 +3054,30 @@
       "scale": "transboundary waste regulation",
       "accessMode": "pdf",
       "contentSha256": "92b46dd7f65b8dd67c61a032483ea146cd34d1d5fcdb88e832030c374558abb9",
-      "fetchedAt": "2026-08-11T07:23:53.682652+00:00"
+      "fetchedAt": "2026-08-11T09:43:41.448826+00:00"
+    },
+    {
+      "id": "microplastics-food-regulatory-science-2024",
+      "title": "Regulatory science perspective on microplastics and nanoplastics in human food",
+      "url": "https://pubs.acs.org/doi/10.1021/acs.analchem.3c05408",
+      "publisher": "Analytical Chemistry / American Chemical Society",
+      "sourceType": "PEER_REVIEWED_MICROPLASTICS_FOOD_SAFETY_PERSPECTIVE",
+      "jurisdiction": "United States regulatory-science context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Regulatory-science perspective and method-development context; not a product authorization or plant HSE clearance.",
+      "materialFamilies": [
+        "plastics",
+        "microplastics",
+        "nanoplastics",
+        "food-contact",
+        "hse"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "food-safety measurement and regulatory science",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "hse-simpl-plastics",
@@ -1813,7 +3099,7 @@
       "scale": "workplace safety",
       "accessMode": "pdf",
       "contentSha256": "ce84957f42c1ad52edfa635d58d33acd9a8c02248f543ada4424a543c1708d6d",
-      "fetchedAt": "2026-08-11T07:23:54.824633+00:00"
+      "fetchedAt": "2026-08-11T09:43:44.267725+00:00"
     },
     {
       "id": "steinert-household-waste",
@@ -1837,7 +3123,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "4901005b53d765053bc92a32b0e2661c40abab2ab72fd1fa1ae5b77bd416338b",
-      "fetchedAt": "2026-08-11T07:24:23.200421+00:00"
+      "fetchedAt": "2026-08-11T09:44:30.284884+00:00"
     },
     {
       "id": "steinert-plastics-sorting",
@@ -1863,7 +3149,56 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "42b612b599fc4afe6bceefeee38fdb99b3b8ddd170306f3372043e080ebeeef2",
-      "fetchedAt": "2026-08-11T07:24:22.536267+00:00"
+      "fetchedAt": "2026-08-11T09:44:29.371918+00:00"
+    },
+    {
+      "id": "recycled-plastics-safety-assessment-2023",
+      "title": "Safety assessment of recycled plastics from post-consumer waste",
+      "url": "https://www.mdpi.com/2313-4321/8/6/87",
+      "publisher": "Recycling / MDPI",
+      "sourceType": "PEER_REVIEWED_RECYCLED_PLASTICS_HSE_STUDY",
+      "jurisdiction": "Research and food-contact safety context",
+      "licenseNote": "Open-access peer-reviewed article; retain citation and check the article licence before reuse.",
+      "limitations": "Study results do not provide a blanket safety clearance; sample population, process, and end-use must match the question.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "pet",
+        "contaminants",
+        "nias",
+        "hse",
+        "product-safety"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory safety assessment",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
+      "id": "pita-cable-separation-2018",
+      "title": "Separation of copper from electric cable waste by mineral processing",
+      "url": "https://www.mdpi.com/2075-4701/8/11/517",
+      "publisher": "Minerals / MDPI peer-reviewed literature",
+      "sourceType": "PEER_REVIEWED_CABLE_SEPARATION_STUDY",
+      "jurisdiction": "Portugal research context",
+      "licenseNote": "Check the article licence and cite the original authors.",
+      "limitations": "Narrow laboratory batches and selected gravity methods; not evidence for a commercial dry granulator, annual throughput, project recovery, or cost.",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables",
+        "plastics",
+        "separation"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory research",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "sesotec-flake-purifier",
@@ -1884,7 +3219,7 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "56ec2eea3af0e95e7ccae0a521641af67dfbeaa295d74499319fa2cea6e7d2b2",
-      "fetchedAt": "2026-08-11T07:24:17.019564+00:00"
+      "fetchedAt": "2026-08-11T09:44:15.198185+00:00"
     },
     {
       "id": "sesotec-varisort-technical-sheet",
@@ -1906,7 +3241,30 @@
       "scale": "industrial",
       "accessMode": "pdf",
       "contentSha256": "330f3bb8b60b0f294b900f8c356746bae86a2aaa2e471aae2d8d2f41a8b5fd55",
-      "fetchedAt": "2026-08-11T07:24:16.339217+00:00"
+      "fetchedAt": "2026-08-11T09:44:14.397320+00:00"
+    },
+    {
+      "id": "hdpe-repeated-recycling-2023",
+      "title": "Simulating repeated recycling of HDPE milk bottles",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0921344922005663",
+      "publisher": "Resources, Conservation and Recycling / Elsevier",
+      "sourceType": "PEER_REVIEWED_REPEATED_RECYCLING_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Controlled repeated extrusion does not represent mixed polymer contamination, unknown additives, or a small low-tech line.",
+      "materialFamilies": [
+        "plastics",
+        "hdpe",
+        "mechanical-recycling",
+        "degradation",
+        "food-packaging"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory ageing and processing study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "hse-waste-processing",
@@ -1930,7 +3288,7 @@
       "scale": "waste-sector safety",
       "accessMode": "web",
       "contentSha256": "1a541afc4c4abfacfed3a221accdb7d90ec6bdf69ca20b9c9adb9c252f69f826",
-      "fetchedAt": "2026-08-11T07:23:54.985912+00:00"
+      "fetchedAt": "2026-08-11T09:43:44.546909+00:00"
     },
     {
       "id": "starlinger-recycling-brochure",
@@ -1956,6 +3314,30 @@
       "fetchedAt": ""
     },
     {
+      "id": "starlinger-post-industrial-recycling",
+      "title": "Starlinger post-industrial plastics recycling technology",
+      "url": "https://www.starlinger.com/en/recycling-technology/post-industrial",
+      "publisher": "Starlinger recycling technology",
+      "sourceType": "MACHINE_MANUFACTURER_TECHNICAL_PAGE",
+      "jurisdiction": "International vendor reference",
+      "licenseNote": "Manufacturer content; retain source URL and verify the current model, quotation, and test conditions.",
+      "limitations": "Vendor application descriptions do not establish a route for mixed or contaminated feedstock, throughput, safety compliance, or economics.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "films",
+        "regrind",
+        "machinery"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "industrial",
+      "accessMode": "web",
+      "contentSha256": "6055ea87381e733ef4d21db38ef4ed46a1d0085aeba028d2a6d52fa3c0884809",
+      "fetchedAt": "2026-08-11T09:45:16.803875+00:00"
+    },
+    {
       "id": "starlinger-recostar-dynamic",
       "title": "Starlinger recoSTAR dynamic art post-consumer plastics line",
       "url": "https://www.starlinger.com/en/recycling-technology/recostar-dynamic-art",
@@ -1979,7 +3361,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "4388b73efbc4cc4b96fa5543f2135cafca9e1f263b4fad5f921af6fe48322384",
-      "fetchedAt": "2026-08-11T07:24:21.410772+00:00"
+      "fetchedAt": "2026-08-11T09:44:24.987212+00:00"
     },
     {
       "id": "starlinger-recostar-sheet",
@@ -2005,6 +3387,30 @@
       "accessMode": "pdf",
       "contentSha256": "",
       "fetchedAt": ""
+    },
+    {
+      "id": "stokkermill-ks-2026",
+      "title": "Stokkermill K-S series wire granulators",
+      "url": "https://www.stokkermill.com/recycling-machines/cables-wires-granulator",
+      "publisher": "Stokkermill Recycling Machinery",
+      "sourceType": "MACHINE_MANUFACTURER_COMMERCIAL_TECHNICAL_PAGE",
+      "jurisdiction": "Italian manufacturer and international market",
+      "licenseNote": "Manufacturer content; retain source URL and treat declared figures as commercial statements.",
+      "limitations": "Feed mix, utilization, actual power draw, recovery, purity, labour, wear, maintenance, and annual throughput are unknown.",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "aluminium",
+        "cables",
+        "plastics",
+        "machinery"
+      ],
+      "status": "candidate",
+      "authorityTier": "industry",
+      "scale": "small-scale and industrial",
+      "accessMode": "web",
+      "contentSha256": "e84fa020b57cb17db1aa5784f5cbd6966528a77415483ae690148e8084d02d49",
+      "fetchedAt": "2026-08-11T09:45:02.672403+00:00"
     },
     {
       "id": "tomra-gainnext",
@@ -2078,6 +3484,32 @@
       "fetchedAt": ""
     },
     {
+      "id": "plastic-gasification-tea-lca-2023",
+      "title": "Techno-economic analysis and life-cycle assessment of mixed-plastic gasification",
+      "url": "https://pubs.rsc.org/en/content/articlelanding/2023/gc/d3gc00679d",
+      "publisher": "Green Chemistry / Royal Society of Chemistry",
+      "sourceType": "PEER_REVIEWED_MIXED_PLASTICS_GASIFICATION_TEA_LCA",
+      "jurisdiction": "Research and process-model context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Modelled gasification economics are highly sensitive to feed price, scale, utilities, product price, and allocation assumptions.",
+      "materialFamilies": [
+        "plastics",
+        "pp",
+        "pe",
+        "hdpe",
+        "gasification",
+        "chemical-recycling",
+        "lca",
+        "techno-economics"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "process and techno-economic modelling",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
+    },
+    {
       "id": "pmc-textile-recycling-review",
       "title": "Textile recycling and circularity review",
       "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11902667/fullTextXML",
@@ -2097,7 +3529,7 @@
       "scale": "lab and industrial review",
       "accessMode": "api",
       "contentSha256": "178b3244787411bb8ad9e1eab739ee65d3e22fe16ab75bd319ee94c6ce37652f",
-      "fetchedAt": "2026-08-11T07:23:32.236224+00:00"
+      "fetchedAt": "2026-08-11T09:43:12.098592+00:00"
     },
     {
       "id": "eu-textiles-strategy",
@@ -2117,7 +3549,7 @@
       "scale": "policy",
       "accessMode": "web",
       "contentSha256": "b7551d057941ad60c0b0430f5efb823d3ec13967b47e15dc4dfbc7f77eb4f544",
-      "fetchedAt": "2026-08-11T07:23:28.480995+00:00"
+      "fetchedAt": "2026-08-11T09:43:03.569563+00:00"
     },
     {
       "id": "eea-textiles-circular-economy",
@@ -2138,7 +3570,54 @@
       "scale": "research and policy",
       "accessMode": "web",
       "contentSha256": "5bd73e8e8ac4b89264ff48a5b7068b4656d2317732cff59aeb8da9f77aa81baa",
-      "fetchedAt": "2026-08-11T07:23:29.325281+00:00"
+      "fetchedAt": "2026-08-11T09:43:06.939897+00:00"
+    },
+    {
+      "id": "microplastics-research-review-2024",
+      "title": "Twenty years of microplastic pollution research: what have we learned?",
+      "url": "https://www.science.org/doi/10.1126/science.adl2746",
+      "publisher": "Science / AAAS",
+      "sourceType": "PEER_REVIEWED_MICROPLASTICS_REVIEW",
+      "jurisdiction": "International research context",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Environmental and measurement review; it is not a process HSE assessment or a proof that a particular recycling line creates a specified exposure.",
+      "materialFamilies": [
+        "plastics",
+        "microplastics",
+        "hse",
+        "environmental-risk"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "scientific review",
+      "accessMode": "web",
+      "contentSha256": "23550e032312f3fb5dadff2eceaa3990936748a7f6099d46df5a08debd47736c",
+      "fetchedAt": "2026-08-11T09:46:08.607129+00:00"
+    },
+    {
+      "id": "plastics-additives-complexity-2024",
+      "title": "Untangling the chemical complexity of plastics to improve life-cycle outcomes",
+      "url": "https://www.nature.com/articles/s41578-024-00705-x",
+      "publisher": "Nature Reviews Materials / Springer Nature",
+      "sourceType": "PEER_REVIEWED_PLASTICS_ADDITIVES_PERSPECTIVE",
+      "jurisdiction": "International research context",
+      "licenseNote": "Peer-reviewed perspective landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "Perspective and systems guidance; it does not identify the additives in an unknown lot or replace chemical analysis and HSE review.",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "pet",
+        "additives",
+        "chemicals",
+        "hse"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "materials and life-cycle perspective",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "vecoplan-viz-shredder",
@@ -2161,7 +3640,7 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "09e1b290ff88c237d08b1731e32878ee319425904ae4d02db8b451d3dec06d17",
-      "fetchedAt": "2026-08-11T07:24:05.113385+00:00"
+      "fetchedAt": "2026-08-11T09:43:57.576948+00:00"
     },
     {
       "id": "vecoplan-downloads",
@@ -2184,7 +3663,31 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "7424d465f2fae2c22369d5629308c1ba8920568d6efa895473826ad269be20db",
-      "fetchedAt": "2026-08-11T07:24:05.588220+00:00"
+      "fetchedAt": "2026-08-11T09:43:58.076407+00:00"
+    },
+    {
+      "id": "hdpe-voc-contamination-chain-2024",
+      "title": "Volatile organic contaminants in HDPE milk bottles across mechanical recycling",
+      "url": "https://www.sciencedirect.com/science/article/pii/S0959652624020195?via%3Dihub",
+      "publisher": "Journal of Cleaner Production / Elsevier",
+      "sourceType": "PEER_REVIEWED_RECYCLING_CONTAMINATION_STUDY",
+      "jurisdiction": "Research context; verify application geography",
+      "licenseNote": "Peer-reviewed article landing page; retain citation and use only lawfully accessible content.",
+      "limitations": "HDPE bottle case study; contaminant behavior depends on collection, washing, residence time, additives, and process conditions.",
+      "materialFamilies": [
+        "plastics",
+        "hdpe",
+        "contaminants",
+        "vocs",
+        "hse",
+        "mechanical-recycling"
+      ],
+      "status": "candidate",
+      "authorityTier": "secondary",
+      "scale": "laboratory and value-chain study",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "eu-waste-framework-directive",
@@ -2208,7 +3711,30 @@
       "scale": "waste regulation",
       "accessMode": "pdf",
       "contentSha256": "bba1a4848cff10826b721c13a5917d359036818ace248b8aaab10e6765ceef30",
-      "fetchedAt": "2026-08-11T07:23:51.150602+00:00"
+      "fetchedAt": "2026-08-11T09:43:37.852529+00:00"
+    },
+    {
+      "id": "eu-wfd-2025",
+      "title": "Waste Framework Directive consolidated 16 October 2025",
+      "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02008L0098-20251016",
+      "publisher": "European Parliament and Council of the European Union",
+      "sourceType": "BINDING_EU_WASTE_LAW",
+      "jurisdiction": "European Union",
+      "licenseNote": "Official EU legal text; preserve the Official Journal reference and verify current national implementation.",
+      "limitations": "Consolidated text is a legal orientation aid, not a Bulgarian permit, classification, buyer specification, composition, yield, or cost source.",
+      "materialFamilies": [
+        "waste",
+        "plastics",
+        "metals",
+        "e-waste",
+        "all-materials"
+      ],
+      "status": "candidate",
+      "authorityTier": "primary",
+      "scale": "legal framework",
+      "accessMode": "web",
+      "contentSha256": "",
+      "fetchedAt": ""
     },
     {
       "id": "zerma-granulators",
@@ -2231,10 +3757,534 @@
       "scale": "industrial",
       "accessMode": "web",
       "contentSha256": "2e31b330670e81cd9a710e7cc3f58be7d8215bd781cc3bbc7ac98ad6685114f2",
-      "fetchedAt": "2026-08-11T07:24:13.543343+00:00"
+      "fetchedAt": "2026-08-11T09:44:10.693102+00:00"
     }
   ],
   "documents": [
+    {
+      "documentId": "doc-microplastics-research-review-2024-1-23550e032312",
+      "sourceId": "microplastics-research-review-2024",
+      "version": 1,
+      "contentSha256": "23550e032312f3fb5dadff2eceaa3990936748a7f6099d46df5a08debd47736c",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:46:08.607129+00:00",
+      "chunkCount": 60,
+      "title": "Twenty years of microplastic pollution research: what have we learned?",
+      "publisher": "Science / AAAS",
+      "materialFamilies": [
+        "plastics",
+        "microplastics",
+        "hse",
+        "environmental-risk"
+      ],
+      "authorityTier": "secondary",
+      "scale": "scientific review",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-flexible-packaging-waste-flows-2025-1-4d696706029d",
+      "sourceId": "flexible-packaging-waste-flows-2025",
+      "version": 1,
+      "contentSha256": "4d696706029d824f8cadcf0e137851e4043a8b8f6dd43118e6e2f907f632b96c",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:46:06.476759+00:00",
+      "chunkCount": 3,
+      "title": "Addressing favorable and challenging flexible plastic packaging waste flows",
+      "publisher": "Journal of Advanced Manufacturing and Processing / Wiley",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "films",
+        "packaging",
+        "collection",
+        "mechanical-recycling",
+        "lca"
+      ],
+      "authorityTier": "secondary",
+      "scale": "national and comparative material-flow analysis",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-king-county-mrf-assessment-2022-1-984d2bfe2fdb",
+      "sourceId": "king-county-mrf-assessment-2022",
+      "version": 1,
+      "contentSha256": "984d2bfe2fdbfecc5b006894b016f776c50d7fe20f09e9b41e4d47e8a58a9aad",
+      "contentType": "application/pdf",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:45:32.455847+00:00",
+      "chunkCount": 205,
+      "title": "King County 2022 Material Recovery Facility Assessment",
+      "publisher": "King County Solid Waste Division",
+      "materialFamilies": [
+        "plastics",
+        "pet",
+        "hdpe",
+        "pp",
+        "metals",
+        "non-plastics",
+        "mixed-waste"
+      ],
+      "authorityTier": "primary",
+      "scale": "regional MRF study",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-lee-cable-separation-2016-4-2442ee26dfb0",
+      "sourceId": "lee-cable-separation-2016",
+      "version": 4,
+      "contentSha256": "2442ee26dfb0e8c1dfa211a0267827f80dd214c1960b3c1c11e6894db830b3bc",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:45:00.717307+00:00",
+      "chunkCount": 5,
+      "title": "Mechanical separation of waste jelly-filled communication cables",
+      "publisher": "Korean Institute of Resources Recycling",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables",
+        "plastics"
+      ],
+      "authorityTier": "secondary",
+      "scale": "laboratory and pilot research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-precious-plastic-download-kit-8-65cd4ab463b6",
+      "sourceId": "precious-plastic-download-kit",
+      "version": 8,
+      "contentSha256": "65cd4ab463b6bf32dd919bd337edcd210abc5a297843cdea99c91e43c3bba486",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:43:49.709919+00:00",
+      "chunkCount": 4,
+      "title": "Precious Plastic download kit library",
+      "publisher": "Precious Plastic community",
+      "materialFamilies": [
+        "plastics",
+        "low-tech",
+        "small-scale",
+        "machinery"
+      ],
+      "authorityTier": "community",
+      "scale": "small-scale",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-lee-cable-separation-2016-3-18907f01b678",
+      "sourceId": "lee-cable-separation-2016",
+      "version": 3,
+      "contentSha256": "18907f01b6787b6a8fed4d3bf7b797b296298b3b0381ccbcf6ada1f28f2dcaa5",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:32:11.498236+00:00",
+      "chunkCount": 5,
+      "title": "Mechanical separation of waste jelly-filled communication cables",
+      "publisher": "Korean Institute of Resources Recycling",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables",
+        "plastics"
+      ],
+      "authorityTier": "secondary",
+      "scale": "laboratory and pilot research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-precious-plastic-download-kit-7-cd4199172cbf",
+      "sourceId": "precious-plastic-download-kit",
+      "version": 7,
+      "contentSha256": "cd4199172cbf8056e8a7c9481f3adb9ee38e396cf963276fb030867ae93f10f7",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:30:57.604798+00:00",
+      "chunkCount": 4,
+      "title": "Precious Plastic download kit library",
+      "publisher": "Precious Plastic community",
+      "materialFamilies": [
+        "plastics",
+        "low-tech",
+        "small-scale",
+        "machinery"
+      ],
+      "authorityTier": "community",
+      "scale": "small-scale",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-lee-cable-separation-2016-2-b17915fad55e",
+      "sourceId": "lee-cable-separation-2016",
+      "version": 2,
+      "contentSha256": "b17915fad55e3e1386b50777c90951e7db91a7f7aaa3d091054e4d030cd6e09e",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:17:17.395085+00:00",
+      "chunkCount": 5,
+      "title": "Mechanical separation of waste jelly-filled communication cables",
+      "publisher": "Korean Institute of Resources Recycling",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables",
+        "plastics"
+      ],
+      "authorityTier": "secondary",
+      "scale": "laboratory and pilot research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-precious-plastic-download-kit-6-814afbb0e6fd",
+      "sourceId": "precious-plastic-download-kit",
+      "version": 6,
+      "contentSha256": "814afbb0e6fd9ce4d3164d7175d090615a9bcdf0e5f0cc6a96179446310a3369",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:15:19.436285+00:00",
+      "chunkCount": 4,
+      "title": "Precious Plastic download kit library",
+      "publisher": "Precious Plastic community",
+      "materialFamilies": [
+        "plastics",
+        "low-tech",
+        "small-scale",
+        "machinery"
+      ],
+      "authorityTier": "community",
+      "scale": "small-scale",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-nist-polymer-thermal-decomposition-2-3b3cb514afba",
+      "sourceId": "nist-polymer-thermal-decomposition",
+      "version": 2,
+      "contentSha256": "3b3cb514afbaba09ea60b30735467a8cddcb94beda465b9a4dbd0e50c5f5d6aa",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:12:31.470572+00:00",
+      "chunkCount": 4,
+      "title": "Molecular modeling of thermal decomposition of polymers",
+      "publisher": "US National Institute of Standards and Technology",
+      "materialFamilies": [
+        "plastics",
+        "polymers",
+        "thermal-processing",
+        "fumes"
+      ],
+      "authorityTier": "primary",
+      "scale": "laboratory research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-starlinger-post-industrial-recycling-1-6055ea87381e",
+      "sourceId": "starlinger-post-industrial-recycling",
+      "version": 1,
+      "contentSha256": "6055ea87381e733ef4d21db38ef4ed46a1d0085aeba028d2a6d52fa3c0884809",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:05:05.565805+00:00",
+      "chunkCount": 2,
+      "title": "Starlinger post-industrial plastics recycling technology",
+      "publisher": "Starlinger recycling technology",
+      "materialFamilies": [
+        "plastics",
+        "pe",
+        "pp",
+        "films",
+        "regrind",
+        "machinery"
+      ],
+      "authorityTier": "industry",
+      "scale": "industrial",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-pre-european-plastics-recycling-2022-1-a7d3a8c11576",
+      "sourceId": "pre-european-plastics-recycling-2022",
+      "version": 1,
+      "contentSha256": "a7d3a8c115760a0bfb925252b271fd32ed31e60436badd11d09e5034c9fe6972",
+      "contentType": "application/pdf",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:05:03.088925+00:00",
+      "chunkCount": 4,
+      "title": "Plastics recycling industry in Europe 2022 data",
+      "publisher": "Plastics Recyclers Europe",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "pe",
+        "pp",
+        "pet",
+        "recycling-industry"
+      ],
+      "authorityTier": "industry",
+      "scale": "European recycling industry",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-oecd-global-plastics-outlook-1-8b9a1b703d29",
+      "sourceId": "oecd-global-plastics-outlook",
+      "version": 1,
+      "contentSha256": "8b9a1b703d2999e1bfa4a07132928d2f2e2814cae0447067ce3c6e17190ce874",
+      "contentType": "application/pdf",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:05:02.426544+00:00",
+      "chunkCount": 408,
+      "title": "OECD Global Plastics Outlook",
+      "publisher": "Organisation for Economic Co-operation and Development",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "policy",
+        "circular-economy"
+      ],
+      "authorityTier": "primary",
+      "scale": "global systems research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-oecd-recycled-content-requirements-1-d20cd2019a1d",
+      "sourceId": "oecd-recycled-content-requirements",
+      "version": 1,
+      "contentSha256": "d20cd2019a1d8937e5694c359f53403abd55c4171bb4c5fe4b931494e9ea14d2",
+      "contentType": "application/pdf",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:55.567970+00:00",
+      "chunkCount": 93,
+      "title": "OECD plastics recycled-content requirements report",
+      "publisher": "Organisation for Economic Co-operation and Development",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "policy",
+        "recycled-content"
+      ],
+      "authorityTier": "primary",
+      "scale": "policy and market research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-recyclass-methodology-1-54d6fa55e22a",
+      "sourceId": "recyclass-methodology",
+      "version": 1,
+      "contentSha256": "54d6fa55e22af4d8903b069c980e026331a317fd23566b37073eb3360d28f2c4",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:53.454713+00:00",
+      "chunkCount": 3,
+      "title": "RecyClass methodology for recyclability assessment",
+      "publisher": "RecyClass / Plastics Recyclers Europe",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "pe",
+        "pp",
+        "pet",
+        "pvc",
+        "additives"
+      ],
+      "authorityTier": "industry",
+      "scale": "laboratory protocol and value chain",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-recyclass-design-guidelines-1-cc7684d5aacb",
+      "sourceId": "recyclass-design-guidelines",
+      "version": 1,
+      "contentSha256": "cc7684d5aacb2cf83ae5de2cff70a6b2635c866972298829526c9becd702720d",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:52.663726+00:00",
+      "chunkCount": 3,
+      "title": "RecyClass Design for Recycling Guidelines",
+      "publisher": "RecyClass / Plastics Recyclers Europe",
+      "materialFamilies": [
+        "plastics",
+        "packaging",
+        "pe",
+        "pp",
+        "pet",
+        "pvc"
+      ],
+      "authorityTier": "industry",
+      "scale": "packaging design and recycling chain",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-eldan-powerkat-b-2026-1-f3d4ef8d9316",
+      "sourceId": "eldan-powerkat-b-2026",
+      "version": 1,
+      "contentSha256": "f3d4ef8d93162a7c0de8ca8324d1a18d307ab395f60f86802849145b05edb69d",
+      "contentType": "application/pdf",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:51.794370+00:00",
+      "chunkCount": 2,
+      "title": "REDOMA Powerkat B cable plant technical sheet",
+      "publisher": "ELDAN Recycling / REDOMA",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "aluminium",
+        "cables",
+        "plastics",
+        "machinery"
+      ],
+      "authorityTier": "industry",
+      "scale": "industrial",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-stokkermill-ks-2026-1-e84fa020b57c",
+      "sourceId": "stokkermill-ks-2026",
+      "version": 1,
+      "contentSha256": "e84fa020b57cb17db1aa5784f5cbd6966528a77415483ae690148e8084d02d49",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:51.085216+00:00",
+      "chunkCount": 6,
+      "title": "Stokkermill K-S series wire granulators",
+      "publisher": "Stokkermill Recycling Machinery",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "aluminium",
+        "cables",
+        "plastics",
+        "machinery"
+      ],
+      "authorityTier": "industry",
+      "scale": "small-scale and industrial",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-lee-cable-separation-2016-1-483d27ac8c50",
+      "sourceId": "lee-cable-separation-2016",
+      "version": 1,
+      "contentSha256": "483d27ac8c50e487a6f2c44e8193bae1f1b9e029003fefdc575f15e0cff3c319",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:49.054999+00:00",
+      "chunkCount": 5,
+      "title": "Mechanical separation of waste jelly-filled communication cables",
+      "publisher": "Korean Institute of Resources Recycling",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables",
+        "plastics"
+      ],
+      "authorityTier": "secondary",
+      "scale": "laboratory and pilot research",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-jrc-copper-eow-2011-1-ab31d5c26042",
+      "sourceId": "jrc-copper-eow-2011",
+      "version": 1,
+      "contentSha256": "ab31d5c260421c66fc3f46953d782df94fd715f8f3ec4096f0ece61acf2a6018",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:42.408467+00:00",
+      "chunkCount": 2,
+      "title": "JRC technical proposals for copper and copper-alloy scrap end-of-waste",
+      "publisher": "Joint Research Centre of the European Commission",
+      "materialFamilies": [
+        "metals",
+        "copper",
+        "cables"
+      ],
+      "authorityTier": "primary",
+      "scale": "sector technical history",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-jrc-weee-plastics-2016-1-598291207cdf",
+      "sourceId": "jrc-weee-plastics-2016",
+      "version": 1,
+      "contentSha256": "598291207cdf763c697b64bac6d5ad8f72861d9ffd06a226e6e3c93674e4cf23",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:41.958768+00:00",
+      "chunkCount": 5,
+      "title": "JRC methods for material efficiency and WEEE polymers",
+      "publisher": "Joint Research Centre of the European Commission",
+      "materialFamilies": [
+        "e-waste",
+        "plastics",
+        "polymers",
+        "additives",
+        "flame-retardants"
+      ],
+      "authorityTier": "primary",
+      "scale": "technical research and policy",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-bg-moew-wsr-notice-2026-1-849447c6c891",
+      "sourceId": "bg-moew-wsr-notice-2026",
+      "version": 1,
+      "contentSha256": "849447c6c891ef03c394c8d95ddd8e05f9207cde1ba329ed97e2538c25379d1c",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:40.912773+00:00",
+      "chunkCount": 3,
+      "title": "Bulgarian notice on new EU waste-transport rules and electronic system",
+      "publisher": "Bulgarian Ministry of Environment and Water",
+      "materialFamilies": [
+        "waste",
+        "shipments",
+        "plastics",
+        "metals",
+        "e-waste"
+      ],
+      "authorityTier": "primary",
+      "scale": "national administrative guidance",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-bg-wma-official-2022-1-d7e72929cf95",
+      "sourceId": "bg-wma-official-2022",
+      "version": 1,
+      "contentSha256": "d7e72929cf957389b6f0e81aa82ea10cfe645e26759c35e9e69087014c2d6bc1",
+      "contentType": "application/pdf",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:04:39.864540+00:00",
+      "chunkCount": 281,
+      "title": "Bulgarian Waste Management Act official English translation",
+      "publisher": "Bulgarian Ministry of Environment and Water",
+      "materialFamilies": [
+        "waste",
+        "plastics",
+        "metals",
+        "e-waste"
+      ],
+      "authorityTier": "primary",
+      "scale": "national legal orientation",
+      "sourceStatus": "candidate"
+    },
+    {
+      "documentId": "doc-precious-plastic-download-kit-5-67b2c62fcc9a",
+      "sourceId": "precious-plastic-download-kit",
+      "version": 5,
+      "contentSha256": "67b2c62fcc9a1d649861c308e6fddbf351e686cb30661dcc08173c89abbe6010",
+      "contentType": "text/html",
+      "extractionStatus": "extracted",
+      "fetchedAt": "2026-08-11T09:03:38.706700+00:00",
+      "chunkCount": 4,
+      "title": "Precious Plastic download kit library",
+      "publisher": "Precious Plastic community",
+      "materialFamilies": [
+        "plastics",
+        "low-tech",
+        "small-scale",
+        "machinery"
+      ],
+      "authorityTier": "community",
+      "scale": "small-scale",
+      "sourceStatus": "candidate"
+    },
     {
       "documentId": "doc-precious-plastic-download-kit-4-45eb621fbd6f",
       "sourceId": "precious-plastic-download-kit",

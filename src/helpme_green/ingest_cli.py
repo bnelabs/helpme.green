@@ -48,6 +48,12 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="send extracted chunks to the configured OpenAI-compatible embedding endpoint",
     )
+    parser.add_argument(
+        "--embedding-batch-size",
+        type=int,
+        default=32,
+        help="number of chunks per embedding request",
+    )
     return parser
 
 
@@ -72,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
                 download_dir=download_dir,
             ),
             embedding_provider=provider,
+            embedding_batch_size=args.embedding_batch_size,
         )
         exported = database.export_catalog(args.export_catalog) if args.export_catalog else None
         print(

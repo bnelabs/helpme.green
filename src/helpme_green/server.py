@@ -80,6 +80,8 @@ class _Handler(BaseHTTPRequestHandler):
                 self.server.processor.skill_registry,
                 query,
                 self.server.processor.machine_catalog,
+                embedding_provider=self.server.processor.query_embedding_provider,
+                reranker=self.server.processor.reranker,
             )
             self._send_json(result, HTTPStatus.BAD_REQUEST if "errors" in result else HTTPStatus.OK)
             return

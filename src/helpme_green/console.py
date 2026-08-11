@@ -23,7 +23,11 @@ from .machinery import MachineCatalog
 from .mcp import ReadOnlyMCP
 from .model_gateway import ModelRouter, ProviderUnavailable
 from .persistence import SecretStore, SessionState, SessionStore
-from .source_ingest import SourceManifest
+from .source_ingest import (
+    SourceManifest,
+    embedding_provider_from_environment,
+    reranker_from_environment,
+)
 
 COMMANDS = (
     "/start",
@@ -79,6 +83,11 @@ _FACT_TITLES = {
     "humidity": "Moisture and free liquids",
     "origin": "Origin and geography",
 }
+
+
+def _environment_enabled(name: str) -> bool:
+    return os.environ.get(name, "").casefold() in {"1", "true", "yes", "on"}
+
 
 _AI_INTAKE_CONTRACT = """
 You are the natural-language intake assistant inside helpme.green.
@@ -142,6 +151,12 @@ class CommandProcessor:
         self.knowledge_db = KnowledgeDatabase(database_path)
         self._register_source_catalog(knowledge)
         self.store.knowledge_digest = self._runtime_knowledge_digest()
+        self.query_embedding_provider = (
+            embedding_provider_from_environment()
+            if _environment_enabled("HELPME_EMBEDDING_QUERY_ENABLED")
+            else None
+        )
+        self.reranker = reranker_from_environment()
         self.conversation = ConversationAgent(
             self.model_router,
             store,
@@ -149,6 +164,8 @@ class CommandProcessor:
             skill_registry=self.skill_registry,
             knowledge_db=self.knowledge_db,
             machine_catalog=self.machine_catalog,
+            embedding_provider=self.query_embedding_provider,
+            reranker=self.reranker,
         )
         self.mcp = mcp or ReadOnlyMCP(file_roots=(Path(knowledge.root), Path(store.root)))
         self.secret_store = secret_store

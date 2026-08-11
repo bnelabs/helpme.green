@@ -725,6 +725,7 @@ sources:
   - id: erema-regrindpro-technical-sheet
     title: EREMA INTAREMA RegrindPro technical data
     url: https://www.erema.com/en/regrind_pro_technical_data/
+    fetch_urls: ["https://www.erema.com/en/regrind_pro_technical_data/?output=1"]
     publisher: EREMA
     source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
     material_families: [plastics, ldpe, hdpe, pp, abs, ps, regrind, machinery]
@@ -1141,4 +1142,719 @@ sources:
     limitations: Recovery statements require feedstock testing, assay, and buyer specification.
     authority_tier: industry
     scale: small-scale
+    access_mode: web
+
+  # Governed legal, technical, and cable-recovery references reconciled from the research registers
+  - id: eu-wfd-2025
+    title: Waste Framework Directive consolidated 16 October 2025
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02008L0098-20251016
+    publisher: European Parliament and Council of the European Union
+    source_type: BINDING_EU_WASTE_LAW
+    material_families: [waste, plastics, metals, e-waste, all-materials]
+    jurisdiction: European Union
+    license_note: Official EU legal text; preserve the Official Journal reference and verify current national implementation.
+    limitations: Consolidated text is a legal orientation aid, not a Bulgarian permit, classification, buyer specification, composition, yield, or cost source.
+    authority_tier: primary
+    scale: legal framework
+    access_mode: web
+  - id: eu-copper-eow-715-2013
+    title: EU end-of-waste criteria for copper scrap
+    url: https://eur-lex.europa.eu/legal-content/EN/ALL/?uri=CELEX:32013R0715
+    publisher: European Commission
+    source_type: BINDING_EU_END_OF_WASTE_LAW
+    material_families: [metals, copper, cables]
+    jurisdiction: European Union
+    license_note: Official EU legal text; retain the Official Journal reference.
+    limitations: Applies only when every input, treatment, quality-management, grading, analysis, and statement-of-conformity criterion is satisfied; it does not classify untreated cable or untested output.
+    authority_tier: primary
+    scale: legal and output qualification
+    access_mode: web
+  - id: bg-wma-official-2022
+    title: Bulgarian Waste Management Act official English translation
+    url: https://www.moew.government.bg/static/media/ups/tiny/Waste_Management_Act.pdf
+    publisher: Bulgarian Ministry of Environment and Water
+    source_type: OFFICIAL_BULGARIAN_WASTE_LAW_TRANSLATION
+    material_families: [waste, plastics, metals, e-waste]
+    jurisdiction: Bulgaria
+    license_note: Bulgarian public-authority publication; verify the current Bulgarian-language law before relying on an obligation.
+    limitations: English translation lists amendments only through March 2022 and cannot establish current 2026 obligations, site authorization, waste code, or competent-authority position.
+    authority_tier: primary
+    scale: national legal orientation
+    access_mode: pdf
+  - id: eu-wsr-2024-1157
+    title: EU Regulation on shipments of waste
+    url: https://eur-lex.europa.eu/eli/reg/2024/1157/oj
+    publisher: European Parliament and Council of the European Union
+    source_type: BINDING_EU_WASTE_SHIPMENT_LAW
+    material_families: [waste, plastics, metals, e-waste, shipments]
+    jurisdiction: European Union and covered international movements
+    license_note: Official EU legal text; verify transition provisions and current competent-authority practice.
+    limitations: Control route depends on classification, destination, transition provisions, and shipment facts; it is not a batch-level shipment determination.
+    authority_tier: primary
+    scale: cross-border legal framework
+    access_mode: web
+  - id: bg-moew-wsr-notice-2026
+    title: Bulgarian notice on new EU waste-transport rules and electronic system
+    url: https://www.moew.government.bg/en/new-rules-on-waste-transport-in-the-eu-and-a-mandatory-electronic-system-to-be-introduced-from-21-may/
+    publisher: Bulgarian Ministry of Environment and Water
+    source_type: OFFICIAL_ADMINISTRATIVE_WASTE_SHIPMENT_NOTICE
+    material_families: [waste, shipments, plastics, metals, e-waste]
+    jurisdiction: Bulgaria and European Union
+    license_note: Bulgarian public-authority notice; retain publication date and verify the current procedure.
+    limitations: Public notice, not a permit, classification, or procedure decision for a specific shipment.
+    authority_tier: primary
+    scale: national administrative guidance
+    access_mode: web
+  - id: eu-waste-treatment-bat-2018
+    title: EU BAT conclusions for waste treatment
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02018D1147-20180817
+    publisher: European Commission
+    source_type: BINDING_EU_BAT_CONCLUSIONS
+    material_families: [waste, metals, plastics, e-waste, machinery, HSE]
+    jurisdiction: European Union
+    license_note: Official EU legal text; check installation scope and current permit conditions.
+    limitations: Applies only to defined activities and installations; industrial controls do not prove small-scale authorization, performance, or economics.
+    authority_tier: primary
+    scale: industrial environmental control
+    access_mode: web
+  - id: eu-pops-regulation-2025
+    title: EU POPs Regulation consolidated 4 August 2025
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02019R1021-20250804
+    publisher: European Parliament and Council of the European Union
+    source_type: BINDING_EU_PERSISTENT_ORGANIC_POLLUTANTS_LAW
+    material_families: [waste, e-waste, plastics, additives, HSE]
+    jurisdiction: European Union
+    license_note: Official EU legal text; retain the consolidated-date reference and verify current annexes.
+    limitations: Applicability, concentration limits, sampling, classification, and dates require qualified review; no actual stream is classified by this source.
+    authority_tier: primary
+    scale: chemical and waste law
+    access_mode: web
+  - id: eu-weee-directive-2012
+    title: EU Waste Electrical and Electronic Equipment Directive
+    url: https://eur-lex.europa.eu/eli/dir/2012/19/oj/eng
+    publisher: European Parliament and Council of the European Union
+    source_type: BINDING_EU_WEEE_LAW
+    material_families: [e-waste, plastics, metals, cables, machinery]
+    jurisdiction: European Union
+    license_note: Official EU legal text; verify national implementation and current guidance.
+    limitations: Applies only to WEEE within scope; actual component inventory, treatment route, and national implementation require qualified review.
+    authority_tier: primary
+    scale: EU product and waste law
+    access_mode: web
+  - id: eu-wt-bat-2018
+    title: EU waste-treatment BAT conclusions alias for governed cable register
+    url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02018D1147-20180817
+    publisher: European Commission
+    source_type: BINDING_EU_BAT_CONCLUSIONS_ALIAS
+    material_families: [waste, metals, plastics, e-waste, machinery, HSE]
+    jurisdiction: European Union
+    license_note: Official EU legal text; retained as a separate source ID for the governed cable register.
+    limitations: Duplicate legal content is intentionally retained for source-register compatibility; applicability depends on installation scope and permit.
+    authority_tier: primary
+    scale: industrial environmental control
+    access_mode: web
+  - id: jrc-weee-plastics-2016
+    title: JRC methods for material efficiency and WEEE polymers
+    url: https://publications.jrc.ec.europa.eu/repository/handle/JRC104065
+    publisher: Joint Research Centre of the European Commission
+    source_type: OFFICIAL_JRC_TECHNICAL_PUBLICATION
+    material_families: [e-waste, plastics, polymers, additives, flame-retardants]
+    jurisdiction: European Union
+    license_note: European Commission publication; retain the repository record and original authorship.
+    limitations: Product-policy research, not a buyer specification or proof that a particular fraction is recyclable; technology and product mix vary.
+    authority_tier: primary
+    scale: technical research and policy
+    access_mode: web
+  - id: jrc-copper-eow-2011
+    title: JRC technical proposals for copper and copper-alloy scrap end-of-waste
+    url: https://publications.jrc.ec.europa.eu/repository/handle/JRC64207
+    publisher: Joint Research Centre of the European Commission
+    source_type: OFFICIAL_JRC_TECHNICAL_STUDY
+    material_families: [metals, copper, cables]
+    jurisdiction: European Union
+    license_note: European Commission publication; subordinate to later binding law where applicable.
+    limitations: Predates Regulation (EU) No 715/2013 and supplies no project-specific yield, cost, or buyer acceptance evidence.
+    authority_tier: primary
+    scale: sector technical history
+    access_mode: web
+  - id: lee-cable-separation-2016
+    title: Mechanical separation of waste jelly-filled communication cables
+    url: https://www.kci.go.kr/kciportal/landing/article.kci?arti_id=ART002119652
+    publisher: Korean Institute of Resources Recycling
+    source_type: PEER_REVIEWED_CABLE_SEPARATION_STUDY
+    material_families: [metals, copper, cables, plastics]
+    jurisdiction: Republic of Korea research context
+    license_note: Peer-reviewed publication; verify reuse rights and cite the original authors.
+    limitations: One cable type and equipment configuration; it does not validate manual productivity, other geometries, local safety, annual scale, or economics.
+    authority_tier: secondary
+    scale: laboratory and pilot research
+    access_mode: web
+  - id: pita-cable-separation-2018
+    title: Separation of copper from electric cable waste by mineral processing
+    url: https://www.mdpi.com/2075-4701/8/11/517
+    publisher: Minerals / MDPI peer-reviewed literature
+    source_type: PEER_REVIEWED_CABLE_SEPARATION_STUDY
+    material_families: [metals, copper, cables, plastics, separation]
+    jurisdiction: Portugal research context
+    license_note: Check the article licence and cite the original authors.
+    limitations: Narrow laboratory batches and selected gravity methods; not evidence for a commercial dry granulator, annual throughput, project recovery, or cost.
+    authority_tier: secondary
+    scale: laboratory research
+    access_mode: web
+  - id: stokkermill-ks-2026
+    title: Stokkermill K-S series wire granulators
+    url: https://www.stokkermill.com/recycling-machines/cables-wires-granulator
+    publisher: Stokkermill Recycling Machinery
+    source_type: MACHINE_MANUFACTURER_COMMERCIAL_TECHNICAL_PAGE
+    material_families: [metals, copper, aluminium, cables, plastics, machinery]
+    jurisdiction: Italian manufacturer and international market
+    license_note: Manufacturer content; retain source URL and treat declared figures as commercial statements.
+    limitations: Feed mix, utilization, actual power draw, recovery, purity, labour, wear, maintenance, and annual throughput are unknown.
+    authority_tier: industry
+    scale: small-scale and industrial
+    access_mode: web
+  - id: eldan-powerkat-b-2026
+    title: REDOMA Powerkat B cable plant technical sheet
+    url: https://eldan-recycling.com/wp-content/uploads/2021/06/Powerkat-B-Cable-Plant.pdf
+    publisher: ELDAN Recycling / REDOMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_SHEET
+    material_families: [metals, copper, aluminium, cables, plastics, machinery]
+    jurisdiction: Danish manufacturer and international market
+    license_note: Manufacturer PDF; retain source URL and verify current model and offer.
+    limitations: Commercial declaration for a specific line and stated cable basis; it does not establish project feed performance, annual utilization, energy, crew, wear, or cost.
+    authority_tier: industry
+    scale: industrial
+    access_mode: pdf
+
+  # Additional reputable research, industry, regulatory, and machinery references
+  - id: recyclass-design-guidelines
+    title: RecyClass Design for Recycling Guidelines
+    url: https://recyclass.eu/protocols-guidelines/design-for-recycling-guidelines/
+    publisher: RecyClass / Plastics Recyclers Europe
+    source_type: INDUSTRY_DESIGN_FOR_RECYCLING_GUIDANCE
+    material_families: [plastics, packaging, pe, pp, pet, pvc]
+    jurisdiction: European Union and packaging value chain
+    license_note: Industry technical guidance; retain the source URL and verify the current revision and application scope.
+    limitations: Packaging design guidance is not a feedstock acceptance specification, plant permit, or guarantee for a contaminated waste lot.
+    authority_tier: industry
+    scale: packaging design and recycling chain
+    access_mode: web
+  - id: recyclass-methodology
+    title: RecyClass methodology for recyclability assessment
+    url: https://recyclass.eu/our-approach/recyclass-methodology/
+    publisher: RecyClass / Plastics Recyclers Europe
+    source_type: INDUSTRY_RECYCLABILITY_ASSESSMENT_METHOD
+    material_families: [plastics, packaging, pe, pp, pet, pvc, additives]
+    jurisdiction: European Union and packaging value chain
+    license_note: Industry methodology; retain the source URL and current revision.
+    limitations: Assessment methodology is not a certification for an unknown object or a process design basis for a recycling plant.
+    authority_tier: industry
+    scale: laboratory protocol and value chain
+    access_mode: web
+  - id: oecd-recycled-content-requirements
+    title: OECD plastics recycled-content requirements report
+    url: https://www.oecd.org/content/dam/oecd/en/publications/reports/2024/05/plastics-recycled-content-requirements_c6de64b7/b311ee60-en.pdf
+    publisher: Organisation for Economic Co-operation and Development
+    source_type: INTERGOVERNMENTAL_PLASTICS_POLICY_RESEARCH
+    material_families: [plastics, packaging, policy, recycled-content]
+    jurisdiction: International and OECD policy context
+    license_note: OECD publication; retain attribution and follow the publication licence.
+    limitations: Policy and market analysis does not establish local material composition, route feasibility, permit status, or product compliance.
+    authority_tier: primary
+    scale: policy and market research
+    access_mode: pdf
+  - id: oecd-global-plastics-outlook
+    title: OECD Global Plastics Outlook
+    url: https://www.oecd.org/content/dam/oecd/en/publications/reports/2022/02/global-plastics-outlook_a653d1c9/de747aef-en.pdf
+    publisher: Organisation for Economic Co-operation and Development
+    source_type: INTERGOVERNMENTAL_PLASTICS_SYSTEMS_RESEARCH
+    material_families: [plastics, packaging, policy, circular-economy]
+    jurisdiction: International and OECD policy context
+    license_note: OECD publication; retain attribution and follow the publication licence.
+    limitations: Global and regional scenarios do not substitute for representative sampling, plant data, current local law, or buyer specifications.
+    authority_tier: primary
+    scale: global systems research
+    access_mode: pdf
+  - id: pre-european-plastics-recycling-2022
+    title: Plastics recycling industry in Europe 2022 data
+    url: https://www.plasticsrecyclers.eu/wp-content/uploads/2024/01/Plastics-Recycling-Industry-in-Europe-2022-data.pdf
+    publisher: Plastics Recyclers Europe
+    source_type: INDUSTRY_RECYCLING_STATISTICS
+    material_families: [plastics, packaging, pe, pp, pet, recycling-industry]
+    jurisdiction: Europe
+    license_note: Industry association publication; retain attribution and verify the reporting year before use.
+    limitations: Industry aggregates are context only and do not establish a specific facility’s yield, quality, price, authorization, or economics.
+    authority_tier: industry
+    scale: European recycling industry
+    access_mode: pdf
+  - id: eu-packaging-packaging-waste-regulation-2025
+    title: EU Packaging and Packaging Waste Regulation
+    url: https://eur-lex.europa.eu/eli/reg/2025/40/oj
+    publisher: European Parliament and Council of the European Union
+    source_type: BINDING_EU_PACKAGING_REGULATION
+    material_families: [plastics, packaging, recycled-content, waste]
+    jurisdiction: European Union
+    license_note: Official EU legal text; verify application dates, delegated acts, and current national implementation.
+    limitations: Legal framework only; it does not classify a specific waste stream or prove recyclability, yield, or product acceptance.
+    authority_tier: primary
+    scale: EU product and waste law
+    access_mode: web
+  - id: eu-ecodesign-sustainable-products-regulation-2024
+    title: EU Ecodesign for Sustainable Products Regulation
+    url: https://eur-lex.europa.eu/eli/reg/2024/1781/oj
+    publisher: European Parliament and Council of the European Union
+    source_type: BINDING_EU_PRODUCT_CIRCULARITY_REGULATION
+    material_families: [plastics, packaging, textiles, metals, product-design]
+    jurisdiction: European Union
+    license_note: Official EU legal text; verify product-specific delegated acts and application dates.
+    limitations: Product-policy framework does not establish a recycling process, feedstock route, plant authorization, or buyer acceptance.
+    authority_tier: primary
+    scale: EU product policy and design
+    access_mode: web
+  - id: starlinger-post-industrial-recycling
+    title: Starlinger post-industrial plastics recycling technology
+    url: https://www.starlinger.com/en/recycling-technology/post-industrial
+    publisher: Starlinger recycling technology
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_PAGE
+    material_families: [plastics, pe, pp, films, regrind, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer content; retain source URL and verify the current model, quotation, and test conditions.
+    limitations: Vendor application descriptions do not establish a route for mixed or contaminated feedstock, throughput, safety compliance, or economics.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+  - id: erema-regrindpro-technical-data-current
+    title: EREMA RegrindPro technical data and application limits
+    url: https://www.erema.com/en/regrind_pro_technical_data/
+    fetch_urls: ["https://www.erema.com/en/regrind_pro_technical_data/?output=1"]
+    publisher: EREMA
+    source_type: MACHINE_MANUFACTURER_TECHNICAL_DATA
+    material_families: [plastics, ldpe, hdpe, pp, abs, ps, regrind, machinery]
+    jurisdiction: International vendor reference
+    license_note: Manufacturer technical page; retain source URL and verify the current model and test basis.
+    limitations: Published throughput depends on material condition and is not a project guarantee; page scope is primarily clean mono-polymer regrind.
+    authority_tier: industry
+    scale: industrial
+    access_mode: web
+
+  # Academic Library: Airtable review - high-value feedstock, process, quality, HSE, and route references
+  - id: king-county-mrf-assessment-2022
+    title: King County 2022 Material Recovery Facility Assessment
+    url: https://your.kingcounty.gov/dnrp/library/solid-waste/Solid-waste-planning-monitoring/Solid-waste-monitoring/MRF-assessment-2022.pdf
+    publisher: King County Solid Waste Division
+    source_type: MRF_MATERIAL_CHARACTERIZATION_REPORT
+    material_families: [plastics, pet, hdpe, pp, metals, non-plastics, mixed-waste]
+    jurisdiction: King County, Washington, United States
+    license_note: Public-sector report; retain attribution and verify the reporting scope before applying findings elsewhere.
+    limitations: Regional curbside and MRF data are not a representative sample of a Bulgarian or industrial feedstock; they do not establish project yield, composition, or economics.
+    authority_tier: primary
+    scale: regional MRF study
+    access_mode: pdf
+  - id: eu-plastics-recycling-terminology-2023
+    title: Clarifying European terminology in plastics recycling
+    url: https://www.sciencedirect.com/science/article/pii/S2452223623001190?via%3Dihub
+    publisher: Current Opinion in Green and Sustainable Chemistry / Elsevier
+    source_type: PEER_REVIEWED_RECYCLING_TERMINOLOGY_REVIEW
+    material_families: [plastics, pe, pp, pet, mechanical-recycling, chemical-recycling]
+    jurisdiction: European Union and international literature
+    license_note: Peer-reviewed article landing page; retrieve only lawfully accessible text or metadata and retain the citation.
+    limitations: Terminology and taxonomy review; it does not prove route feasibility, plant performance, permit status, or product acceptance.
+    authority_tier: secondary
+    scale: research and policy terminology
+    access_mode: web
+  - id: hdpe-recovery-pathways-2024
+    title: Recovery pathway assessment of recycled HDPE for circular economy
+    url: https://www.sciencedirect.com/science/article/pii/S2212827124000763
+    publisher: Procedia CIRP / Elsevier
+    source_type: PEER_REVIEWED_HDPE_LCA_TEA_STUDY
+    material_families: [plastics, hdpe, mechanical-recycling, lca, techno-economics]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Case-specific recycled HDPE pathway comparison; it does not establish the quality, cost, or market for an unknown feedstock.
+    authority_tier: secondary
+    scale: product pathway assessment
+    access_mode: web
+  - id: hdpe-voc-contamination-chain-2024
+    title: Volatile organic contaminants in HDPE milk bottles across mechanical recycling
+    url: https://www.sciencedirect.com/science/article/pii/S0959652624020195?via%3Dihub
+    publisher: Journal of Cleaner Production / Elsevier
+    source_type: PEER_REVIEWED_RECYCLING_CONTAMINATION_STUDY
+    material_families: [plastics, hdpe, contaminants, vocs, hse, mechanical-recycling]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: HDPE bottle case study; contaminant behavior depends on collection, washing, residence time, additives, and process conditions.
+    authority_tier: secondary
+    scale: laboratory and value-chain study
+    access_mode: web
+  - id: plastic-pyrolysis-lca-2023
+    title: Life-cycle analysis of post-use plastic to plastic via pyrolysis
+    url: https://www.sciencedirect.com/science/article/pii/S0959652623030251?via%3Dihub
+    publisher: Journal of Cleaner Production / Elsevier
+    source_type: PEER_REVIEWED_PYROLYSIS_LCA
+    material_families: [plastics, pe, hdpe, pyrolysis, chemical-recycling, lca]
+    jurisdiction: Research and process-model context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Modelled pyrolysis pathways depend on feed quality, allocation, energy, upgrading, and plant assumptions; not a process guarantee.
+    authority_tier: secondary
+    scale: process and life-cycle modelling
+    access_mode: web
+  - id: recycled-content-quantification-review-2025
+    title: "Quantification of recycled content in plastics: a review"
+    url: https://www.sciencedirect.com/science/article/pii/S0921344925003040?via%3Dihub
+    publisher: Resources, Conservation and Recycling / Elsevier
+    source_type: PEER_REVIEWED_RECYCLED_CONTENT_METHODS_REVIEW
+    material_families: [plastics, pet, pe, pp, recycled-content, polymer-characterization, regulation]
+    jurisdiction: International methods and policy context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Review of methods and policy; measurement uncertainty and chain-of-custody requirements remain application-specific.
+    authority_tier: secondary
+    scale: analytical methods and policy
+    access_mode: web
+  - id: hdpe-recyclate-characterization-2024
+    title: Data-driven analysis of HDPE post-consumer recyclate for bottle packaging
+    url: https://www.sciencedirect.com/science/article/pii/S0921344924001332?via%3Dihub
+    publisher: Resources, Conservation and Recycling / Elsevier
+    source_type: PEER_REVIEWED_RECYCLED_HDPE_CHARACTERIZATION
+    material_families: [plastics, hdpe, polymer-characterization, ftir, dsc, tga, rheology]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Characterization protocol and selected PCR samples do not establish compliance for a new lot or product category.
+    authority_tier: secondary
+    scale: laboratory characterization
+    access_mode: web
+  - id: pp-yogurt-cup-closed-loop-2024
+    title: Closed-loop recycling of polypropylene yogurt cups
+    url: https://www.sciencedirect.com/science/article/pii/S0921344924001320?via%3Dihub
+    publisher: Resources, Conservation and Recycling / Elsevier
+    source_type: PEER_REVIEWED_CLOSED_LOOP_PP_CASE_STUDY
+    material_families: [plastics, pp, mechanical-recycling, food-packaging, circular-economy]
+    jurisdiction: Austria case study
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Separately collected yogurt cups are materially different from mixed, dirty, or pesticide-exposed feedstock.
+    authority_tier: secondary
+    scale: closed-loop case study
+    access_mode: web
+  - id: hdpe-repeated-recycling-2023
+    title: Simulating repeated recycling of HDPE milk bottles
+    url: https://www.sciencedirect.com/science/article/pii/S0921344922005663
+    publisher: Resources, Conservation and Recycling / Elsevier
+    source_type: PEER_REVIEWED_REPEATED_RECYCLING_STUDY
+    material_families: [plastics, hdpe, mechanical-recycling, degradation, food-packaging]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Controlled repeated extrusion does not represent mixed polymer contamination, unknown additives, or a small low-tech line.
+    authority_tier: secondary
+    scale: laboratory ageing and processing study
+    access_mode: web
+  - id: rhdpe-toys-safety-2024
+    title: Designing safe recycled HDPE for child toys
+    url: https://www.sciencedirect.com/science/article/pii/S0304389424020612?via%3Dihub
+    publisher: Journal of Hazardous Materials / Elsevier
+    source_type: PEER_REVIEWED_RECYCLED_PLASTICS_SAFETY_STUDY
+    material_families: [plastics, hdpe, contaminants, nias, hse, product-safety]
+    jurisdiction: Research and product-safety context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Toy and migration scenario; it is not a generic safety clearance for recycled polymers or food-contact applications.
+    authority_tier: secondary
+    scale: laboratory product-safety study
+    access_mode: web
+  - id: flexible-film-inks-recycling-2024
+    title: Mechanical recycling of printed flexible plastic packaging
+    url: https://www.sciencedirect.com/science/article/pii/S0304389424009543?via%3Dihub
+    publisher: Journal of Hazardous Materials / Elsevier
+    source_type: PEER_REVIEWED_PRINTED_FILM_CONTAMINATION_STUDY
+    material_families: [plastics, pe, films, inks, pigments, vocs, hse]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Printed flexible packaging case study; contamination, ink chemistry, filtration, degassing, and end-use requirements vary by line.
+    authority_tier: secondary
+    scale: laboratory mechanical-recycling study
+    access_mode: web
+  - id: recyqmeter-recycled-quality-2025
+    title: RecyQMeter application-specific quality of recycled plastics
+    url: https://www.sciencedirect.com/science/article/pii/S0956053X25002570?via%3Dihub
+    publisher: Waste Management / Elsevier
+    source_type: PEER_REVIEWED_RECYCLED_PLASTICS_QUALITY_METRIC
+    material_families: [plastics, pet, pp, pe, hdpe, recycled-content, technical-quality]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: A quality scoring concept is not a buyer specification, certification, or guarantee for a particular product route.
+    authority_tier: secondary
+    scale: application-specific quality assessment
+    access_mode: web
+  - id: recycling-quality-alignment-2025
+    title: Perceptions and alignment on quality along the circular plastics chain
+    url: https://www.sciencedirect.com/science/article/pii/S0956053X25001631?via%3Dihub
+    publisher: Waste Management / Elsevier
+    source_type: PEER_REVIEWED_RECYCLING_VALUE_CHAIN_QUALITY_STUDY
+    material_families: [plastics, pet, pp, pe, films, mechanical-recycling, chemical-recycling]
+    jurisdiction: International value-chain research context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Stakeholder perceptions do not establish a numeric specification or commercial acceptance for a given buyer.
+    authority_tier: secondary
+    scale: value-chain study
+    access_mode: web
+  - id: flexible-recycling-process-mfa-2022
+    title: Material flow analysis and recycling performance of improved flexible-plastics recycling
+    url: https://www.sciencedirect.com/science/article/pii/S0956053X22004470?via%3Dihub
+    publisher: Waste Management / Elsevier
+    source_type: PEER_REVIEWED_FLEXIBLE_PLASTICS_MFA_TEA_STUDY
+    material_families: [plastics, pe, films, mechanical-recycling, yield, techno-economics]
+    jurisdiction: Research and CEFLEX context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Process and material-flow results depend on the defined flexible stream, wash, filtration, and product targets.
+    authority_tier: secondary
+    scale: process and material-flow study
+    access_mode: web
+  - id: flexible-recycling-quality-economics-2022
+    title: Quality evaluation and economic assessment of improved flexible-plastics recycling
+    url: https://www.sciencedirect.com/science/article/pii/S0956053X22004275?via%3Dihub
+    publisher: Waste Management / Elsevier
+    source_type: PEER_REVIEWED_FLEXIBLE_PLASTICS_QUALITY_TEA_STUDY
+    material_families: [plastics, pe, films, mechanical-recycling, washing, filtration, degassing, techno-economics]
+    jurisdiction: Research and CEFLEX context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Hot and cold washing, filtration, degassing, and deodorization results depend on feedstock and equipment configuration.
+    authority_tier: secondary
+    scale: process and quality study
+    access_mode: web
+  - id: flexible-single-stream-feasibility-2023
+    title: Economic and environmental feasibility of recycling flexible packaging from single-stream collection
+    url: https://www.sciencedirect.com/science/article/abs/pii/S0921344923000459?via%3Dihub
+    publisher: Resources, Conservation and Recycling / Elsevier
+    source_type: PEER_REVIEWED_FLEXIBLE_PACKAGING_TEA_LCA
+    material_families: [plastics, pe, films, collection, mechanical-recycling, lca, techno-economics]
+    jurisdiction: Research and single-stream collection context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Economic feasibility is highly sensitive to collection, contamination, yield, energy, and end-market assumptions.
+    authority_tier: secondary
+    scale: system and process assessment
+    access_mode: web
+  - id: advanced-post-sorting-tradeoffs-2026
+    title: Analysis of trade-offs of post-sorting plastic packaging
+    url: https://www.nature.com/articles/s41586-026-10606-4
+    publisher: Nature / Springer Nature
+    source_type: PEER_REVIEWED_POST_SORTING_CONTAMINATION_STUDY
+    material_families: [plastics, pp, pe, hdpe, films, contaminants, metals, vocs, mechanical-recycling]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Post-sorting trade-offs are system-specific; findings do not establish a facility design or substitute for representative sampling.
+    authority_tier: secondary
+    scale: material-flow and contamination study
+    access_mode: web
+  - id: plastics-additives-complexity-2024
+    title: Untangling the chemical complexity of plastics to improve life-cycle outcomes
+    url: https://www.nature.com/articles/s41578-024-00705-x
+    publisher: Nature Reviews Materials / Springer Nature
+    source_type: PEER_REVIEWED_PLASTICS_ADDITIVES_PERSPECTIVE
+    material_families: [plastics, pe, pp, pet, additives, chemicals, hse]
+    jurisdiction: International research context
+    license_note: Peer-reviewed perspective landing page; retain citation and use only lawfully accessible content.
+    limitations: Perspective and systems guidance; it does not identify the additives in an unknown lot or replace chemical analysis and HSE review.
+    authority_tier: secondary
+    scale: materials and life-cycle perspective
+    access_mode: web
+  - id: advanced-plastics-recycling-analysis-2024
+    title: Analyses of circular solutions for advanced plastics waste recycling
+    url: https://www.nature.com/articles/s44286-024-00121-6
+    publisher: Nature Chemical Engineering / Springer Nature
+    source_type: PEER_REVIEWED_ADVANCED_RECYCLING_ANALYSIS
+    material_families: [plastics, pet, pe, pp, chemical-recycling, mechanical-recycling, lca]
+    jurisdiction: International research and industrial pilot context
+    license_note: Peer-reviewed perspective landing page; retain citation and use only lawfully accessible content.
+    limitations: Analysis framework and pilot lessons do not establish a route, permit, or economic case for a specific facility.
+    authority_tier: secondary
+    scale: process and industrial pilot analysis
+    access_mode: web
+  - id: polyethylene-recycling-degradation-quality-2024
+    title: Defining quality by quantifying degradation in mechanical recycling of polyethylene
+    url: https://www.nature.com/articles/s41467-024-52856-8
+    publisher: Nature Communications / Springer Nature
+    source_type: PEER_REVIEWED_POLYETHYLENE_DEGRADATION_STUDY
+    material_families: [plastics, pe, hdpe, degradation, rheology, mechanical-recycling]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Controlled polyethylene degradation and rheology do not establish performance for mixed polymers, PVC, metals, or pesticide residues.
+    authority_tier: secondary
+    scale: laboratory materials study
+    access_mode: web
+  - id: recycled-plastics-safety-assessment-2023
+    title: Safety assessment of recycled plastics from post-consumer waste
+    url: https://www.mdpi.com/2313-4321/8/6/87
+    publisher: Recycling / MDPI
+    source_type: PEER_REVIEWED_RECYCLED_PLASTICS_HSE_STUDY
+    material_families: [plastics, pe, pp, pet, contaminants, nias, hse, product-safety]
+    jurisdiction: Research and food-contact safety context
+    license_note: Open-access peer-reviewed article; retain citation and check the article licence before reuse.
+    limitations: Study results do not provide a blanket safety clearance; sample population, process, and end-use must match the question.
+    authority_tier: secondary
+    scale: laboratory safety assessment
+    access_mode: web
+  - id: pp-mechanical-solvent-recycling-2023
+    title: Complementary roles for mechanical and solvent-based recycling in circular polypropylene
+    url: https://www.pnas.org/doi/suppl/10.1073/pnas.2306902120
+    publisher: Proceedings of the National Academy of Sciences
+    source_type: PEER_REVIEWED_PP_ROUTE_COMPARISON_LCA
+    material_families: [plastics, pp, mechanical-recycling, dissolution, lca]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article and supplement landing page; retain citation and use only lawfully accessible content.
+    limitations: Route comparison is not a process design, feedstock acceptance specification, or local economic case.
+    authority_tier: secondary
+    scale: route and life-cycle comparison
+    access_mode: web
+  - id: polyolefin-waste-light-olefins-2024
+    title: Polyolefin waste to light olefins with ethylene and base-metal catalysts
+    url: https://www.science.org/doi/10.1126/science.adq7316
+    publisher: Science / AAAS
+    source_type: PEER_REVIEWED_POLYOLEFIN_CHEMICAL_RECYCLING
+    material_families: [plastics, pe, pp, hdpe, chemical-recycling, catalysis]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Laboratory catalyst results are not an industrial process guarantee and do not address mixed contaminants, permits, or economics.
+    authority_tier: secondary
+    scale: laboratory chemical-recycling research
+    access_mode: web
+  - id: mixed-polyester-recycling-lca-2024
+    title: Mixed polyester recycling can enable a circular plastic economy
+    url: https://www.cell.com/one-earth/fulltext/S2590-3322(24)00583-9?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS2590332224005839%3Fshowall%3Dtrue
+    publisher: One Earth / Cell Press
+    source_type: PEER_REVIEWED_MIXED_POLYESTER_SOLVOLYSIS_LCA
+    material_families: [plastics, pet, pla, pbat, depolymerization, solvolysis, lca]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Mixed-polyester solvolysis and separation assumptions are not transferable to a mixed polyolefin or pesticide-contaminated stream.
+    authority_tier: secondary
+    scale: process and life-cycle modelling
+    access_mode: web
+  - id: pet-degradation-recycling-review-2024
+    title: Molecular and material property variations during PET degradation and mechanical recycling
+    url: https://pubs.rsc.org/en/content/articlelanding/2024/su/d4su00485j
+    publisher: RSC Sustainability / Royal Society of Chemistry
+    source_type: PEER_REVIEWED_PET_DEGRADATION_REVIEW
+    material_families: [plastics, pet, degradation, mechanical-recycling, chemical-recycling]
+    jurisdiction: International research context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: PET-specific degradation review; it does not answer the route or quality question for PE/PP/PVC mixtures.
+    authority_tier: secondary
+    scale: materials and degradation review
+    access_mode: web
+  - id: nir-polyolefin-differentiation-2026
+    title: Predicting polyolefin properties from near-infrared spectra with machine learning
+    url: https://pubs.acs.org/doi/10.1021/acspolymersau.5c00131
+    publisher: ACS Polymers Au / American Chemical Society
+    source_type: PEER_REVIEWED_NIR_SORTING_ML_STUDY
+    material_families: [plastics, pe, pp, hdpe, films, nir, sorting, machine-learning]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Model performance depends on spectra, calibration, sample presentation, and validation; it is not a drop-in sorter specification.
+    authority_tier: secondary
+    scale: laboratory and computational sorting research
+    access_mode: web
+  - id: nir-polyolefin-bulk-properties-2023
+    title: Correlating near-infrared spectra to bulk properties in polyolefins
+    url: https://pubs.acs.org/doi/10.1021/acs.macromol.3c02290?ref=PDF
+    publisher: Macromolecules / American Chemical Society
+    source_type: PEER_REVIEWED_NIR_POLYOLEFIN_CHARACTERIZATION
+    material_families: [plastics, pe, pp, hdpe, nir, polymer-characterization, sorting]
+    jurisdiction: Research context; verify application geography
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Correlation models are not a substitute for representative sampling or confirmatory laboratory analysis.
+    authority_tier: secondary
+    scale: laboratory and computational characterization
+    access_mode: web
+  - id: plastic-recycling-cascade-2024
+    title: "Plastic recycling stripped naked: circular product to circular industry with recycling cascade"
+    url: https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cssc.202301320
+    publisher: ChemSusChem / Chemistry Europe
+    source_type: PEER_REVIEWED_PLASTICS_RECYCLING_CASCADE_PERSPECTIVE
+    material_families: [plastics, pe, pet, pp, mechanical-recycling, dissolution, depolymerization, pyrolysis, gasification]
+    jurisdiction: International research and industrial context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Perspective on route cascades; it does not establish plant economics, HSE, or legal acceptance for a specific stream.
+    authority_tier: secondary
+    scale: route strategy and life-cycle perspective
+    access_mode: web
+  - id: flexible-packaging-waste-flows-2025
+    title: Addressing favorable and challenging flexible plastic packaging waste flows
+    url: https://aiche.onlinelibrary.wiley.com/doi/epdf/10.1002/amp2.70014
+    publisher: Journal of Advanced Manufacturing and Processing / Wiley
+    source_type: PEER_REVIEWED_FLEXIBLE_PACKAGING_MFA
+    material_families: [plastics, pe, films, packaging, collection, mechanical-recycling, lca]
+    jurisdiction: United States and comparable-economy material-flow context
+    license_note: Peer-reviewed article PDF; retain citation and respect the article licence.
+    limitations: US and comparable-economy flows are not a local feedstock forecast; the reported recyclable fraction is scenario-dependent.
+    authority_tier: secondary
+    scale: national and comparative material-flow analysis
+    access_mode: pdf
+  - id: microplastics-research-review-2024
+    title: "Twenty years of microplastic pollution research: what have we learned?"
+    url: https://www.science.org/doi/10.1126/science.adl2746
+    publisher: Science / AAAS
+    source_type: PEER_REVIEWED_MICROPLASTICS_REVIEW
+    material_families: [plastics, microplastics, hse, environmental-risk]
+    jurisdiction: International research context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Environmental and measurement review; it is not a process HSE assessment or a proof that a particular recycling line creates a specified exposure.
+    authority_tier: secondary
+    scale: scientific review
+    access_mode: web
+  - id: microplastics-food-regulatory-science-2024
+    title: Regulatory science perspective on microplastics and nanoplastics in human food
+    url: https://pubs.acs.org/doi/10.1021/acs.analchem.3c05408
+    publisher: Analytical Chemistry / American Chemical Society
+    source_type: PEER_REVIEWED_MICROPLASTICS_FOOD_SAFETY_PERSPECTIVE
+    material_families: [plastics, microplastics, nanoplastics, food-contact, hse]
+    jurisdiction: United States regulatory-science context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Regulatory-science perspective and method-development context; not a product authorization or plant HSE clearance.
+    authority_tier: secondary
+    scale: food-safety measurement and regulatory science
+    access_mode: web
+  - id: global-plastic-waste-pathways-2024
+    title: Pathways to reduce global plastic waste mismanagement and greenhouse gas emissions by 2050
+    url: https://www.science.org/doi/10.1126/science.adr3837
+    publisher: Science / AAAS
+    source_type: PEER_REVIEWED_PLASTICS_SYSTEMS_MODEL
+    material_families: [plastics, pet, pe, hdpe, pp, policy, lca]
+    jurisdiction: Global model context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Global scenario model; it does not determine local collection, plant route, permit, yield, or economics.
+    authority_tier: secondary
+    scale: global systems modelling
+    access_mode: web
+  - id: plastic-gasification-tea-lca-2023
+    title: "Techno-economic analysis and life-cycle assessment of mixed-plastic gasification"
+    url: https://pubs.rsc.org/en/content/articlelanding/2023/gc/d3gc00679d
+    publisher: Green Chemistry / Royal Society of Chemistry
+    source_type: PEER_REVIEWED_MIXED_PLASTICS_GASIFICATION_TEA_LCA
+    material_families: [plastics, pp, pe, hdpe, gasification, chemical-recycling, lca, techno-economics]
+    jurisdiction: Research and process-model context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Modelled gasification economics are highly sensitive to feed price, scale, utilities, product price, and allocation assumptions.
+    authority_tier: secondary
+    scale: process and techno-economic modelling
+    access_mode: web
+  - id: hydrothermal-waste-plastics-lca-2023
+    title: "Hydrothermal treatment of waste plastics: an environmental impact study"
+    url: https://link.springer.com/article/10.1007/s10924-023-02792-3
+    publisher: Journal of Polymers and the Environment / Springer
+    source_type: PEER_REVIEWED_HYDROTHERMAL_PLASTICS_LCA
+    material_families: [plastics, pp, pe, hdpe, hydrothermal, chemical-recycling, lca]
+    jurisdiction: Research and process-model context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: Environmental comparison depends on allocation, energy, product displacement, and plant assumptions; it is not an equipment or permit basis.
+    authority_tier: secondary
+    scale: process and life-cycle modelling
+    access_mode: web
+  - id: plastic-to-x-pathways-pet-2023
+    title: Comparing parallel plastic-to-X pathways for PET bottles
+    url: https://onlinelibrary.wiley.com/doi/full/10.1002/adsu.202300068
+    publisher: Advanced Sustainable Systems / Wiley
+    source_type: PEER_REVIEWED_PET_ROUTE_LCA_TEA
+    material_families: [plastics, pet, mechanical-recycling, depolymerization, chemical-recycling, lca, techno-economics]
+    jurisdiction: Research and process-model context
+    license_note: Peer-reviewed article landing page; retain citation and use only lawfully accessible content.
+    limitations: PET bottle route comparison is not transferable to mixed polyolefin film or contaminated bales without new data.
+    authority_tier: secondary
+    scale: route comparison and modelling
     access_mode: web

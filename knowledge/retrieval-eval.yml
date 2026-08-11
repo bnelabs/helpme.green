@@ -1,0 +1,41 @@
+schemaVersion: "1"
+purpose: >-
+  Small human-maintained retrieval regression set. Expected source IDs are relevance judgments for
+  retrieval evaluation, not a complete truth set and not permission to promote claims.
+queries:
+  - id: plastics-mixed-polymer-contamination
+    query: mixed plastics polymer identity contamination additives route compatibility
+    expected_source_ids: [pmc-polymer-recycling-review, recyclass-design-guidelines, echa-plastic-additives-mapping]
+  - id: ldpe-film-regrind-quality
+    query: LDPE film regrind moisture contamination throughput recycling
+    expected_source_ids: [erema-regrindpro-technical-data-current, erema-regrindpro-technical-sheet, hse-plastics-safety-basics]
+  - id: copper-cable-end-of-waste
+    query: copper cable scrap end of waste quality criteria
+    expected_source_ids: [eu-copper-eow-715-2013, jrc-copper-eow-2011, eu-wfd-2025]
+  - id: waste-shipment-bulgaria
+    query: Bulgaria EU waste shipment electronic system transition
+    expected_source_ids: [eu-wsr-2024-1157, bg-moew-wsr-notice-2026]
+  - id: recycled-content-policy
+    query: plastics recycled content requirements policy Europe
+    expected_source_ids: [oecd-recycled-content-requirements, eu-packaging-packaging-waste-regulation-2025]
+  - id: packaging-recyclability-method
+    query: packaging design for recycling recyclability assessment methodology
+    expected_source_ids: [recyclass-design-guidelines, recyclass-methodology]
+  - id: weee-polymer-additives
+    query: WEEE plastics flame retardants additives POPs sorting
+    expected_source_ids: [jrc-weee-plastics-2016, eu-pops-regulation-2025, echa-plastic-additives-mapping]
+  - id: cable-granulator-capability
+    query: cable granulator manufacturer input capacity copper separation
+    expected_source_ids: [stokkermill-ks-2026, eldan-powerkat-b-2026]
+  - id: plastics-machinery-regrind
+    query: post industrial plastics recycling regrind machinery
+    expected_source_ids: [starlinger-post-industrial-recycling, erema-regrindpro-technical-data-current]
+  - id: chemical-safety-sheets
+    query: safety data sheets chemical workplace risk assessment plastics recycling
+    expected_source_ids: [echa-safety-data-sheets, hse-plastics-safety-basics]
+  - id: small-scale-plastics-machines
+    query: small scale low tech plastics recycling machines shredder extruder
+    expected_source_ids: [precious-plastic-machines, practical-action-plastics-recycling]
+  - id: waste-treatment-controls
+    query: waste treatment BAT acceptance inspection output residue controls
+    expected_source_ids: [eu-waste-treatment-bat-2018, eu-wt-bat-2018]
