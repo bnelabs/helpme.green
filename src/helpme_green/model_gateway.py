@@ -118,10 +118,6 @@ class ModelRouter:
         timeout_seconds = self._timeout_seconds(profile)
         profile.pop("timeout_seconds", None)
         profile_max_tokens = profile.pop("max_tokens", None)
-        if max_tokens is None:
-            max_tokens = profile_max_tokens if profile_max_tokens is not None else 1200
-        if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens <= 0:
-            raise ProviderUnavailable("max_tokens must be a positive integer.")
         payload = {
             "model": selection.model,
             "messages": [
@@ -129,9 +125,17 @@ class ModelRouter:
                 *messages,
             ],
             "temperature": 0,
-            "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
         }
+        requested_max_tokens = max_tokens if max_tokens is not None else profile_max_tokens
+        if requested_max_tokens is not None:
+            if (
+                isinstance(requested_max_tokens, bool)
+                or not isinstance(requested_max_tokens, int)
+                or requested_max_tokens <= 0
+            ):
+                raise ProviderUnavailable("max_tokens must be a positive integer.")
+            payload["max_tokens"] = requested_max_tokens
         payload.update(profile)
         headers = {
             "Content-Type": "application/json",

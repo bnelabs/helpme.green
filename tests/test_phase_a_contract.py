@@ -403,6 +403,7 @@ def test_model_profiles_are_selected_by_model_identity(monkeypatch) -> None:
     assert profiled_payload["chat_template_kwargs"] == {"reasoning_strength": "xhigh"}
     assert captured_timeouts == [240, 30]
     assert default_payload["temperature"] == 0
+    assert "max_tokens" not in default_payload
     assert "top_p" not in default_payload
     assert "chat_template_kwargs" not in default_payload
 
