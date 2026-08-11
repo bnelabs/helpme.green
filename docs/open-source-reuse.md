@@ -101,7 +101,8 @@ When content from a registered project is cited in an evaluation output, carry:
 - External projects enter as **sources** (source-register entries) before retrieval can use them.
 - Their content supports route and capability context (machines, processes, business models), not a
   guaranteed composition, safety, permit, or economic outcome for a specific stream.
-- Sourcer Agent must record: exact source URL, license, verification date, applicability, limitations — mirroring this register's format.
+- The research workflow must record: exact source URL, licence, verification date, applicability, and
+  limitations, mirroring this register's format.
 
 ---
 
