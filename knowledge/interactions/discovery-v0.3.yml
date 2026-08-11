@@ -1,0 +1,268 @@
+schema_version: "0.3"
+kind: interactions
+cards:
+  - id: fines-moisture-handling
+    version: 1
+    title: Metal-bearing fines with reported moisture
+    description: >-
+      Combined-condition rule that expands characterisation, compatible handling, storage,
+      emissions, and destination review when a fines stream is also reported as wet or moist.
+      It does not predict separation performance.
+    sources:
+      - &eu_bat
+        id: eu-waste-treatment-bat-2018
+        source_type: REGULATION
+        publisher: European Commission
+        title: Commission Implementing Decision (EU) 2018/1147 on BAT conclusions for waste treatment
+        url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02018D1147-20180817
+        published_on: "2018-08-17"
+        accessed_on: "2026-07-14"
+        geography: European Union
+        jurisdiction: European Union
+        location_reference: Annex, BAT 2 and sections 2.1 to 2.3
+        limitations: >-
+          Applies only to activities and installations within its legal and technical scope.
+          Site-specific permit conditions and applicability require qualified review.
+        confidence: HIGH
+    claims:
+      - key: combined-scope-expands
+        claim_type: INTERACTION
+        statement: >-
+          Where a heterogeneous fines input is also reported as wet or moist, risk-based
+          pre-acceptance and handling review must address both the fine physical form and the
+          moisture or free-liquid condition before a receiving route is treated as suitable.
+        evidence_state: VERIFIED
+        confidence: HIGH
+        applicability: Wet or moist heterogeneous fines within applicable waste-treatment scope.
+        limitations: Does not quantify flow, agglomeration, separation, drying, emissions, or residue effects.
+        conflicting_evidence: Reported moisture may differ from representative measured condition.
+        sources:
+          - source_id: eu-waste-treatment-bat-2018
+            source_location: Annex, BAT 2(a), BAT 2(b), and BAT 5
+            feed_composition: Heterogeneous fine or powdery waste
+            feed_condition: Reported wet, moist, or free-liquid condition
+            physical_form: Fine or powdery fraction
+            particle_size: Must be established for the actual stream
+            contamination: Moisture or free liquid is a route-changing condition
+            pretreatment: None assumed
+            equipment_configuration: No treatment equipment is specified
+            scale_and_throughput: Within applicable scope; no transfer is made
+            measurement_method: Risk-based characterisation, acceptance, handling, and transfer review
+            output_definition: Qualified receiving route or controlled hold
+            applicability: Supports expanded evidence and handling gates.
+            limitations: No processing performance or operating instruction is provided.
+            conflicting_evidence: None recorded for the limited management requirement.
+    antecedent_conditions:
+      - key: suspected_material
+        operator: CONTAINS
+        value: fines
+      - key: contamination
+        operator: CONTAINS
+        value: moisture
+    effects:
+      - type: CHARACTERISATION_SCOPE
+        direction: EXPANDS
+      - type: HANDLING_AND_STORAGE_REVIEW
+        direction: EXPANDS
+    affected_requirements:
+      - representative-characterisation
+      - qualified-safety-legal-review
+      - written-receiver-acceptance
+    affected_outputs: [qualified-evidence-package, no-route-liability]
+    scale_dependence: >-
+      Handling and emissions controls depend on the quantity, moisture condition, containment,
+      transfer method, and applicable installation scope; no scale band is transferred.
+    cumulative_yield_consequences: >-
+      No numeric yield consequence is asserted. Moisture and unaccounted liquid must remain explicit
+      in any later input basis and mass closure.
+    residue_consequences: >-
+      Wet retained material, separated liquid, packaging, and any treatment residue require explicit
+      identification and lawful destination evidence.
+    applicability: Metal-bearing or contaminated fines reported with moisture or free liquid.
+    limitations: A representative measurement and qualified handling review are required.
+    effective_from: "2026-07-14"
+    review_owner: Materials, safety, environmental, and legal reviewers
+
+  - id: weee-polymer-flame-retardant
+    version: 1
+    title: Mixed WEEE polymers with suspected flame retardant
+    description: >-
+      Combined-condition rule that expands polymer identification, sorting, POP and WEEE review,
+      output qualification, and residue control when mixed WEEE plastics are also suspected to
+      contain flame retardants.
+    sources:
+      - &jrc_weee_plastics
+        id: jrc-weee-plastics-2016
+        source_type: OFFICIAL_TECHNICAL
+        publisher: Joint Research Centre, European Commission
+        title: Revision of methods to assess material efficiency of energy related products and potential requirements
+        url: https://publications.jrc.ec.europa.eu/repository/handle/JRC104065
+        published_on: "2016-12-02"
+        accessed_on: "2026-07-14"
+        geography: European Union
+        jurisdiction: European Union product-policy context
+        location_reference: Chapter 5 and repository abstract on recyclability of plastics
+        limitations: >-
+          Product-policy research and discovery evidence, not a buyer specification or proof of
+          performance for a particular WEEE plastic fraction.
+        confidence: HIGH
+      - &eu_pops
+        id: eu-pops-regulation-2025
+        source_type: REGULATION
+        publisher: European Parliament and Council of the European Union
+        title: Regulation (EU) 2019/1021 on persistent organic pollutants, consolidated 4 August 2025
+        url: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:02019R1021-20250804
+        published_on: "2025-08-04"
+        accessed_on: "2026-07-14"
+        geography: European Union
+        jurisdiction: European Union
+        location_reference: Article 7 and Annex IV
+        limitations: >-
+          Legal applicability, current concentration limits, sampling, and classification require
+          qualified review for the particular waste and date.
+        confidence: HIGH
+    claims:
+      - key: combined-scope-expands
+        claim_type: INTERACTION
+        statement: >-
+          Mixed WEEE polymers combined with suspected flame-retardant content expand both technical
+          sorting uncertainty and legal and analytical review; supplier or hearsay declarations do
+          not establish polymer compatibility, POP status, or output acceptance.
+        evidence_state: VERIFIED
+        confidence: HIGH
+        applicability: Mixed WEEE polymer fractions with suspected flame-retardant additives.
+        limitations: Does not classify an actual fraction or prove that a regulated substance is present.
+        conflicting_evidence: Product markings, supplier declarations, and analytical results may disagree.
+        sources:
+          - source_id: jrc-weee-plastics-2016
+            source_location: Chapter 5; repository abstract, paragraphs on polymer variety, sorting, and flame retardants
+            feed_composition: Mixed plastics from energy-related products and WEEE
+            feed_condition: End-of-life product plastics
+            physical_form: Parts or mixed plastic fractions
+            particle_size: Not fixed
+            contamination: Multiple polymers and flame-retardant additives
+            pretreatment: Identification, dismantling, and sorting may be relevant
+            equipment_configuration: No equipment result is transferred
+            scale_and_throughput: Not transferred
+            measurement_method: JRC technical review and product-policy assessment
+            output_definition: Potentially recyclable fraction requiring qualification
+            applicability: Supports combined technical sorting and additive gates.
+            limitations: No route-specific yield, purity, or cost is supplied.
+            conflicting_evidence: Technology and product mix vary.
+          - source_id: eu-pops-regulation-2025
+            source_location: Article 7 and Annex IV
+            feed_composition: Waste potentially containing listed POP substances
+            feed_condition: As generated or separated
+            physical_form: Polymer part or fraction
+            particle_size: Sampling-dependent and not specified here
+            contamination: Listed POP substances may be present
+            pretreatment: None assumed
+            equipment_configuration: Not specified
+            scale_and_throughput: Legal requirements are case-specific
+            measurement_method: Qualified legal and analytical review required
+            output_definition: Compliant receiving route or controlled POP-containing waste route
+            applicability: Supports the fail-closed legal and analytical gate.
+            limitations: No classification or threshold conclusion is made for an actual stream.
+            conflicting_evidence: None recorded for the legal requirement itself.
+    antecedent_conditions:
+      - key: suspected_material
+        operator: CONTAINS
+        value: weee
+      - key: contamination
+        operator: CONTAINS
+        value: flame retardant
+    effects:
+      - type: POLYMER_SORTING_UNCERTAINTY
+        direction: INCREASES
+      - type: POP_AND_WEEE_REVIEW_SCOPE
+        direction: EXPANDS
+      - type: OUTPUT_QUALIFICATION_SCOPE
+        direction: EXPANDS
+    affected_requirements:
+      - representative-characterisation
+      - qualified-pops-weee-review
+      - written-buyer-acceptance
+    affected_outputs: [qualified-polymer-fractions, regulated-or-incompatible-polymer-residue]
+    scale_dependence: >-
+      Sorting capability, sampling, detection, and legal applicability depend on feed composition,
+      particle form, equipment, jurisdiction, date, and throughput; no scale transfer is made.
+    cumulative_yield_consequences: >-
+      No numeric yield consequence is asserted. Any regulated, unidentified, incompatible, or
+      rejected fraction must remain explicit in multi-stage mass closure.
+    residue_consequences: >-
+      Regulated, incompatible, unidentified, and cross-contaminated fractions may require separate
+      controlled routes and cannot be silently blended into a qualified polymer output.
+    applicability: Mixed WEEE polymers with suspected flame-retardant content.
+    limitations: Representative identification, analytical, legal, and buyer evidence is required.
+    effective_from: "2026-07-14"
+    review_owner: Polymer, safety, environmental, legal, and buyer reviewers
+
+  - id: cooling-weee-volatile-media
+    version: 1
+    title: Cooling WEEE with suspected refrigerant or oil
+    description: >-
+      Combined-condition rule that activates specialist depollution, emissions, explosion,
+      captured-media, and residue review when a refrigerator is reported with suspected
+      refrigerant, oil, or unknown cooling-circuit media.
+    sources:
+      - *eu_bat
+    claims:
+      - key: combined-specialist-gate
+        claim_type: INTERACTION
+        statement: >-
+          A refrigerator combined with suspected refrigerant or oil requires a verified specialist
+          treatment route; mechanical processing or output release cannot be inferred from general
+          material observations.
+        evidence_state: VERIFIED
+        confidence: HIGH
+        applicability: Cooling-appliance WEEE containing or suspected to contain VFCs or VHCs and oil.
+        limitations: Does not identify the substance, approve a facility, or provide an operating procedure.
+        conflicting_evidence: Appliance age, labels, damage, and prior depollution records may conflict.
+        sources:
+          - source_id: eu-waste-treatment-bat-2018
+            source_location: Annex, sections 2.3.1 and 2.3.2, BAT 29 and BAT 30
+            feed_composition: WEEE containing VFCs and/or VHCs
+            feed_condition: Intact, damaged, or prepared cooling equipment
+            physical_form: Cooling-appliance assembly
+            particle_size: Pre-treatment assembly
+            contamination: Refrigerants, oils, and combustible gases may be present
+            pretreatment: Specialist removal and capture controls
+            equipment_configuration: Enclosed specialist WEEE treatment systems
+            scale_and_throughput: Within applicable installation scope; not transferred
+            measurement_method: BAT-defined monitoring and control context
+            output_definition: Depolluted appliance fractions and separately managed captured media
+            applicability: Supports specialist, emissions, explosion, and residue gates.
+            limitations: No operating instruction, performance transfer, or facility approval is provided.
+            conflicting_evidence: Actual refrigerant and oil condition require verification.
+    antecedent_conditions:
+      - key: suspected_material
+        operator: CONTAINS
+        value: refrigerator
+      - key: contamination
+        operator: CONTAINS
+        value: refrigerant
+    effects:
+      - type: SPECIALIST_DEPOLLUTION_GATE
+        direction: ACTIVATES
+      - type: EMISSIONS_AND_EXPLOSION_REVIEW
+        direction: ACTIVATES
+      - type: CAPTURED_MEDIA_ACCOUNTING
+        direction: ACTIVATES
+    affected_requirements:
+      - appliance-system-characterised
+      - authorised-specialist-route
+      - written-destination-acceptance
+    affected_outputs: [qualified-cooling-weee-fractions, captured-media-and-residues]
+    scale_dependence: >-
+      Facility scope, applicable controls, and monitoring depend on equipment, volatile media,
+      quantity, condition, and legal scope; no capacity or operating value is transferred.
+    cumulative_yield_consequences: >-
+      No numeric yield consequence is asserted. Captured media, oil, foam, material fractions, and
+      residues must all remain explicit in mass closure.
+    residue_consequences: >-
+      Captured refrigerant, separated oil, foam, filters, contaminated material, and rejected
+      fractions require identified specialist destinations.
+    applicability: Refrigerator WEEE with suspected refrigerant, oil, or unknown cooling-circuit media.
+    limitations: Qualified specialist identification and acceptance are required before treatment.
+    effective_from: "2026-07-14"
+    review_owner: Cooling engineering, WEEE, safety, environmental, and legal reviewers

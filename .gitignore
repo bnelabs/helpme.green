@@ -27,3 +27,13 @@ htmlcov/
 # Builds
 dist/
 build/
+
+# Runtime data (snapshots, audit chain, encrypted BYOK records)
+.data/
+data/
+
+# Downloaded source copies and generated local catalog databases
+knowledge/source-downloads/
+
+# Local reference checkouts
+/vendor/tmp/

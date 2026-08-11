@@ -6,7 +6,10 @@
 - **Name:** helpme.green
 - **One line:** *Describe any material stream. Get an honest, evidence-grounded, geography-aware answer: what it could become, what routes are actually applied, what evidence is missing, and what it is conservatively worth.*
 - **Character:** advisory only. Deterministic engine + governed knowledge base + AI that interviews and explains but **never concludes**.
-- **Scope for this phase:** the autonomous core + the **Pro Console** (terminal UI). The public web frontend is a later, separate work stream.
+- **Scope for this phase:** the autonomous core + a **conversation-first local web surface**. The
+  deterministic evaluator and compatibility command API remain available underneath; slash
+  commands are not the primary user interaction. A broader public web product can be decided
+  separately.
 
 ## 1. Vision
 
@@ -28,7 +31,13 @@ Requirement: every output is labelled with its tier; no output may present educa
 
 ## 4. Core user journeys
 
-**Console journey (now):** enter the console → `/start` or describe a stream → AI interview driven by the deterministic question agenda (composition, contamination, physical state, volume, humidity, origin; gentle basic probes for non-experts) → **fact confirmation step** (every fact labelled `declared / estimate / unknown`) → `/evaluate` → route landscape with sources and blocks → `/next` for VOI-ranked actions → `/value` if and only if the basis is complete → `/snapshot` to persist → `/export` to take it elsewhere.
+**Conversation journey (now):** open the local surface → describe an object, material, situation, or
+goal in ordinary language → the AI answers the actual question and asks at most one useful follow-up
+when a missing detail changes the answer → the side rail quietly reflects the shared understanding
+(object, condition, goal) → optional background context is available when relevant. The user never
+has to learn slash commands, fill an evidence form, or provide a token when local auth is disabled.
+The deterministic evaluator, snapshots, exports, and compatibility command API remain available to
+controlled clients and advanced workflows.
 
 **Web journey (later):** landing → pick material from catalog → guided wizard → same evaluation underneath.
 
@@ -41,7 +50,9 @@ Requirement: every output is labelled with its tier; no output may present educa
 5. **R5 — Provenance.** Every claim shown traces to the source register (exact location, applicability, limitations). No source, no claim.
 6. **R6 — Jurisdiction-aware.** Regulatory gates scoped to the user's geography; content per jurisdiction requires qualified review for that jurisdiction.
 7. **R7 — Financial conservatism.** Ranges with basis (revenue floor, cost ceiling, currency, price year). **No financial figure on an incomplete basis — ever.**
-8. **R8 — No free dialogue.** The AI has defined roles (interviewer, translator, explainer) and cannot drift; answers are rendered from engine output.
+8. **R8 — Bounded natural dialogue.** The AI may hold a natural conversation, answer the user’s
+   actual question, translate ordinary language, and ask one useful follow-up; it cannot drift into
+   deterministic conclusions, fabricated sources, or unsupported recommendations.
 9. **R9 — Coverage honesty.** "Not yet covered" is an acceptable, required answer; never improvise beyond vetted knowledge.
 10. **R10 — Contamination presumption.** The AI actively probes contamination and condition even if the user asserts cleanliness; non-expert "none" = hearsay, never clearance.
 11. **R11 — The AI never writes the conclusion.** The engine evaluates; the AI interviews, translates, explains.
@@ -94,12 +105,17 @@ Deterministic evaluation ⇒ same facts + same knowledge version = same result f
 
 Provider-agnostic interface (swap models without behavior change — verified by asserting identical engine outputs across models). **DeepSeek primary for testing (cheap), OpenRouter free models selectable.** BYOK: user tokens encrypted at rest, never in browser/logs, metered and audited. Platform default tier: cost-capped, model identity shown. AI roles hard-constrained (interviewer/translator/explainer). Fallback: engine still answers from cache when a model fails; clearly says the interview cannot continue. No training on user data without explicit consent.
 
-## 12. Interface strategy — Pro Console (now) + Public Web (later)
+## 12. Interface strategy — conversation-first local surface
 
-**Pro Console (launch interface, pro tier only):** a terminal TUI (Claude Code-style) served at a URL. Rationale: validates the logic with real professionals at a fraction of a consumer frontend's cost; slash commands map directly to deterministic engine operations; MCP fits professional data; the matter-of-fact aesthetic matches the honesty brand. **It is the professional surface, not the public face.**
+**Primary surface:** a local web conversation with a calm editorial layout. It has one message box,
+one natural-language send action, and a quiet “What I’m hearing” summary. It does not expose slash
+commands, internal schemas, evidence-state labels, or a required token prompt. The user can begin
+with an incomplete sentence, a question, or frustration; the assistant meets that message at its
+level and continues from there.
 
-**Slash command set:**
-`/start` begin a case · `/evaluate` run evaluation on current facts · `/routes` applicable routes + status · `/evidence` labelled fact set · `/ask` next deterministic question · `/value` value record (only when basis complete) · `/compare <a> <b>` route comparison · `/sources` source register for current result · `/next` VOI-ranked next actions · `/model <provider:model>` switch model · `/key` set BYOK (encrypted) · `/load <file|csv|url>` read-only data import → unverified facts · `/export` JSON/MD/CSV · `/snapshot` persist immutable snapshot to audit chain · `/budget` token usage · `/status` pipeline health · `/help` · `/exit`.
+**Compatibility surface:** the existing command endpoint and CLI remain available for deterministic
+engine tests, snapshots, exports, and controlled professional workflows. They are implementation
+interfaces, not onboarding instructions for the conversation surface.
 
 **Session model:** case-oriented sessions; state = labelled fact set + knowledge version + geography; resume by snapshot; every decision appended to the audit chain. Sessions persist, cases resume.
 
@@ -142,7 +158,10 @@ Advisory-only on every surface; "not legal/regulatory/safety/investment advice" 
 ## 17. Plan & roadmap
 
 - **Phase 0 — Decisions** (owner): pricing skeleton; launch jurisdictions; initial domain-review agent configuration; trademark/domain check on helpme.green. *Exit:* decisions recorded.
-- **Phase A — Honest spine + Console:** engine wiring, Intake/Explainer agents on DeepSeek, Pro Console (slash commands, sessions, snapshots, read-only MCP), CLI/API test surface, one material family (copper cable), VPS deploy. *Exit:* 100 evaluations, 0 fabricated sources, identical engine outputs across models, console sessions persist and resume.
+- **Phase A — Honest spine + conversation surface:** engine wiring, bounded natural conversation on
+  LocalAI/OpenAI-compatible providers, sessions, snapshots, read-only MCP, compatibility API, one
+  material family (copper cable), and local Docker deployment. *Exit:* 100 evaluations, 0 fabricated
+  sources, identical engine outputs across models, conversational sessions persist and resume.
 - **Phase B — Knowledge pipeline:** Sourcer + Curator + Domain Reviewers + Conflict + Policy promotion; dialogue candidate intake. *Exit:* autonomous knowledge growth; two-review promotion only; zero single-agent promotions in audit.
 - **Phase C — Value generation:** Market Data + Economics agents, value records, VOI. *Exit:* zero incomplete-basis numbers in QA audits.
 - **Phase D — Autonomy hardening:** QA Auditor, Ops Agent, incidents, budgets, fail-closed pauses, escalation contract. *Exit:* 72-hour unattended run, no invariant violations, no human steps.
@@ -161,7 +180,8 @@ Honesty: 0 fabricated sources in audits; 100% of decision outputs show `BLOCKED`
 4. **Regulatory exposure** → tier labelling, advisory framing, jurisdiction gates.
 5. **Token cost blowout** → deterministic cache, templated question agenda, budgets, BYOK.
 6. **Agent myopia / drift** → contracts, separation of duties, cross-check pairs, fail-closed pauses, audit.
-7. **Console narrowing the market** → the console is pro-tier only; public web (Phase F) carries the education tier; never present the console as the public face.
+7. **Conversation drift or model failure** → keep the model bounded, preserve the deterministic
+   evaluator, state when the provider is unavailable, and never turn a missing answer into a guess.
 8. **Scope creep toward execution/marketplace** → boundary §16.16, explicit separate decision.
 
 ## 20. Open decisions
