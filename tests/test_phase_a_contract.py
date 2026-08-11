@@ -358,8 +358,8 @@ def test_model_profiles_are_selected_by_model_identity(monkeypatch) -> None:
                     "temperature": 1.0,
                     "top_p": 0.95,
                     "top_k": 64,
-                    "max_tokens": 8192,
-                    "timeout_seconds": 120,
+                    "max_tokens": 16384,
+                    "timeout_seconds": 240,
                     "chat_template_kwargs": {"reasoning_strength": "xhigh"},
                 }
             }
@@ -399,9 +399,9 @@ def test_model_profiles_are_selected_by_model_identity(monkeypatch) -> None:
     assert muse_payload["temperature"] == 1.0
     assert muse_payload["top_p"] == 0.95
     assert muse_payload["top_k"] == 64
-    assert muse_payload["max_tokens"] == 8192
+    assert muse_payload["max_tokens"] == 16384
     assert muse_payload["chat_template_kwargs"] == {"reasoning_strength": "xhigh"}
-    assert captured_timeouts == [120, 30]
+    assert captured_timeouts == [240, 30]
     assert default_payload["temperature"] == 0
     assert "top_p" not in default_payload
     assert "chat_template_kwargs" not in default_payload
