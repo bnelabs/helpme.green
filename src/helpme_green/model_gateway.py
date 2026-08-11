@@ -25,6 +25,19 @@ class ModelSelection:
         return f"{self.provider}:{self.model}"
 
 
+_PROFILE_RESERVED_KEYS = {"model", "messages", "response_format", "stream"}
+
+
+def _json_object(value: Any, *, label: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ProviderUnavailable(f"{label} must be a JSON object.")
+    try:
+        json.dumps(value)
+    except (TypeError, ValueError) as exc:
+        raise ProviderUnavailable(f"{label} must contain JSON values only.") from exc
+    return value
+
+
 class ModelRouter:
     """Provider selection is separate from the deterministic engine."""
 
@@ -98,6 +111,9 @@ class ModelRouter:
             raise ProviderUnavailable(
                 f"{self.selection.provider} key is not configured; the deterministic engine can continue from cache."
             )
+        profile = self._model_profile()
+        timeout_seconds = self._timeout_seconds(profile)
+        profile.pop("timeout_seconds", None)
         payload = {
             "model": self.selection.model,
             "messages": [
@@ -108,6 +124,7 @@ class ModelRouter:
             "max_tokens": max_tokens,
             "response_format": {"type": "json_object"},
         }
+        payload.update(profile)
         headers = {
             "Content-Type": "application/json",
             "User-Agent": "helpme.green/0.1",
@@ -123,9 +140,11 @@ class ModelRouter:
         try:
             context = self._tls_context(endpoint)
             if context is None:
-                response_context = urllib.request.urlopen(request, timeout=30)
+                response_context = urllib.request.urlopen(request, timeout=timeout_seconds)
             else:
-                response_context = urllib.request.urlopen(request, timeout=30, context=context)
+                response_context = urllib.request.urlopen(
+                    request, timeout=timeout_seconds, context=context
+                )
             with response_context as response:
                 raw = json.loads(response.read().decode("utf-8"))
         except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
@@ -146,6 +165,51 @@ class ModelRouter:
             self._tokens_in += int(usage.get("prompt_tokens", 0) or 0)
             self._tokens_out += int(usage.get("completion_tokens", 0) or 0)
         return decoded
+
+    @staticmethod
+    def _timeout_seconds(profile: dict[str, Any]) -> float:
+        raw = profile.get("timeout_seconds", 30)
+        if isinstance(raw, bool):
+            raise ProviderUnavailable("Model profile timeout_seconds must be positive.")
+        try:
+            timeout = float(raw)
+        except (TypeError, ValueError) as exc:
+            raise ProviderUnavailable("Model profile timeout_seconds must be positive.") from exc
+        if timeout <= 0:
+            raise ProviderUnavailable("Model profile timeout_seconds must be positive.")
+        return timeout
+
+    def _model_profile(self) -> dict[str, Any]:
+        """Return request options for the selected model, without changing other models."""
+        raw = os.environ.get("HELPME_MODEL_PROFILES", "").strip()
+        if not raw:
+            return {}
+        try:
+            profiles = _json_object(json.loads(raw), label="HELPME_MODEL_PROFILES")
+        except json.JSONDecodeError as exc:
+            raise ProviderUnavailable("HELPME_MODEL_PROFILES must contain valid JSON.") from exc
+
+        candidates = (self.selection.identity, f"{self.selection.provider}:*", "*")
+        selected: Any = None
+        for identity in candidates:
+            if identity in profiles:
+                selected = profiles[identity]
+                break
+        if selected is None:
+            return {}
+        options = _json_object(selected, label=f"Model profile {self.selection.identity}")
+        forbidden = sorted(_PROFILE_RESERVED_KEYS.intersection(options))
+        if forbidden:
+            raise ProviderUnavailable(
+                "Model profiles cannot override protected request fields: " + ", ".join(forbidden)
+            )
+        if "chat_template_kwargs" in options:
+            _json_object(
+                options["chat_template_kwargs"],
+                label=f"Model profile {self.selection.identity}.chat_template_kwargs",
+            )
+        self._timeout_seconds(options)
+        return options
 
     def _endpoint_and_key_env(self) -> tuple[str, str]:
         if self.selection.provider == "localai":
