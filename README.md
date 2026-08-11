@@ -95,7 +95,7 @@ For the Muse Glimmer model card supplied with this repository, an appropriate pr
 ```bash
 export HELPME_MODEL=localai:muse-glimmer-30B
 export HELPME_LOCALAI_BASE_URL=http://192.168.68.57:8090/v1
-export HELPME_MODEL_PROFILES='{"localai:muse-glimmer-30B":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":8192,"timeout_seconds":120,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
+export HELPME_MODEL_PROFILES='{"localai:muse-glimmer-30B":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":16384,"timeout_seconds":240,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
 ```
 
 The profile is selected only when that model identity is active. Changing to another model does
