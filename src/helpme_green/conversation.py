@@ -140,10 +140,7 @@ class ConversationAgent:
             reply = quality.calibrated_reply
         except (ProviderUnavailable, ValueError, TypeError, json.JSONDecodeError):
             return ConversationResult(
-                text=(
-                    "I can’t reach the local assistant right now. I haven’t turned your message "
-                    "into a recommendation; try sending it again when the model is available."
-                ),
+                text="I couldn’t get a response from the local model just now. Please try again.",
                 hearing=dict(session.understanding),
                 sources=[],
                 model=self.model_router.selection.identity,

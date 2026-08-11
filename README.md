@@ -78,7 +78,9 @@ export HELPME_MODEL_PROFILES='{"localai:<model-id>":{"temperature":1.0,"top_p":0
 These settings are deployment configuration, not hardcoded model behavior. If a profile does not
 specify `max_tokens`, the application omits it and lets the provider/model choose. The application
 does not truncate the completed user-facing answer. Auxiliary quality checks may use smaller requests;
-they never replace or shorten the main answer.
+they never replace or shorten the main answer. Local quality checks are on by default; optional AI
+critic calls are opt-in with `HELPME_QUALITY_JUDGES=1` because they add extra model requests and
+latency on smaller local deployments.
 
 ## Knowledge digest
 
