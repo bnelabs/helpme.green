@@ -32,9 +32,11 @@ requirements and plan are in
 - `knowledge/` — governed reference packs plus the tiered multi-material source manifest,
   machinery catalog, and portable digest snapshot.
 - `vendor/reference/knowledge-manifest.json` — reference commit and pack hashes.
-- vendor/candidates/precious-plastic-kit-v4.1.json — candidate-only local kit provenance; excluded from Phase A.
-- docs/open-source-reuse.md — point-in-time license and reuse register for external circular-economy projects.
-- docs/open-source-integration.md — clean-room integration boundaries and invariant mapping.
+- `vendor/candidates/precious-plastic-kit-v4.1.json` — candidate-only local kit provenance; excluded from Phase A.
+- `docs/open-source-reuse.md` — license register for external open-source circular-economy projects;
+  its reuse rules and per-project verdicts bind the Sourcer Agent.
+- `docs/open-source-integration.md` — clean-room integration boundaries, governed data-source
+  mapping, and invariant enforcement.
 - `docs/deployment.md` — dedicated-VPS container deployment and secret-boundary instructions.
 - `docs/phase-a-verification.md` — requirement-to-control matrix and current verification record.
 - `knowledge/source-manifest.yml` — the registered, tiered source queue across materials, science,
