@@ -5,7 +5,7 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     environment:
-      HELPME_CONSOLE_TOKEN: ${HELPME_CONSOLE_TOKEN:-}
+      HELPME_ACCESS_TOKEN: ${HELPME_ACCESS_TOKEN:-}
       HELPME_MASTER_KEY: ${HELPME_MASTER_KEY:?set a Fernet key for encrypted BYOK storage}
       HELPME_ROOT: /app
       HELPME_DATA_DIR: /app/.data
@@ -27,10 +27,8 @@ services:
       HELPME_RERANK_MODEL: ${HELPME_RERANK_MODEL:-}
       HELPME_RERANK_API_KEY: ${HELPME_RERANK_API_KEY:-}
       HELPME_RERANK_TLS_VERIFY: ${HELPME_RERANK_TLS_VERIFY:-1}
-      HELPME_KIT_ROOT: /app/precious-plastic-kit
     volumes:
       - helpme_data:/app/.data
-      - ${HELPME_KIT_HOST_PATH:-/Users/barisnacierzeren/Downloads/precious-plastic-kit}:/app/precious-plastic-kit:ro
 
 volumes:
   helpme_data:

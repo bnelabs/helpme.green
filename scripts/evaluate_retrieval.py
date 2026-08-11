@@ -121,7 +121,7 @@ def main() -> int:
     finally:
         database.close()
     report = {
-        "schemaVersion": 1,
+        "reportVersion": 1,
         "database": str(args.db.resolve()),
         "embeddingModel": embedding_provider.model if embedding_provider else None,
         "rerankerModel": getattr(reranker, "model", None) if reranker else None,

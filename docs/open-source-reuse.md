@@ -2,8 +2,7 @@
 
 License register and reuse rules for external open-source circular-economy
 projects considered for ingestion into helpme.green's knowledge base or code.
-This register is the contract for the Sourcer Agent and any human or automated
-ingestion: **no external content enters the knowledge base outside these rules.**
+No external content enters the knowledge base outside these rules.
 
 ## Reuse rules (binding)
 
@@ -12,8 +11,8 @@ ingestion: **no external content enters the knowledge base outside these rules.*
    implementation upon that understanding — is permissible and intended. Ideas,
    algorithms, facts, and methodologies are not copyrightable; only their
    *expression* (code text, prose, blueprints, diagrams) is protected. We may
-   study any of these projects, extract facts, and re-express them in our own
-   structure, attributed via the source register (R5). We never reproduce
+   study any of these projects, extract limited information, and re-express it in our own
+   structure, attributed via the source register. We never reproduce
    protected expression wholesale, and we never copy code verbatim into our
    codebase without honoring its license.
 2. **Share-alike triggers.** Content under CC BY-SA / AGPL / EUPL that is
@@ -47,7 +46,8 @@ ingestion: **no external content enters the knowledge base outside these rules.*
 - **License (code):** mixed — community platform MIT, academy GPL-3.0, kit/starterkits no LICENSE file.
 - **Reusable:** machine blueprints and knowledge for plastic recycling routes (shredder, extruder, sheet press, injection), business tools, community content — with attribution and share-alike.
 - **Restrictions:** derived packs that copy their content must be distributed BY-SA; attribution required.
-- **Verdict:** ingest as source-register entries for plastic materials (Phase E). Decision required then: keep derived packs BY-SA or obtain separate permission. Phase A (copper) unaffected.
+- **Verdict:** retain as a registered plastic reference. Keep any substantially copied derivative
+  material BY-SA or obtain separate permission; do not copy the kit’s expression into the product.
 
 ### 2. Plastic Odyssey (Technology Platform)
 
@@ -63,7 +63,8 @@ ingestion: **no external content enters the knowledge base outside these rules.*
 - **License:** **BSD-3-Clause** (in-repo LICENSE, Copyright (c) 2023, Suman Kunwar). Companion REST API: MIT. Training dataset on Kaggle (`sumn2u/garbage-classification-v2`): **MIT**.
 - **Reusable:** full app code, trained TFLite classifier (~22 MB, in-repo), 6-class labels file — commercially reusable with attribution; no-endorsement clause.
 - **Restrictions/warnings:** in-repo labels (6 classes) do **not** match the dataset/README taxonomy (10 classes) — verify real model outputs before relying on them. Dataset images were "collected from various internet sources"; underlying photo rights are not granted by the MIT/BSD licenses.
-- **Verdict:** optional, Phase 3 (photo intake). Useful as a waste-taxonomy seed and vision-classifier reference; treat all its outputs as weak-evidence input, never as knowledge.
+- **Verdict:** optional future vision reference. Useful as a waste-taxonomy seed, but model outputs
+  must remain untrusted observations rather than repository knowledge.
 
 ### 4. Fleetbase
 
@@ -97,8 +98,9 @@ When content from a registered project is cited in an evaluation output, carry:
 
 ## Integration notes for the knowledge pipeline
 
-- External projects enter as **sources** (source-register entries) before any claim can reference them (R5).
-- Their content supports **route/capability knowledge** (machines, processes, business models), not composition evidence for a specific stream; evidence states must reflect what the source actually demonstrates.
+- External projects enter as **sources** (source-register entries) before retrieval can use them.
+- Their content supports route and capability context (machines, processes, business models), not a
+  guaranteed composition, safety, permit, or economic outcome for a specific stream.
 - Sourcer Agent must record: exact source URL, license, verification date, applicability, limitations — mirroring this register's format.
 
 ---

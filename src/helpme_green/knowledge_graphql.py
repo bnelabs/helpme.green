@@ -242,7 +242,7 @@ def execute_graphql(
                 summary = database.ingestion_summary()
                 data[field.name] = _project(
                     {
-                        "schemaVersion": database.schema_version,
+                        "databaseVersion": database.database_version,
                         "digest": database.digest(),
                         "sourceCount": summary["sources"]["total"],
                         "documentCount": summary["documents"]["total"],

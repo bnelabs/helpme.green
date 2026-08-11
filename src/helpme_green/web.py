@@ -239,9 +239,9 @@ textarea::placeholder { color: var(--quiet); }
       <p class="intro">Tell me what you have, what is happening with it, or what you want to change. We can work it out from there.</p>
 
       <section class="auth-gate" id="authGate" hidden>
-        <p>This local console is protected. Enter its token once to start the conversation.</p>
+        <p>This local assistant is protected. Enter its connection key once to start the conversation.</p>
         <form class="auth-row" id="authForm">
-          <input id="token" type="password" autocomplete="off" placeholder="Console token">
+          <input id="token" type="password" autocomplete="off" placeholder="Connection key">
           <button class="continue" type="submit">Continue</button>
         </form>
         <div class="error" id="authError" hidden></div>
@@ -261,13 +261,13 @@ textarea::placeholder { color: var(--quiet); }
       <h2>What I’m hearing</h2>
       <p class="rail-copy">This updates as you talk. It is a shared summary, not a form you have to complete.</p>
       <dl class="hearing">
-        <div class="hearing-row"><dt>Object</dt><dd id="hearingObject">—</dd></div>
-        <div class="hearing-row"><dt>Condition</dt><dd id="hearingCondition">—</dd></div>
-        <div class="hearing-row"><dt>Goal</dt><dd id="hearingGoal">—</dd></div>
+        <div class="hearing-row"><dt>Subject</dt><dd id="hearingSubject">—</dd></div>
+        <div class="hearing-row"><dt>Situation</dt><dd id="hearingSituation">—</dd></div>
+        <div class="hearing-row"><dt>Aim</dt><dd id="hearingAim">—</dd></div>
       </dl>
       <details class="background" id="background" hidden>
         <summary>Background I have available</summary>
-        <p>These references can help orient the conversation. They are not proof that something is safe, permitted, or worth doing.</p>
+        <p>These are optional reference pointers for the conversation. They do not replace current checks, trials, or professional judgement.</p>
         <ul id="sourceList"></ul>
       </details>
     </aside>
@@ -289,9 +289,9 @@ textarea::placeholder { color: var(--quiet); }
   const authInput = document.getElementById("token");
   const authError = document.getElementById("authError");
   const hearingFields = {
-    object: document.getElementById("hearingObject"),
-    condition: document.getElementById("hearingCondition"),
-    goal: document.getElementById("hearingGoal")
+    subject: document.getElementById("hearingSubject"),
+    situation: document.getElementById("hearingSituation"),
+    aim: document.getElementById("hearingAim")
   };
   const background = document.getElementById("background");
   const sourceList = document.getElementById("sourceList");
@@ -345,7 +345,7 @@ textarea::placeholder { color: var(--quiet); }
 
   function showConnectionError(error) {
     if (error && error.message === "auth_required") return;
-    addMessage("assistant", "I couldn’t connect to the local assistant. Nothing has been decided from your message; try again in a moment.");
+      addMessage("assistant", "I couldn’t connect to the local assistant, so your message was not answered. Try again in a moment.");
   }
 
   async function createSession() {
@@ -356,7 +356,7 @@ textarea::placeholder { color: var(--quiet); }
     try {
       const body = await request("/api/sessions", {method: "POST", body: "{}"});
       sessionId = body.session_id;
-      addMessage("assistant", body.message || "Tell me what you have, what you are trying to figure out, or what you want to change.");
+      addMessage("assistant", body.message || "Tell me what you’re exploring, what you have, or what you want to change.");
       message.focus();
     } catch (error) {
       showConnectionError(error);
@@ -413,7 +413,7 @@ textarea::placeholder { color: var(--quiet); }
     await createSession();
     if (!sessionId) {
       authError.hidden = false;
-      authError.textContent = "That token did not start a session. Check it and try again.";
+      authError.textContent = "That key did not start a session. Check it and try again.";
     } else {
       authGate.hidden = true;
     }

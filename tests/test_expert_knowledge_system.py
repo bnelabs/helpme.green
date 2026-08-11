@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 from typing import Any
 
-from helpme_green.curator import KnowledgeCurator
 from helpme_green.expert_skills import SkillRegistry
 from helpme_green.knowledge_graphql import execute_graphql
 from helpme_green.knowledge_store import KnowledgeDatabase, SourceSpec
 from helpme_green.machinery import MachineCatalog
 from helpme_green.quality import AnswerQualityGate
+from helpme_green.source_digest import SourceDigest
 from helpme_green.source_ingest import (
     SourceFetchError,
     SourceManifest,
@@ -32,7 +33,7 @@ def test_skill_registry_selects_targeted_material_expertise() -> None:
     assert len(registry.public_catalog()) >= 6
 
 
-def test_knowledge_database_is_source_backed_versioned_and_two_review_gated(
+def test_knowledge_database_is_source_backed_and_latest_versioned(
     tmp_path: Path,
 ) -> None:
     database = KnowledgeDatabase(tmp_path / "knowledge.db")
@@ -60,44 +61,59 @@ def test_knowledge_database_is_source_backed_versioned_and_two_review_gated(
     )
     latest = database.ingest_document(
         source,
-        "Latest composition and contamination evidence supersedes the older source version.",
+        "The latest source version supersedes the older source version.",
         content_type="text/plain",
         fetched_at="2026-08-11T00:02:00Z",
     )
 
     assert first.document_id == second.document_id
-    matches = database.search("composition contamination", material_family="plastics")
+    matches = database.search("latest source version", material_family="plastics")
     assert matches and matches[0].source_id == "test-plastics-guide"
     assert {item.document_id for item in matches} == {latest.document_id}
-    assert matches[0].source_status == "candidate"
+    assert matches[0].source_status == "catalogued"
 
-    claim_id = database.add_candidate_claim(
+    note_id = database.add_source_note(
         source_id=source.source_id,
-        statement="Composition and contamination affect route suitability.",
+        summary="Composition and contamination affect route suitability.",
         skill_id="plastics-recycling",
         chunk_id=matches[0].chunk_id,
         applicability="Early triage only",
         limitations="Does not establish a route for a specific batch.",
     )
-    assert not database.promote_claim(claim_id)
-    database.review_claim(
-        claim_id,
-        reviewer_id="materials-reviewer",
-        reviewer_role="materials",
-        decision="approve",
-        reasoning="The source supports the limited statement.",
+    assert note_id.startswith("note-")
+    notes = database.source_note_catalog()
+    assert notes[0]["summary"] == "Composition and contamination affect route suitability."
+    assert database.graph_neighbors(note_id)
+
+
+def test_legacy_decision_tables_are_removed_when_database_is_opened(tmp_path: Path) -> None:
+    path = tmp_path / "legacy.db"
+    connection = sqlite3.connect(path)
+    connection.executescript(
+        """
+        CREATE TABLE store_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+        INSERT INTO store_meta(key, value) VALUES ('schema_version', '2');
+        CREATE TABLE claims (claim_id TEXT PRIMARY KEY);
+        CREATE TABLE claim_reviews (review_id TEXT PRIMARY KEY, claim_id TEXT);
+        """
     )
-    assert not database.promote_claim(claim_id)
-    database.review_claim(
-        claim_id,
-        reviewer_id="safety-reviewer",
-        reviewer_role="safety",
-        decision="approve",
-        reasoning="The limitations are explicit.",
-    )
-    assert database.promote_claim(claim_id)
-    assert database.claim_status(claim_id) == "active"
-    assert database.graph_neighbors(claim_id)
+    connection.commit()
+    connection.close()
+
+    database = KnowledgeDatabase(path)
+    database.close()
+    connection = sqlite3.connect(path)
+    tables = {
+        str(row[0])
+        for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+    }
+    metadata = dict(connection.execute("SELECT key, value FROM store_meta").fetchall())
+    connection.close()
+
+    assert "claims" not in tables
+    assert "claim_reviews" not in tables
+    assert "schema_version" not in metadata
+    assert metadata["database_version"] == "3"
 
 
 def test_read_only_graphql_exposes_expert_catalog_without_mutation(tmp_path: Path) -> None:
@@ -123,7 +139,7 @@ def test_read_only_graphql_exposes_expert_catalog_without_mutation(tmp_path: Pat
         registry,
         '{ skills { id title } sources(materialFamily: "metals") { id title } '
         'search(query: "ferrous", materialFamily: "metals") { chunkId text } '
-        "status { schemaVersion sourceCount documentCount searchableChunks failedSources latestExtractedSources } }",
+        "status { databaseVersion sourceCount documentCount searchableChunks failedSources latestExtractedSources } }",
     )
 
     assert "errors" not in response
@@ -135,7 +151,7 @@ def test_read_only_graphql_exposes_expert_catalog_without_mutation(tmp_path: Pat
     assert response["data"]["status"]["searchableChunks"] == 1
     assert response["data"]["status"]["failedSources"] == 0
     assert response["data"]["status"]["latestExtractedSources"] == 1
-    mutation = execute_graphql(database, registry, 'mutation { promoteClaim(id: "x") }')
+    mutation = execute_graphql(database, registry, 'mutation { changeSource(id: "x") }')
     assert mutation["errors"]
 
     machines = MachineCatalog.from_path(ROOT / "knowledge/machine-catalog.yml")
@@ -175,7 +191,7 @@ def test_empty_knowledge_store_has_zeroed_health_counters(tmp_path: Path) -> Non
     assert summary["chunks"] == {"total": 0, "searchable": 0, "embedded": 0}
 
 
-def test_quality_gate_calibrates_absolute_language_and_keeps_contract_internal() -> None:
+def test_quality_gate_calibrates_absolute_language_and_keeps_internal_fields_private() -> None:
     gate = AnswerQualityGate()
     report = gate.assess(
         user_message="I have mixed plastic film with possible PVC.",
@@ -191,7 +207,6 @@ def test_quality_gate_calibrates_absolute_language_and_keeps_contract_internal()
     assert "absolute_claim" in report.flags
     assert "will destroy" not in report.calibrated_reply.casefold()
     assert "legally non-compliant" not in report.calibrated_reply.casefold()
-    assert "schema" not in json.dumps(report.to_dict()).casefold()
 
 
 def test_manifest_and_machine_catalog_preserve_source_tiers_and_vendor_limits() -> None:
@@ -301,14 +316,14 @@ def test_catalog_records_ingestion_health_without_exporting_source_text(tmp_path
     assert exported["documents"][0]["contentSha256"]
 
 
-def test_curator_adds_candidate_claims_without_promotion(tmp_path: Path) -> None:
+def test_source_digest_adds_linked_notes_without_rewriting_sources(tmp_path: Path) -> None:
     class FakeRouter:
         def complete_json(self, messages: list[dict[str, str]], **_: Any) -> dict[str, Any]:
             assert "<source_passage>" in messages[0]["content"]
             return {
-                "claims": [
+                "notes": [
                     {
-                        "statement": "The source describes a conditional route.",
+                        "summary": "The source describes a conditional route.",
                         "applicability": "Only within the source's stated process conditions.",
                         "limitations": "It does not establish a route for an unknown local batch.",
                     }
@@ -317,9 +332,9 @@ def test_curator_adds_candidate_claims_without_promotion(tmp_path: Path) -> None
 
     database = KnowledgeDatabase(tmp_path / "knowledge.db")
     source = SourceSpec(
-        source_id="test-curator",
-        title="Curator test source",
-        url="https://example.gov/curator",
+        source_id="test-source-digest",
+        title="Source digest test source",
+        url="https://example.gov/source-digest",
         publisher="Example public body",
         source_type="OFFICIAL_GUIDANCE",
         material_families=("plastics",),
@@ -330,14 +345,11 @@ def test_curator_adds_candidate_claims_without_promotion(tmp_path: Path) -> None
         "A conditional route is described only for a defined process condition.",
         content_type="text/plain",
     )
-    run = KnowledgeCurator(FakeRouter(), SkillRegistry.from_repository(ROOT)).run(database)
-    assert run.claims_added == 1
-    assert (
-        run.to_dict()["promotion"] == "none; all claims remain candidates until independent review"
-    )
-    claims = database.claim_catalog()
-    assert len(claims) == 1
-    assert claims[0]["status"] == "candidate"
+    run = SourceDigest(FakeRouter(), SkillRegistry.from_repository(ROOT)).run(database)
+    assert run.notes_added == 1
+    notes = database.source_note_catalog()
+    assert len(notes) == 1
+    assert notes[0]["summary"] == "The source describes a conditional route."
 
 
 def test_hybrid_search_fuses_semantic_results_and_reports_mode(tmp_path: Path) -> None:

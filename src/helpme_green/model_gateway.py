@@ -12,7 +12,7 @@ from typing import Any
 
 
 class ProviderUnavailable(RuntimeError):
-    """The model is unavailable; deterministic evaluation remains usable."""
+    """The configured model is unavailable or returned an unusable response."""
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ def _json_object(value: Any, *, label: str) -> dict[str, Any]:
 
 
 class ModelRouter:
-    """Provider selection is separate from the deterministic engine."""
+    """Provider and model selection is separate from retrieval and answer quality."""
 
     allowed = {"localai", "deepseek", "openrouter"}
 
@@ -102,7 +102,7 @@ class ModelRouter:
         system_contract: str,
         max_tokens: int | None = None,
     ) -> Mapping[str, Any]:
-        """Call an OpenAI-compatible provider without giving it evaluator authority."""
+        """Call an OpenAI-compatible provider using the selected model profile."""
         if not self._env_flag("HELPME_AI_ENABLED", default=False):
             raise ProviderUnavailable(
                 "AI interaction is disabled; set HELPME_AI_ENABLED=1 to enable the configured provider."
@@ -112,7 +112,7 @@ class ModelRouter:
         api_key = self._api_key(selection.provider, env_name)
         if not api_key and selection.provider != "localai":
             raise ProviderUnavailable(
-                f"{selection.provider} key is not configured; the deterministic engine can continue from cache."
+                f"{selection.provider} key is not configured; local reference services remain available."
             )
         profile = self._model_profile(selection.identity)
         timeout_seconds = self._timeout_seconds(profile)
@@ -300,9 +300,7 @@ class ModelRouter:
             if context is None:
                 response_context = urllib.request.urlopen(request, timeout=timeout)
             else:
-                response_context = urllib.request.urlopen(
-                    request, timeout=timeout, context=context
-                )
+                response_context = urllib.request.urlopen(request, timeout=timeout, context=context)
             with response_context as response:
                 raw = json.loads(response.read().decode("utf-8"))
         except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
@@ -331,9 +329,7 @@ class ModelRouter:
         try:
             timeout = float(raw)
         except (TypeError, ValueError) as exc:
-            raise ProviderUnavailable(
-                "HELPME_MODEL_DISCOVERY_TIMEOUT must be positive."
-            ) from exc
+            raise ProviderUnavailable("HELPME_MODEL_DISCOVERY_TIMEOUT must be positive.") from exc
         if timeout <= 0:
             raise ProviderUnavailable("HELPME_MODEL_DISCOVERY_TIMEOUT must be positive.")
         return timeout

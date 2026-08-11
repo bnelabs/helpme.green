@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 2,
-  "generatedAt": "2026-08-11T09:48:27.442306+00:00",
-  "digest": "e8180263ecc966a66e0acf276e14e00324eccfcf1393cb6a4e738b46ce5ed0c9",
+  "databaseVersion": 3,
+  "generatedAt": "2026-08-11T11:46:10.838429+00:00",
+  "digest": "5eec432bd869fabcf55b942081d64c17fa90885b9d753b32311671e67acae740",
   "ingestion": {
     "sources": {
       "total": 153,
       "byStatus": {
-        "candidate": 153
+        "catalogued": 153
       }
     },
     "documents": {
@@ -31,9 +31,9 @@
     "embeddingModels": {
       "nvidia/nemotron-3-embed-1b:free": 6087
     },
-    "claims": {
+    "sourceNotes": {
       "total": 0,
-      "byStatus": {}
+      "bySkill": {}
     },
     "runs": {
       "total": 897,
@@ -237,7 +237,7 @@
         "cellulose",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -259,7 +259,7 @@
         "nonwovens",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "pilot-to-industrial",
       "accessMode": "pdf",
@@ -282,7 +282,7 @@
         "rejects",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -306,7 +306,7 @@
         "fibres",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "pilot-to-industrial",
       "accessMode": "web",
@@ -328,7 +328,7 @@
         "nonwovens",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "pilot and industrial trials",
       "accessMode": "web",
@@ -353,7 +353,7 @@
         "mechanical-recycling",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "national and comparative material-flow analysis",
       "accessMode": "pdf",
@@ -372,7 +372,7 @@
       "materialFamilies": [
         "plastics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "policy and process background",
       "accessMode": "web",
@@ -397,7 +397,7 @@
         "mechanical-recycling",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and industrial pilot analysis",
       "accessMode": "web",
@@ -424,7 +424,7 @@
         "vocs",
         "mechanical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "material-flow and contamination study",
       "accessMode": "web",
@@ -445,7 +445,7 @@
         "waste-management",
         "transboundary-waste"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "policy and technical guidance",
       "accessMode": "pdf",
@@ -467,7 +467,7 @@
         "metals",
         "e-waste"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "national legal orientation",
       "accessMode": "pdf",
@@ -490,7 +490,7 @@
         "metals",
         "e-waste"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "national administrative guidance",
       "accessMode": "web",
@@ -512,7 +512,7 @@
         "dust",
         "ATEX"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -536,7 +536,7 @@
         "pellets",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -557,7 +557,7 @@
         "polymers",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
       "accessMode": "api",
@@ -580,7 +580,7 @@
         "cellulose",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
       "accessMode": "api",
@@ -604,7 +604,7 @@
         "mechanical-recycling",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "research and policy terminology",
       "accessMode": "web",
@@ -627,7 +627,7 @@
         "food-packaging",
         "circular-economy"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "closed-loop case study",
       "accessMode": "web",
@@ -652,7 +652,7 @@
         "lca",
         "techno-economics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "route comparison and modelling",
       "accessMode": "web",
@@ -675,7 +675,7 @@
         "dissolution",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "route and life-cycle comparison",
       "accessMode": "web",
@@ -697,7 +697,7 @@
         "green-waste",
         "compostables"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "public guidance",
       "accessMode": "web",
@@ -719,7 +719,7 @@
         "paperboard",
         "fibre"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "procurement guidance",
       "accessMode": "web",
@@ -740,7 +740,7 @@
         "cullet",
         "mixed-materials"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
       "accessMode": "api",
@@ -762,7 +762,7 @@
         "fumes",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "process HSE",
       "accessMode": "pdf",
@@ -787,7 +787,7 @@
         "polymer-characterization",
         "sorting"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory and computational characterization",
       "accessMode": "web",
@@ -812,7 +812,7 @@
         "tga",
         "rheology"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory characterization",
       "accessMode": "web",
@@ -836,7 +836,7 @@
         "rheology",
         "mechanical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory materials study",
       "accessMode": "web",
@@ -860,7 +860,7 @@
         "hse",
         "product-safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory product-safety study",
       "accessMode": "web",
@@ -882,7 +882,7 @@
         "combustible-dust",
         "safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "equipment and workplace regulation",
       "accessMode": "web",
@@ -904,7 +904,7 @@
         "additives",
         "chemicals"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "chemical policy and risk",
       "accessMode": "web",
@@ -927,7 +927,7 @@
         "washing",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "chemical workplace safety",
       "accessMode": "pdf",
@@ -950,7 +950,7 @@
         "cables",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-scale and industrial",
       "accessMode": "pdf",
@@ -974,7 +974,7 @@
         "plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-to-industrial",
       "accessMode": "web",
@@ -998,7 +998,7 @@
         "plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-to-industrial",
       "accessMode": "pdf",
@@ -1022,7 +1022,7 @@
         "plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -1048,7 +1048,7 @@
         "regrind",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1072,7 +1072,7 @@
         "technical-plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1098,7 +1098,7 @@
         "regrind",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1122,7 +1122,7 @@
         "machinery",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "industrial environmental control",
       "accessMode": "web",
@@ -1145,7 +1145,7 @@
         "metals",
         "product-design"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "EU product policy and design",
       "accessMode": "web",
@@ -1168,7 +1168,7 @@
         "additives",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "chemical and waste law",
       "accessMode": "web",
@@ -1190,7 +1190,7 @@
         "recycled-content",
         "waste"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "EU product and waste law",
       "accessMode": "web",
@@ -1213,7 +1213,7 @@
         "e-waste",
         "shipments"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "cross-border legal framework",
       "accessMode": "web",
@@ -1236,7 +1236,7 @@
         "cables",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "EU product and waste law",
       "accessMode": "web",
@@ -1257,7 +1257,7 @@
         "copper",
         "cables"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "legal and output qualification",
       "accessMode": "web",
@@ -1281,7 +1281,7 @@
         "machinery",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "industrial environmental control",
       "accessMode": "web",
@@ -1306,7 +1306,7 @@
         "lca",
         "techno-economics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "system and process assessment",
       "accessMode": "web",
@@ -1326,7 +1326,7 @@
         "metals",
         "ferrous"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "national statistics",
       "accessMode": "web",
@@ -1349,7 +1349,7 @@
         "batteries",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1370,7 +1370,7 @@
         "cullet",
         "minerals"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and industrial research",
       "accessMode": "api",
@@ -1393,7 +1393,7 @@
         "cables",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-scale",
       "accessMode": "web",
@@ -1417,7 +1417,7 @@
         "radiators",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-to-industrial",
       "accessMode": "web",
@@ -1439,7 +1439,7 @@
         "chemicals",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace safety",
       "accessMode": "web",
@@ -1462,7 +1462,7 @@
         "fibres",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -1484,7 +1484,7 @@
         "profiles",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1509,7 +1509,7 @@
         "organics",
         "e-waste"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "public guidance",
       "accessMode": "web",
@@ -1534,7 +1534,7 @@
         "chemical-recycling",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and life-cycle modelling",
       "accessMode": "web",
@@ -1555,7 +1555,7 @@
         "polymers",
         "packaging"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "EU systems research",
       "accessMode": "web",
@@ -1578,7 +1578,7 @@
         "paper",
         "glass"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "regulatory and policy",
       "accessMode": "web",
@@ -1600,7 +1600,7 @@
         "batteries",
         "composites"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "research and policy",
       "accessMode": "web",
@@ -1623,7 +1623,7 @@
         "additives",
         "flame-retardants"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "technical research and policy",
       "accessMode": "web",
@@ -1644,7 +1644,7 @@
         "fibres",
         "clothing"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "EU research and policy",
       "accessMode": "web",
@@ -1665,7 +1665,7 @@
         "copper",
         "cables"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "sector technical history",
       "accessMode": "web",
@@ -1690,7 +1690,7 @@
         "non-plastics",
         "mixed-waste"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "regional MRF study",
       "accessMode": "pdf",
@@ -1714,7 +1714,7 @@
         "chemical-recycling",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and life-cycle modelling",
       "accessMode": "web",
@@ -1738,7 +1738,7 @@
         "films",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1761,7 +1761,7 @@
         "glass",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -1785,7 +1785,7 @@
         "plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-to-industrial",
       "accessMode": "pdf",
@@ -1808,7 +1808,7 @@
         "granules",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -1832,7 +1832,7 @@
         "e-waste",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -1854,7 +1854,7 @@
         "HSE",
         "fire-safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace safety",
       "accessMode": "web",
@@ -1878,7 +1878,7 @@
         "yield",
         "techno-economics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and material-flow study",
       "accessMode": "web",
@@ -1903,7 +1903,7 @@
         "vocs",
         "hse"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory mechanical-recycling study",
       "accessMode": "web",
@@ -1925,7 +1925,7 @@
         "cables",
         "plastics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory and pilot research",
       "accessMode": "web",
@@ -1948,7 +1948,7 @@
         "wool",
         "polyester"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
       "accessMode": "api",
@@ -1970,7 +1970,7 @@
         "batteries",
         "critical-raw-materials"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and systems research",
       "accessMode": "api",
@@ -1995,7 +1995,7 @@
         "solvolysis",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and life-cycle modelling",
       "accessMode": "web",
@@ -2018,7 +2018,7 @@
         "mechanical-recycling",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "materials and degradation review",
       "accessMode": "web",
@@ -2040,7 +2040,7 @@
         "thermal-processing",
         "fumes"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "laboratory research",
       "accessMode": "web",
@@ -2063,7 +2063,7 @@
         "glass-fibre",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -2087,7 +2087,7 @@
         "pp",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -2109,7 +2109,7 @@
         "additives",
         "gases"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "laboratory reference",
       "accessMode": "web",
@@ -2130,7 +2130,7 @@
         "polymers",
         "additives"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "research and metrology",
       "accessMode": "web",
@@ -2152,7 +2152,7 @@
         "policy",
         "circular-economy"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "global systems research",
       "accessMode": "pdf",
@@ -2174,7 +2174,7 @@
         "policy",
         "recycled-content"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "policy and market research",
       "accessMode": "pdf",
@@ -2196,7 +2196,7 @@
         "maintenance",
         "electrical-safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace regulation",
       "accessMode": "web",
@@ -2221,7 +2221,7 @@
         "HSE",
         "fire-safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace fire and explosion safety",
       "accessMode": "web",
@@ -2244,7 +2244,7 @@
         "cleaning",
         "washing"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace regulation",
       "accessMode": "web",
@@ -2265,7 +2265,7 @@
         "machinery",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace safety",
       "accessMode": "web",
@@ -2287,7 +2287,7 @@
         "mechanical-recycling",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "engineering research",
       "accessMode": "web",
@@ -2312,7 +2312,7 @@
         "films",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-to-industrial",
       "accessMode": "web",
@@ -2337,7 +2337,7 @@
         "policy",
         "lca"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "global systems modelling",
       "accessMode": "web",
@@ -2360,7 +2360,7 @@
         "textiles",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -2383,7 +2383,7 @@
         "textiles",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -2408,7 +2408,7 @@
         "mechanical-recycling",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "value-chain study",
       "accessMode": "web",
@@ -2430,7 +2430,7 @@
         "boards",
         "mixed-plastics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "low-tech",
       "scale": "small-scale",
       "accessMode": "pdf",
@@ -2457,7 +2457,7 @@
         "pyrolysis",
         "gasification"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "route strategy and life-cycle perspective",
       "accessMode": "web",
@@ -2476,7 +2476,7 @@
       "materialFamilies": [
         "plastics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "national statistics",
       "accessMode": "web",
@@ -2496,7 +2496,7 @@
         "plastics",
         "packaging"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "policy",
       "accessMode": "web",
@@ -2520,7 +2520,7 @@
         "pet",
         "recycling-industry"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "European recycling industry",
       "accessMode": "pdf",
@@ -2541,7 +2541,7 @@
         "polymers",
         "chemical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and technology review",
       "accessMode": "api",
@@ -2565,7 +2565,7 @@
         "chemical-recycling",
         "catalysis"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory chemical-recycling research",
       "accessMode": "web",
@@ -2589,7 +2589,7 @@
         "organics",
         "low-tech"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "low-tech",
       "scale": "small-scale and community",
       "accessMode": "pdf",
@@ -2611,7 +2611,7 @@
         "small-scale",
         "waste-management"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "low-tech",
       "scale": "small-scale and community",
       "accessMode": "pdf",
@@ -2625,7 +2625,7 @@
       "publisher": "Precious Plastic community",
       "sourceType": "OPEN_SOURCE_TECHNICAL_LIBRARY",
       "jurisdiction": "International / community practice",
-      "licenseNote": "Use the local downloaded kit as a candidate reference and preserve its version and licence metadata.",
+      "licenseNote": "Use the local downloaded kit as an optional reference and preserve its version and licence metadata.",
       "limitations": "Community designs require competent construction, guarding, electrical, fire, and process review.",
       "materialFamilies": [
         "plastics",
@@ -2633,7 +2633,7 @@
         "small-scale",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "community",
       "scale": "small-scale",
       "accessMode": "web",
@@ -2654,7 +2654,7 @@
         "low-tech",
         "small-scale"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "community",
       "scale": "small-scale",
       "accessMode": "web",
@@ -2675,7 +2675,7 @@
         "low-tech",
         "small-scale"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "community",
       "scale": "small-scale",
       "accessMode": "web",
@@ -2701,7 +2701,7 @@
         "sorting",
         "machine-learning"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory and computational sorting research",
       "accessMode": "web",
@@ -2724,7 +2724,7 @@
         "precious-metals",
         "composites"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
       "accessMode": "api",
@@ -2750,7 +2750,7 @@
         "degassing",
         "techno-economics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and quality study",
       "accessMode": "web",
@@ -2775,7 +2775,7 @@
         "polymer-characterization",
         "regulation"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "analytical methods and policy",
       "accessMode": "web",
@@ -2798,7 +2798,7 @@
         "wastewater",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "chemicals regulation",
       "accessMode": "pdf",
@@ -2822,7 +2822,7 @@
         "plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -2843,7 +2843,7 @@
         "polymers",
         "bale-specifications"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "commercial and industrial",
       "accessMode": "web",
@@ -2865,7 +2865,7 @@
         "fibre",
         "cellulose"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and process research",
       "accessMode": "api",
@@ -2888,7 +2888,7 @@
         "lca",
         "techno-economics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "product pathway assessment",
       "accessMode": "web",
@@ -2912,7 +2912,7 @@
         "pet",
         "pvc"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "packaging design and recycling chain",
       "accessMode": "web",
@@ -2937,7 +2937,7 @@
         "pvc",
         "additives"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "laboratory protocol and value chain",
       "accessMode": "web",
@@ -2962,7 +2962,7 @@
         "recycled-content",
         "technical-quality"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "application-specific quality assessment",
       "accessMode": "web",
@@ -2984,7 +2984,7 @@
         "HSE",
         "safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "chemicals regulation",
       "accessMode": "web",
@@ -3005,7 +3005,7 @@
         "food-contact",
         "polymers"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "product and process regulation",
       "accessMode": "pdf",
@@ -3026,7 +3026,7 @@
         "recycling-equipment",
         "safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "machinery regulation",
       "accessMode": "pdf",
@@ -3049,7 +3049,7 @@
         "e-waste",
         "batteries"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "transboundary waste regulation",
       "accessMode": "pdf",
@@ -3072,7 +3072,7 @@
         "food-contact",
         "hse"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "food-safety measurement and regulatory science",
       "accessMode": "web",
@@ -3094,7 +3094,7 @@
         "machinery",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "workplace safety",
       "accessMode": "pdf",
@@ -3118,7 +3118,7 @@
         "mixed-waste",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3144,7 +3144,7 @@
         "metals",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3170,7 +3170,7 @@
         "hse",
         "product-safety"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory safety assessment",
       "accessMode": "web",
@@ -3193,7 +3193,7 @@
         "plastics",
         "separation"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory research",
       "accessMode": "web",
@@ -3214,7 +3214,7 @@
         "flakes",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -3236,7 +3236,7 @@
         "e-waste",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -3259,7 +3259,7 @@
         "degradation",
         "food-packaging"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory ageing and processing study",
       "accessMode": "web",
@@ -3283,7 +3283,7 @@
         "batteries",
         "HSE"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "waste-sector safety",
       "accessMode": "web",
@@ -3306,7 +3306,7 @@
         "flakes",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -3330,7 +3330,7 @@
         "regrind",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3356,7 +3356,7 @@
         "fibres",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3381,7 +3381,7 @@
         "films",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "pdf",
@@ -3405,7 +3405,7 @@
         "plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "small-scale and industrial",
       "accessMode": "web",
@@ -3429,7 +3429,7 @@
         "packaging",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3451,7 +3451,7 @@
         "digital-sorting",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "pilot and industrial context",
       "accessMode": "web",
@@ -3476,7 +3476,7 @@
         "films",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3502,7 +3502,7 @@
         "lca",
         "techno-economics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "process and techno-economic modelling",
       "accessMode": "web",
@@ -3524,7 +3524,7 @@
         "cotton",
         "polyester"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "lab and industrial review",
       "accessMode": "api",
@@ -3544,7 +3544,7 @@
         "textiles",
         "fibres"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "policy",
       "accessMode": "web",
@@ -3565,7 +3565,7 @@
         "fibres",
         "plastics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "research and policy",
       "accessMode": "web",
@@ -3587,7 +3587,7 @@
         "hse",
         "environmental-risk"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "scientific review",
       "accessMode": "web",
@@ -3612,7 +3612,7 @@
         "chemicals",
         "hse"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "materials and life-cycle perspective",
       "accessMode": "web",
@@ -3635,7 +3635,7 @@
         "mixed-materials",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3658,7 +3658,7 @@
         "biomass",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3682,7 +3682,7 @@
         "hse",
         "mechanical-recycling"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "secondary",
       "scale": "laboratory and value-chain study",
       "accessMode": "web",
@@ -3706,7 +3706,7 @@
         "glass",
         "organics"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "waste regulation",
       "accessMode": "pdf",
@@ -3729,7 +3729,7 @@
         "e-waste",
         "all-materials"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "primary",
       "scale": "legal framework",
       "accessMode": "web",
@@ -3752,7 +3752,7 @@
         "reinforced-plastics",
         "machinery"
       ],
-      "status": "candidate",
+      "status": "catalogued",
       "authorityTier": "industry",
       "scale": "industrial",
       "accessMode": "web",
@@ -3780,7 +3780,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "scientific review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-flexible-packaging-waste-flows-2025-1-4d696706029d",
@@ -3804,7 +3804,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "national and comparative material-flow analysis",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-king-county-mrf-assessment-2022-1-984d2bfe2fdb",
@@ -3828,7 +3828,7 @@
       ],
       "authorityTier": "primary",
       "scale": "regional MRF study",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-lee-cable-separation-2016-4-2442ee26dfb0",
@@ -3849,7 +3849,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "laboratory and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-8-65cd4ab463b6",
@@ -3870,7 +3870,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-lee-cable-separation-2016-3-18907f01b678",
@@ -3891,7 +3891,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "laboratory and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-7-cd4199172cbf",
@@ -3912,7 +3912,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-lee-cable-separation-2016-2-b17915fad55e",
@@ -3933,7 +3933,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "laboratory and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-6-814afbb0e6fd",
@@ -3954,7 +3954,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-nist-polymer-thermal-decomposition-2-3b3cb514afba",
@@ -3975,7 +3975,7 @@
       ],
       "authorityTier": "primary",
       "scale": "laboratory research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-starlinger-post-industrial-recycling-1-6055ea87381e",
@@ -3998,7 +3998,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pre-european-plastics-recycling-2022-1-a7d3a8c11576",
@@ -4021,7 +4021,7 @@
       ],
       "authorityTier": "industry",
       "scale": "European recycling industry",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-oecd-global-plastics-outlook-1-8b9a1b703d29",
@@ -4042,7 +4042,7 @@
       ],
       "authorityTier": "primary",
       "scale": "global systems research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-oecd-recycled-content-requirements-1-d20cd2019a1d",
@@ -4063,7 +4063,7 @@
       ],
       "authorityTier": "primary",
       "scale": "policy and market research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-recyclass-methodology-1-54d6fa55e22a",
@@ -4087,7 +4087,7 @@
       ],
       "authorityTier": "industry",
       "scale": "laboratory protocol and value chain",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-recyclass-design-guidelines-1-cc7684d5aacb",
@@ -4110,7 +4110,7 @@
       ],
       "authorityTier": "industry",
       "scale": "packaging design and recycling chain",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eldan-powerkat-b-2026-1-f3d4ef8d9316",
@@ -4133,7 +4133,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-stokkermill-ks-2026-1-e84fa020b57c",
@@ -4156,7 +4156,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-scale and industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-lee-cable-separation-2016-1-483d27ac8c50",
@@ -4177,7 +4177,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "laboratory and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-jrc-copper-eow-2011-1-ab31d5c26042",
@@ -4197,7 +4197,7 @@
       ],
       "authorityTier": "primary",
       "scale": "sector technical history",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-jrc-weee-plastics-2016-1-598291207cdf",
@@ -4219,7 +4219,7 @@
       ],
       "authorityTier": "primary",
       "scale": "technical research and policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-bg-moew-wsr-notice-2026-1-849447c6c891",
@@ -4241,7 +4241,7 @@
       ],
       "authorityTier": "primary",
       "scale": "national administrative guidance",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-bg-wma-official-2022-1-d7e72929cf95",
@@ -4262,7 +4262,7 @@
       ],
       "authorityTier": "primary",
       "scale": "national legal orientation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-5-67b2c62fcc9a",
@@ -4283,7 +4283,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-4-45eb621fbd6f",
@@ -4304,7 +4304,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-waste-shipments-2024-1157-1-92b46dd7f65b",
@@ -4326,7 +4326,7 @@
       ],
       "authorityTier": "primary",
       "scale": "transboundary waste regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-waste-framework-directive-1-bba1a4848cff",
@@ -4349,7 +4349,7 @@
       ],
       "authorityTier": "primary",
       "scale": "waste regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-recycled-plastic-food-contact-1-b4394da950c9",
@@ -4369,7 +4369,7 @@
       ],
       "authorityTier": "primary",
       "scale": "product and process regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-clp-regulation-1272-2008-1-4d2ee22c0671",
@@ -4390,7 +4390,7 @@
       ],
       "authorityTier": "primary",
       "scale": "chemicals regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-reach-and-clp-1-bb4f8b53afe3",
@@ -4412,7 +4412,7 @@
       ],
       "authorityTier": "primary",
       "scale": "chemicals regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-atex-2014-34-1-7c26f073d84b",
@@ -4433,7 +4433,7 @@
       ],
       "authorityTier": "primary",
       "scale": "equipment and workplace regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-machinery-regulation-2023-1230-1-ddb95742007c",
@@ -4453,7 +4453,7 @@
       ],
       "authorityTier": "primary",
       "scale": "machinery regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-tomra-holygrail-1-b5259bff3870",
@@ -4474,7 +4474,7 @@
       ],
       "authorityTier": "industry",
       "scale": "pilot and industrial context",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-3-01a6ea1a13b9",
@@ -4495,7 +4495,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-metal-recovery-energy-2-0c8af0623f90",
@@ -4516,7 +4516,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and systems research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-pcb-metals-recovery-3-fffa62a8d13c",
@@ -4538,7 +4538,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-glass-computer-vision-3-9d869cee10f3",
@@ -4558,7 +4558,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-glass-recycling-review-3-8906094254eb",
@@ -4578,7 +4578,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and industrial research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-paper-recycling-review-2-6b1142f480d0",
@@ -4599,7 +4599,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and process research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-chemical-recycling-3-ea2ee8813bfc",
@@ -4621,7 +4621,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-mechanical-recycling-3-9ba36077b547",
@@ -4643,7 +4643,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-recycling-review-3-178b32447874",
@@ -4664,7 +4664,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and industrial review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-plastic-chemical-recycling-review-3-5b6004c6650a",
@@ -4684,7 +4684,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-polymer-recycling-review-3-d8e26efb4826",
@@ -4704,7 +4704,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and technology review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-pcb-metals-recovery-2-6a86cbc203fc",
@@ -4726,7 +4726,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-mechanical-recycling-2-ef9cccd24d8e",
@@ -4748,7 +4748,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-recycling-review-2-6a2c9187e653",
@@ -4769,7 +4769,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and industrial review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-plastic-chemical-recycling-review-2-e56a977bf8d4",
@@ -4789,7 +4789,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-glass-computer-vision-2-69c8ad70b993",
@@ -4809,7 +4809,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-glass-recycling-review-2-27e1d029dec0",
@@ -4829,7 +4829,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and industrial research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-chemical-recycling-2-265b53ba5018",
@@ -4851,7 +4851,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-erema-regrindpro-technical-sheet-1-33f61e889592",
@@ -4876,7 +4876,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-2-268df35bc218",
@@ -4897,7 +4897,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-polymer-recycling-review-2-0ea398f51cae",
@@ -4917,7 +4917,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and technology review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-guidetti-sincro-eko-1-8f96ec717dc3",
@@ -4939,7 +4939,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-guidetti-wire-pro-1-41bd6207b788",
@@ -4962,7 +4962,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eldan-turbo-mill-1-bd1034b01c8d",
@@ -4985,7 +4985,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eldan-separator-1-ebcfaabdbed4",
@@ -5008,7 +5008,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eldan-thunderhawk-1-41934d3e76cd",
@@ -5030,7 +5030,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-scale and industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eldan-redoma-cable-systems-1-1f91944db1cc",
@@ -5053,7 +5053,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-mtb-cablebox-1-f463c24c692e",
@@ -5076,7 +5076,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-mtb-upgrade-box-1-00330c558241",
@@ -5098,7 +5098,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-mtb-corporate-brochure-1-7895ce6760d5",
@@ -5121,7 +5121,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-andritz-paper-reject-equipment-1-dc8d49ad08c9",
@@ -5143,7 +5143,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-andritz-deinking-systems-1-66bc497b4353",
@@ -5165,7 +5165,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-andritz-textile-technical-centre-1-85fd0dc5eebb",
@@ -5186,7 +5186,7 @@
       ],
       "authorityTier": "industry",
       "scale": "pilot and industrial trials",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-andritz-mechanical-textile-brochure-1-756369ba35ba",
@@ -5207,7 +5207,7 @@
       ],
       "authorityTier": "industry",
       "scale": "pilot-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-andritz-textile-recycling-1-bb15d6f2fe09",
@@ -5230,7 +5230,7 @@
       ],
       "authorityTier": "industry",
       "scale": "pilot-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-buehler-sortex-multivision-1-5d332d8839a8",
@@ -5251,7 +5251,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-buehler-sortex-plastic-sorting-1-e407b1b507ce",
@@ -5274,7 +5274,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-steinert-household-waste-1-4901005b53d7",
@@ -5297,7 +5297,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-steinert-plastics-sorting-1-42b612b599fc",
@@ -5322,7 +5322,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-starlinger-recostar-dynamic-1-4388b73efbc4",
@@ -5347,7 +5347,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pellencst-smart-share-1-dd128e8d1a26",
@@ -5369,7 +5369,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pellencst-aisee-1-b385d3d8a670",
@@ -5391,7 +5391,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-ngr-cgran-twin-1-299b88c01e84",
@@ -5413,7 +5413,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-ngr-cgran-1-195bcf845ddf",
@@ -5436,7 +5436,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-polystar-repro-flex-1-9927d0ac152a",
@@ -5460,7 +5460,7 @@
       ],
       "authorityTier": "industry",
       "scale": "small-to-industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-sesotec-flake-purifier-1-56ec2eea3af0",
@@ -5480,7 +5480,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-sesotec-varisort-technical-sheet-1-330f3bb8b60b",
@@ -5501,7 +5501,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-genox-brochure-library-1-0c5ebd550e3f",
@@ -5523,7 +5523,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-zerma-granulators-1-2e31b330670e",
@@ -5545,7 +5545,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-erema-intarema-t-te-1-a089e231ce7a",
@@ -5568,7 +5568,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-herbold-plastics-recycling-1-ff6d94f78825",
@@ -5589,7 +5589,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-herbold-sml-technical-sheet-1-4a4425472ceb",
@@ -5611,7 +5611,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-lindner-film-examiner-1-1ca0b8f0b3ec",
@@ -5634,7 +5634,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-lindner-srf-sorting-1-b652779c112b",
@@ -5656,7 +5656,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-vecoplan-downloads-1-7424d465f2fa",
@@ -5678,7 +5678,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-vecoplan-viz-shredder-1-09e1b290ff88",
@@ -5700,7 +5700,7 @@
       ],
       "authorityTier": "industry",
       "scale": "industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-rema-apr-plastic-specifications-1-48539bafadff",
@@ -5720,7 +5720,7 @@
       ],
       "authorityTier": "industry",
       "scale": "commercial and industrial",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-basel-plastic-recycling-compilation-1-49233d6d722a",
@@ -5740,7 +5740,7 @@
       ],
       "authorityTier": "primary",
       "scale": "policy and technical guidance",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-plastic-odyssey-recycled-boards-1-78c5141d2445",
@@ -5761,7 +5761,7 @@
       ],
       "authorityTier": "low-tech",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-practical-action-recycling-book-1-918e71975fb5",
@@ -5784,7 +5784,7 @@
       ],
       "authorityTier": "low-tech",
       "scale": "small-scale and community",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-practical-action-plastics-recycling-1-bda4d4ab9fdc",
@@ -5805,7 +5805,7 @@
       ],
       "authorityTier": "low-tech",
       "scale": "small-scale and community",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-download-kit-1-24d3e3811776",
@@ -5826,7 +5826,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-precious-plastic-open-source-1-8823855ba011",
@@ -5846,7 +5846,7 @@
       ],
       "authorityTier": "community",
       "scale": "small-scale",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-osha-hazard-communication-1-c69c3aa7a216",
@@ -5868,7 +5868,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-osha-combustible-dust-1-eb285f8e7641",
@@ -5892,7 +5892,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace fire and explosion safety",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-osha-lockout-tagout-1-ea47f6190bb5",
@@ -5913,7 +5913,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace regulation",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-osha-plastics-machine-guarding-1-ef85feb0d811",
@@ -5933,7 +5933,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace safety",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-hse-waste-processing-1-1a541afc4c4a",
@@ -5956,7 +5956,7 @@
       ],
       "authorityTier": "primary",
       "scale": "waste-sector safety",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-hse-simpl-plastics-1-ce84957f42c1",
@@ -5977,7 +5977,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace safety",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-hse-plastics-fume-ppis13-1-97649b11cc73",
@@ -5998,7 +5998,7 @@
       ],
       "authorityTier": "primary",
       "scale": "process HSE",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-hse-plastics-industry-1-3d4b6fc55b89",
@@ -6019,7 +6019,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace safety",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-hse-plastics-safety-basics-1-6db5bbf5cb54",
@@ -6040,7 +6040,7 @@
       ],
       "authorityTier": "primary",
       "scale": "workplace safety",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-jrc-end-of-waste-1-a0f6e001e14d",
@@ -6062,7 +6062,7 @@
       ],
       "authorityTier": "primary",
       "scale": "regulatory and policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-jrc-plastics-flows-1-c6d767bc806b",
@@ -6082,7 +6082,7 @@
       ],
       "authorityTier": "primary",
       "scale": "EU systems research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-jrc-textile-study-1-cf4fbfdadee4",
@@ -6102,7 +6102,7 @@
       ],
       "authorityTier": "primary",
       "scale": "EU research and policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-nist-polymer-thermal-decomposition-1-19e744e589ec",
@@ -6123,7 +6123,7 @@
       ],
       "authorityTier": "primary",
       "scale": "laboratory research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-nist-chemistry-webbook-1-d6c13fff5305",
@@ -6144,7 +6144,7 @@
       ],
       "authorityTier": "primary",
       "scale": "laboratory reference",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-nist-polymers-plastics-1-1e5a118331e2",
@@ -6164,7 +6164,7 @@
       ],
       "authorityTier": "primary",
       "scale": "research and metrology",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-metal-recovery-energy-1-797046ee4f12",
@@ -6185,7 +6185,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and systems research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-pcb-metals-recovery-1-797046ee4f12",
@@ -6207,7 +6207,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-glass-computer-vision-1-797046ee4f12",
@@ -6227,7 +6227,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-glass-recycling-review-1-797046ee4f12",
@@ -6247,7 +6247,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and industrial research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-paper-recycling-review-1-797046ee4f12",
@@ -6268,7 +6268,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and process research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-chemical-recycling-1-797046ee4f12",
@@ -6290,7 +6290,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-mechanical-recycling-1-797046ee4f12",
@@ -6312,7 +6312,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-textile-recycling-review-1-797046ee4f12",
@@ -6333,7 +6333,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and industrial review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-plastic-chemical-recycling-review-1-797046ee4f12",
@@ -6353,7 +6353,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and pilot research",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-pmc-polymer-recycling-review-1-797046ee4f12",
@@ -6373,7 +6373,7 @@
       ],
       "authorityTier": "secondary",
       "scale": "lab and technology review",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-us-epa-composting-1-c877ab69a109",
@@ -6394,7 +6394,7 @@
       ],
       "authorityTier": "primary",
       "scale": "public guidance",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-us-epa-common-recyclables-1-e4383a66e56b",
@@ -6418,7 +6418,7 @@
       ],
       "authorityTier": "primary",
       "scale": "public guidance",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eea-textiles-circular-economy-1-5bd73e8e8ac4",
@@ -6438,7 +6438,7 @@
       ],
       "authorityTier": "primary",
       "scale": "research and policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-textiles-strategy-1-b7551d057941",
@@ -6457,7 +6457,7 @@
       ],
       "authorityTier": "primary",
       "scale": "policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-us-epa-paper-products-1-2e28bb693b8e",
@@ -6478,7 +6478,7 @@
       ],
       "authorityTier": "primary",
       "scale": "procurement guidance",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-jrc-critical-raw-material-recovery-1-6f16402d9e4c",
@@ -6499,7 +6499,7 @@
       ],
       "authorityTier": "primary",
       "scale": "research and policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-us-epa-ferrous-metals-data-1-64480e30e985",
@@ -6518,7 +6518,7 @@
       ],
       "authorityTier": "primary",
       "scale": "national statistics",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-eu-plastics-strategy-1-dd72c7ce8dcc",
@@ -6537,7 +6537,7 @@
       ],
       "authorityTier": "primary",
       "scale": "policy",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-us-epa-plastics-data-1-827a3d2221a6",
@@ -6555,7 +6555,7 @@
       ],
       "authorityTier": "primary",
       "scale": "national statistics",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     },
     {
       "documentId": "doc-us-epa-plastics-advanced-recycling-1-b0f62146f58b",
@@ -6573,7 +6573,7 @@
       ],
       "authorityTier": "primary",
       "scale": "policy and process background",
-      "sourceStatus": "candidate"
+      "sourceStatus": "catalogued"
     }
   ]
 }

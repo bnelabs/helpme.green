@@ -41,8 +41,8 @@ class QualityReport:
 class AnswerQualityGate:
     """Provider-neutral answer guard with optional independent model critics.
 
-    Critics may flag a draft, but they never write or promote knowledge and never override the
-    deterministic evaluator. The deterministic checks remain active when no model is available.
+    Critics may flag a draft, but they never write knowledge or replace the main answer. The local
+    checks remain active when no critic model is available.
     """
 
     def __init__(self, *, router: ModelRouter | None = None) -> None:
@@ -139,7 +139,7 @@ class AnswerQualityGate:
             role, mission = item
             prompt = (
                 "You are an independent answer critic. You do not rewrite the answer, make a decision, "
-                "or promote knowledge. Return JSON with score (0-5), flags (array of short strings), "
+                "or write knowledge. Return JSON with score (0-5), flags (array of short strings), "
                 "and reason (short string). "
                 + mission
                 + "\nUser message:\n"

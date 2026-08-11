@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     database = KnowledgeDatabase(db_path)
     for source in manifest.sources:
-        database.register_source(source, status="candidate")
+        database.register_source(source, status="catalogued")
     if args.fetch:
         provider = embedding_provider_from_environment() if args.embed else None
         results = ingest_manifest(

@@ -14,7 +14,9 @@ from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
 
-from .domain import CaseFact, canonical_json
+
+def canonical_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _default_model_identity() -> str:
@@ -56,42 +58,28 @@ def _write_exclusive(path: Path, text: str) -> None:
 @dataclass
 class SessionState:
     session_id: str
-    material: str
+    topic: str
     geography: str
-    facts: dict[str, CaseFact] = field(default_factory=dict)
     model_identity: str = field(default_factory=_default_model_identity)
     conversation: list[dict[str, str]] = field(default_factory=list)
     understanding: dict[str, str] = field(default_factory=dict)
-    last_evaluation: dict[str, Any] | None = None
-    exited: bool = False
 
     @classmethod
-    def new(cls, *, material: str, geography: str) -> SessionState:
-        return cls(session_id=str(uuid.uuid4()), material=material, geography=geography)
+    def new(cls, *, topic: str, geography: str) -> SessionState:
+        return cls(session_id=str(uuid.uuid4()), topic=topic, geography=geography)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "session_id": self.session_id,
-            "material": self.material,
+            "topic": self.topic,
             "geography": self.geography,
-            "facts": {key: self.facts[key].to_dict() for key in sorted(self.facts)},
             "model_identity": self.model_identity,
             "conversation": self.conversation,
             "understanding": self.understanding,
-            "last_evaluation": self.last_evaluation,
-            "exited": self.exited,
         }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> SessionState:
-        raw_facts = data.get("facts", {})
-        if not isinstance(raw_facts, Mapping):
-            raise ValueError("Session facts must be an object.")
-        facts: dict[str, CaseFact] = {}
-        for key, value in raw_facts.items():
-            if not isinstance(value, Mapping):
-                raise ValueError("Each session fact must be an object.")
-            facts[str(key)] = CaseFact.from_dict(value)
         raw_conversation = data.get("conversation", [])
         if not isinstance(raw_conversation, list):
             raise ValueError("Session conversation must be a list.")
@@ -114,16 +102,11 @@ class SessionState:
         }
         return cls(
             session_id=str(data["session_id"]),
-            material=str(data.get("material", "copper cable")),
-            geography=str(data.get("geography", "Bulgaria / EU")),
-            facts=facts,
+            topic=str(data.get("topic", "")),
+            geography=str(data.get("geography", "")),
             model_identity=str(data.get("model_identity", _default_model_identity())),
             conversation=conversation,
             understanding=understanding,
-            last_evaluation=data.get("last_evaluation")
-            if isinstance(data.get("last_evaluation"), dict)
-            else None,
-            exited=bool(data.get("exited", False)),
         )
 
 
@@ -152,7 +135,11 @@ class SessionStore:
         temporary.write_text(canonical_json(session.to_dict()), encoding="utf-8")
         temporary.chmod(0o600)
         os.replace(temporary, target)
-        self.append_audit(session.session_id, "session.saved", {"fact_count": len(session.facts)})
+        self.append_audit(
+            session.session_id,
+            "session.saved",
+            {"conversation_turns": len(session.conversation)},
+        )
 
     def load_session(self, session_id: str) -> SessionState:
         session = SessionState.from_dict(

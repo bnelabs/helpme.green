@@ -36,7 +36,7 @@ class ExpertSkill:
     triggers: tuple[str, ...]
     concepts: tuple[str, ...]
     tests: tuple[str, ...]
-    verify_before_claiming: tuple[str, ...]
+    confirm_before_advising: tuple[str, ...]
     avoid_overclaims: tuple[str, ...]
     followups: tuple[str, ...]
     next_step: str
@@ -44,7 +44,7 @@ class ExpertSkill:
 
     @classmethod
     def from_mapping(cls, raw: Mapping[str, Any]) -> ExpertSkill:
-        required = ("id", "title", "material_families", "triggers", "concepts", "tests")
+        required = ("id", "title", "material_families", "concepts", "tests")
         missing = [key for key in required if not raw.get(key)]
         if missing:
             raise SkillConfigurationError(
@@ -57,8 +57,8 @@ class ExpertSkill:
             triggers=_strings(raw.get("triggers"), field="triggers"),
             concepts=_strings(raw.get("concepts"), field="concepts"),
             tests=_strings(raw.get("tests"), field="tests"),
-            verify_before_claiming=_strings(
-                raw.get("verify_before_claiming"), field="verify_before_claiming"
+            confirm_before_advising=_strings(
+                raw.get("confirm_before_advising"), field="confirm_before_advising"
             ),
             avoid_overclaims=_strings(raw.get("avoid_overclaims"), field="avoid_overclaims"),
             followups=_strings(raw.get("followups"), field="followups"),
@@ -75,9 +75,9 @@ class ExpertSkill:
                 "Use these concepts when they change the user's next decision: "
                 + "; ".join(self.concepts),
                 "Useful tests or observations to consider: " + "; ".join(self.tests),
-                "Do not claim these without case-specific verification: "
-                + "; ".join(self.verify_before_claiming or ("route suitability",)),
-                "Avoid these overclaims: "
+                "Confirm these before giving specific advice: "
+                + "; ".join(self.confirm_before_advising or ("route suitability",)),
+                "Avoid these overstatements: "
                 + "; ".join(self.avoid_overclaims or ("absolute outcomes",)),
                 "Highest-value follow-ups, if one is genuinely needed: "
                 + "; ".join(self.followups or ("what would change the next route",)),
@@ -120,7 +120,7 @@ class SkillSelection:
 class SkillRegistry:
     """Loadable, provider-neutral expert lenses used to focus model context."""
 
-    def __init__(self, skills: Iterable[ExpertSkill], contracts: Iterable[Mapping[str, Any]] = ()):
+    def __init__(self, skills: Iterable[ExpertSkill]):
         values = tuple(skills)
         if not values:
             raise SkillConfigurationError("At least one expert skill is required.")
@@ -130,13 +130,11 @@ class SkillRegistry:
                 raise SkillConfigurationError(f"Duplicate expert skill: {skill.skill_id}")
             by_id[skill.skill_id] = skill
         self._skills = by_id
-        self._contracts = tuple(dict(item) for item in contracts)
 
     @classmethod
     def from_repository(cls, root: Path) -> SkillRegistry:
         directory = root / "skills"
         skill_documents: list[Mapping[str, Any]] = []
-        contracts: list[Mapping[str, Any]] = []
         if directory.is_dir():
             for path in sorted(directory.glob("*.y*ml")):
                 raw = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -146,15 +144,13 @@ class SkillRegistry:
                     skill_documents.extend(
                         item for item in raw["skills"] if isinstance(item, Mapping)
                     )
-                if isinstance(raw.get("contracts"), list):
-                    contracts.extend(item for item in raw["contracts"] if isinstance(item, Mapping))
-        return cls((ExpertSkill.from_mapping(item) for item in skill_documents), contracts)
+        return cls(ExpertSkill.from_mapping(item) for item in skill_documents)
 
     def get(self, skill_id: str) -> ExpertSkill:
         return self._skills[skill_id]
 
-    def select(self, message: str, material_hint: str = "") -> SkillSelection:
-        query = f"{material_hint} {message}".strip().casefold()
+    def select(self, message: str, topic_hint: str = "") -> SkillSelection:
+        query = f"{topic_hint} {message}".strip().casefold()
         query_tokens = _tokens(query)
         scored: list[tuple[int, int, ExpertSkill]] = []
         for order, skill in enumerate(self._skills.values()):
@@ -171,7 +167,7 @@ class SkillRegistry:
         scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
         primary = scored[0][2]
         if scored[0][0] <= 0:
-            primary = self._skills.get("general-material-triage", primary)
+            primary = self._skills.get("general-conversation", primary)
         supporting = tuple(
             skill
             for score, _order, skill in scored[1:]
@@ -181,6 +177,3 @@ class SkillRegistry:
 
     def public_catalog(self) -> list[dict[str, Any]]:
         return [skill.to_dict() for skill in self._skills.values()]
-
-    def expert_contracts(self) -> list[dict[str, Any]]:
-        return [dict(item) for item in self._contracts]

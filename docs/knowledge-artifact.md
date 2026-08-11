@@ -12,7 +12,7 @@ current local snapshot's checksums and coverage:
 
 - logical KB digest: `e8180263ecc966a66e0acf276e14e00324eccfcf1393cb6a4e738b46ce5ed0c9`
 - database file size: 212,910,080 bytes
-- candidate gzip release asset: 75,008,500 bytes (not uploaded)
+- proposed gzip release asset: 75,008,500 bytes (not uploaded)
 - registered sources: 153
 - extracted documents: 121; blocked documents: 10
 - latest searchable chunks: 6,069; latest embedded chunks: 6,069
@@ -38,7 +38,7 @@ python3 scripts/bootstrap_knowledge.py
 
 The bootstrapper downloads the HTTPS release asset, checks its size and SHA-256, decompresses it to
 a temporary file, runs SQLite integrity verification, and atomically installs `.data/knowledge.db`.
-It does not need an AI provider key or a browser console token.
+It does not need an AI provider key or a browser access token.
 
 Lexical retrieval works from the installed database without a provider. The current snapshot's
 vectors were created with `nvidia/nemotron-3-embed-1b:free`; semantic or hybrid query-time retrieval still needs

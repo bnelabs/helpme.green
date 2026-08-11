@@ -7,10 +7,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .curator import KnowledgeCurator
 from .expert_skills import SkillRegistry
 from .knowledge_store import KnowledgeDatabase
 from .model_gateway import ModelRouter
+from .source_digest import SourceDigest
 from .source_ingest import (
     OfficialSourceFetcher,
     SourceManifest,
@@ -26,7 +26,7 @@ def run_once(
     download_dir: Path,
     export_catalog: Path | None = None,
     embed: bool = False,
-    curate: bool = False,
+    digest_notes: bool = False,
     max_bytes: int = 32_000_000,
     embedding_batch_size: int = 32,
     repository_root: Path | None = None,
@@ -35,7 +35,7 @@ def run_once(
     database = KnowledgeDatabase(database_path)
     try:
         for source in manifest.sources:
-            database.register_source(source, status="candidate")
+            database.register_source(source, status="catalogued")
         provider = embedding_provider_from_environment() if embed else None
         results = ingest_manifest(
             manifest,
@@ -48,11 +48,11 @@ def run_once(
             embedding_provider=provider,
             embedding_batch_size=embedding_batch_size,
         )
-        curator_data: dict[str, Any] = {}
-        if curate:
+        digest_data: dict[str, Any] = {}
+        if digest_notes:
             root = repository_root or manifest_path.parent.parent
-            curator_data = (
-                KnowledgeCurator(
+            digest_data = (
+                SourceDigest(
                     ModelRouter(),
                     SkillRegistry.from_repository(root),
                 )
@@ -69,7 +69,7 @@ def run_once(
             "ingestion": database.ingestion_summary(),
             "digest": database.digest(),
             "catalog": str(export_catalog.resolve()) if export_catalog else "",
-            "curator": curator_data,
+            "sourceDigest": digest_data,
         }
     finally:
         database.close()
@@ -77,14 +77,18 @@ def run_once(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Fetch, digest, and optionally curate the allowlisted knowledge manifest."
+        description="Fetch, digest, and optionally write source notes for the allowlisted manifest."
     )
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--db", type=Path, default=None)
     parser.add_argument("--downloads", type=Path, default=None)
     parser.add_argument("--export-catalog", type=Path, default=None)
     parser.add_argument("--embed", action="store_true")
-    parser.add_argument("--curate", action="store_true")
+    parser.add_argument(
+        "--digest-notes",
+        action="store_true",
+        help="ask the configured model for compact source notes; never writes user answers",
+    )
     parser.add_argument("--max-bytes", type=int, default=32_000_000)
     parser.add_argument(
         "--embedding-batch-size",
@@ -119,7 +123,7 @@ def main(argv: list[str] | None = None) -> int:
                     download_dir=download_dir,
                     export_catalog=args.export_catalog,
                     embed=args.embed,
-                    curate=args.curate,
+                    digest_notes=args.digest_notes,
                     max_bytes=args.max_bytes,
                     embedding_batch_size=args.embedding_batch_size,
                 ),

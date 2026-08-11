@@ -5,7 +5,7 @@ retrieved passage is correct for a live material case.
 
 ## Corpus and coverage
 
-- Registered candidate sources: **153**
+- Registered sources: **153**
 - Sources with a latest extracted document: **102**
 - Latest searchable chunks: **6,069**
 - Latest chunks embedded with `nvidia/nemotron-3-embed-1b:free`: **6,069**
