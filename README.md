@@ -81,6 +81,39 @@ raw source downloads. The Precious Plastic kit is mounted read-only from
 `HELPME_KIT_HOST_PATH` (default: `/Users/barisnacierzeren/Downloads/precious-plastic-kit`) and is
 candidate orientation material, not a safety, legal, engineering, or financial approval.
 
+## Obtain the prepared knowledge digest
+
+The checked-in [`knowledge/artifact-manifest.json`](knowledge/artifact-manifest.json) records the
+current digest's identity, checksums, and coverage. The full 212.9 MB SQLite snapshot is currently
+marked `pending-redistribution-review` because it contains extracted text and vectors from sources
+with mixed reuse terms. It is not committed to Git or silently downloaded by a clone.
+
+After a scrubbed, explicitly redistributable release asset is published and the manifest is marked
+`ready`, a user can install the digest with:
+
+```bash
+python3 scripts/bootstrap_knowledge.py
+```
+
+The command verifies HTTPS, the artifact checksum, the uncompressed database checksum, file size,
+and SQLite integrity before replacing `.data/knowledge.db`. It requires no AI key. Git itself does
+not execute post-clone download scripts; an explicit bootstrap keeps the artifact and licensing
+boundary visible.
+
+Lexical search works without a provider. The current snapshot's vectors use
+`nvidia/nemotron-3-embed-1b:free`; semantic/hybrid query-time search needs a matching embedding
+endpoint or a deliberate re-embedding run with a different model.
+
+To make Docker use the bootstrapped host database rather than its isolated named volume:
+
+```bash
+export HELPME_DATA_HOST_PATH="$PWD/.data"
+docker compose -f docker-compose.yml -f docker-compose.host-data.yml up -d --build
+```
+
+The full distribution workflow, private-artifact override, and maintainer publication gate are in
+[`docs/knowledge-artifact.md`](docs/knowledge-artifact.md).
+
 ## Build and digest the knowledge base
 
 The checked-in manifest is the source queue. It covers scientific and chemical literature, official
@@ -130,10 +163,12 @@ To embed the Docker store, pass the embedding variables transiently through the 
 Git-ignored environment file. Never put the key in `docker-compose.yml`, the manifest, a shell
 script, a commit, or a catalog snapshot.
 
-The raw downloads and `.data/knowledge.db` are intentionally untracked. They can contain extracted
-copyrighted text, provider-generated vectors, and future candidate material. GitHub receives the
-reproducible source queue, source research register, health/hash snapshot, retrieval benchmark,
-and tooling—not an uncontrolled redistribution of the source archive.
+The raw downloads and the current full `.data/knowledge.db` remain intentionally untracked. They can
+contain extracted copyrighted text, provider-generated vectors, and future candidate material.
+GitHub receives the reproducible source queue, source research register, artifact identity and
+health snapshot, retrieval benchmark, and tooling. A scrubbed, explicitly cleared database may be
+distributed later as a versioned GitHub Release asset; it must never be added to the normal source
+tree by accident.
 
 If a source is blocked by a 403, challenge page, dynamic legal portal, 404, or unsupported format,
 the run records the failure and excludes that content from usable retrieval. See the current
@@ -237,8 +272,12 @@ case.
 - `knowledge/machine-catalog.yml` — vendor-reference machine profiles linked to source IDs.
 - `knowledge/retrieval-eval.yml` — retrieval regression queries and expected source IDs.
 - `knowledge/research/` — research registers, manual-download queue, and limitations.
+- `knowledge/artifact-manifest.json` — version, checksum, coverage, and publication status for a
+  distributable digest artifact.
 - `knowledge/catalog.snapshot.json` — versioned metadata, hashes, extraction/retrieval health; no
   raw passages.
+- `docs/knowledge-artifact.md` — digest distribution, bootstrap, Docker mounting, and publication
+  controls.
 - `docs/knowledge-pipeline.md` — source lifecycle and storage boundary.
 - `docs/knowledge-retrieval.md` — lexical/semantic/hybrid/reranker/graph utilization.
 - `docs/deployment.md` — local Docker and dedicated deployment boundaries.

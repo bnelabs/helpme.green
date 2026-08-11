@@ -22,6 +22,23 @@ docker compose up -d --build
 curl http://127.0.0.1:8080/healthz
 ```
 
+## Use a cloned, bootstrapped digest
+
+The default Compose file keeps the runtime database in the named `helpme_data` volume. When a clone
+has installed a reviewed artifact into `.data/knowledge.db`, use the host-data override so Docker
+searches that exact database:
+
+```bash
+python3 scripts/bootstrap_knowledge.py
+export HELPME_DATA_HOST_PATH="$PWD/.data"
+docker compose -f docker-compose.yml -f docker-compose.host-data.yml up -d --build
+```
+
+The bootstrapper refuses the repository's current `pending-redistribution-review` manifest. That
+is expected until a scrubbed, explicitly redistributable release asset has been published. The
+override is also useful for a controlled private artifact supplied with explicit checksums. See
+[`knowledge-artifact.md`](knowledge-artifact.md) for the publication and checksum contract.
+
 `HELPME_MASTER_KEY` protects encrypted local BYOK storage. It is not a browser login token.
 `HELPME_CONSOLE_TOKEN` is optional. Leave it unset for a local no-token browser; set it only when a
 token gate is wanted:
@@ -60,10 +77,10 @@ add `--embed`. Never place the key in Compose YAML, source manifests, documentat
 Git history. Query-time remote embedding and reranking are separately opt-in; see
 [`docs/knowledge-retrieval.md`](knowledge-retrieval.md).
 
-The host `.data/knowledge.db` and `.data/source-downloads/` remain local. The tracked
-`knowledge/catalog.snapshot.json` contains metadata, hashes, and health only. This protects source
-licensing, user-derived material, and the ability to remove a downloaded copy without rewriting a
-repository’s history.
+The host `.data/knowledge.db` and `.data/source-downloads/` remain local by default. The tracked
+`knowledge/catalog.snapshot.json` and `knowledge/artifact-manifest.json` contain metadata, hashes,
+coverage, and publication status only. A reviewed release artifact may be installed explicitly;
+the current full digest is not silently copied into Git history or a public release.
 
 ## HTTP protection
 

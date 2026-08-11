@@ -1,0 +1,44 @@
+{
+  "manifestVersion": 1,
+  "artifactId": "helpme-green-knowledge-2026-08-11",
+  "status": "pending-redistribution-review",
+  "distribution": "github-release-asset",
+  "artifact": {
+    "name": "helpme-green-knowledge-2026-08-11.sqlite.gz",
+    "url": "",
+    "compression": "gzip",
+    "sha256": "da0de10ff3f810155026b5ab7a51560e5ec297e63aa9bc9c7b82b93b8cde027d",
+    "sizeBytes": 75008500
+  },
+  "database": {
+    "sha256": "b403d6558a566ca350348422029b94a5ba86b4608844f8379d9122b1f0749bf5",
+    "sizeBytes": 212910080,
+    "logicalDigest": "e8180263ecc966a66e0acf276e14e00324eccfcf1393cb6a4e738b46ce5ed0c9",
+    "schemaVersion": 2,
+    "journalMode": "delete",
+    "snapshotType": "stable-checkpointed-copy"
+  },
+  "localWorkingCopy": {
+    "sha256": "59edd0f9da53dbf58f6619ded0244bc02578d0c1264a08960f276998eb54bea2",
+    "sizeBytes": 212910080,
+    "journalMode": "wal"
+  },
+  "coverage": {
+    "registeredSources": 153,
+    "extractedDocuments": 121,
+    "blockedDocuments": 10,
+    "latestSearchableChunks": 6069,
+    "latestEmbeddedChunks": 6069,
+    "embeddingModels": ["nvidia/nemotron-3-embed-1b:free"]
+  },
+  "publicationGate": {
+    "reason": "The local digest contains extracted text and provider-generated vectors from sources with mixed reuse terms. Publish only a scrubbed, explicitly redistributable export after source-by-source licence and privacy review.",
+    "requiredBeforeReady": [
+      "Review every document's redistribution right and attribution requirement.",
+      "Remove documents and user-derived material that are not cleared for public redistribution.",
+      "Create a stable checkpointed SQLite snapshot and verify its integrity.",
+      "Upload the compressed snapshot as a GitHub Release asset and fill artifact.url, artifact.sha256, and artifact.sizeBytes.",
+      "Change status to ready only after the release asset and checksums have been verified."
+    ]
+  }
+}
