@@ -332,7 +332,7 @@ def test_localai_gateway_accepts_reasoning_json_without_a_token(monkeypatch) -> 
         return FakeResponse()
 
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
-    router = ModelRouter(ModelSelection("localai", "Qwen3.6-27B"))
+    router = ModelRouter(ModelSelection("localai", "unprofiled-model"))
 
     result = router.complete_json(
         [{"role": "user", "content": "Hello"}],
@@ -354,7 +354,7 @@ def test_model_profiles_are_selected_by_model_identity(monkeypatch) -> None:
         "HELPME_MODEL_PROFILES",
         json.dumps(
             {
-                "localai:muse-glimmer-30B": {
+                "localai:profiled-model": {
                     "temperature": 1.0,
                     "top_p": 0.95,
                     "top_k": 64,
@@ -389,22 +389,130 @@ def test_model_profiles_are_selected_by_model_identity(monkeypatch) -> None:
         return FakeResponse()
 
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
-    router = ModelRouter(ModelSelection("localai", "muse-glimmer-30B"))
+    router = ModelRouter(ModelSelection("localai", "profiled-model"))
 
     router.complete_json([{"role": "user", "content": "Hello"}], system_contract="Return JSON.")
-    router.select("localai:Qwen3.6-27B")
+    router.select("localai:unprofiled-model")
     router.complete_json([{"role": "user", "content": "Hello"}], system_contract="Return JSON.")
 
-    muse_payload, default_payload = captured
-    assert muse_payload["temperature"] == 1.0
-    assert muse_payload["top_p"] == 0.95
-    assert muse_payload["top_k"] == 64
-    assert muse_payload["max_tokens"] == 16384
-    assert muse_payload["chat_template_kwargs"] == {"reasoning_strength": "xhigh"}
+    profiled_payload, default_payload = captured
+    assert profiled_payload["temperature"] == 1.0
+    assert profiled_payload["top_p"] == 0.95
+    assert profiled_payload["top_k"] == 64
+    assert profiled_payload["max_tokens"] == 16384
+    assert profiled_payload["chat_template_kwargs"] == {"reasoning_strength": "xhigh"}
     assert captured_timeouts == [240, 30]
     assert default_payload["temperature"] == 0
+    assert "max_tokens" not in default_payload
     assert "top_p" not in default_payload
     assert "chat_template_kwargs" not in default_payload
+
+
+def test_explicit_task_budget_caps_model_profile(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
+    monkeypatch.setenv(
+        "HELPME_MODEL_PROFILES",
+        json.dumps({"localai:profiled-model": {"max_tokens": 16384}}),
+    )
+    captured: list[dict[str, object]] = []
+
+    class FakeResponse:
+        def __enter__(self) -> FakeResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {"choices": [{"message": {"content": '{"reply":"Noted."}'}}], "usage": {}}
+            ).encode("utf-8")
+
+    def fake_urlopen(request, timeout, context=None):
+        del timeout, context
+        captured.append(json.loads(request.data.decode("utf-8")))
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter(ModelSelection("localai", "profiled-model"))
+
+    router.complete_json(
+        [{"role": "user", "content": "Judge this."}],
+        system_contract="Return JSON.",
+        max_tokens=300,
+    )
+
+    assert captured[0]["max_tokens"] == 300
+
+
+def test_localai_auto_discovers_one_model_and_applies_its_profile(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.delenv("HELPME_MODEL", raising=False)
+    monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
+    monkeypatch.setenv(
+        "HELPME_MODEL_PROFILES",
+        json.dumps(
+            {
+                "localai:model-advertised-by-server": {
+                    "temperature": 1.0,
+                    "top_p": 0.95,
+                    "top_k": 64,
+                    "max_tokens": 16384,
+                    "timeout_seconds": 240,
+                }
+            }
+        ),
+    )
+    requests: list[tuple[str, str, dict[str, object] | None]] = []
+
+    class FakeResponse:
+        def __init__(self, payload: dict[str, object]) -> None:
+            self.payload = payload
+
+        def __enter__(self) -> FakeResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return json.dumps(self.payload).encode("utf-8")
+
+    def fake_urlopen(request, timeout, context=None):
+        del timeout, context
+        body = json.loads(request.data.decode("utf-8")) if request.data else None
+        requests.append((request.get_method(), request.full_url, body))
+        if request.get_method() == "GET":
+            return FakeResponse({"data": [{"id": "model-advertised-by-server"}]})
+        return FakeResponse(
+            {
+                "choices": [{"message": {"content": '{"reply":"Noted."}'}}],
+                "usage": {},
+            }
+        )
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter()
+
+    result = router.complete_json(
+        [{"role": "user", "content": "Hello"}], system_contract="Return JSON."
+    )
+
+    assert result == {"reply": "Noted."}
+    assert router.selection.identity == "localai:model-advertised-by-server"
+    assert requests[0][:2] == ("GET", "http://127.0.0.1:8090/v1/models")
+    assert requests[1][2]["model"] == "model-advertised-by-server"
+    assert requests[1][2]["max_tokens"] == 16384
+    assert requests[1][2]["temperature"] == 1.0
+
+
+def test_default_model_identity_is_provider_auto(monkeypatch) -> None:
+    monkeypatch.delenv("HELPME_MODEL", raising=False)
+    monkeypatch.delenv("HELPME_PROVIDER", raising=False)
+
+    assert ModelRouter().selection.identity == "localai:auto"
+    assert SessionState.new(material="plastic", geography="EU").model_identity == "localai:auto"
 
 
 def test_console_uses_ai_to_normalize_a_natural_language_answer(

@@ -35,18 +35,29 @@ python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 ```
 
-Point the app at a running LocalAI/llama-server-compatible endpoint. The model identity is
-configuration, so do not copy Muse settings to another model:
+Point the app at a running LocalAI/llama-server-compatible endpoint. No model name is built into the
+application. `localai:auto` discovers the model when the endpoint advertises exactly one model; set
+an explicit `provider:model` when the endpoint serves more than one:
 
 ```bash
 export HELPME_AI_ENABLED=1
-export HELPME_MODEL='localai:muse-glimmer-30B'
-export HELPME_LOCALAI_BASE_URL='http://192.168.68.57:8090/v1'
+export HELPME_MODEL='localai:auto'
+export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'  # replace with your model endpoint
 export HELPME_LOCALAI_TLS_VERIFY=1
-export HELPME_MODEL_PROFILES='{"localai:muse-glimmer-30B":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":16384,"timeout_seconds":240,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
 
 PYTHONPATH=src .venv/bin/python -m helpme_green --serve --host 127.0.0.1 --port 8080
 ```
+
+Model-specific request settings belong in `HELPME_MODEL_PROFILES`, keyed by the provider and the
+model ID advertised by that endpoint. For a model that supports these controls, for example:
+
+```bash
+export HELPME_MODEL='localai:<model-id>'
+export HELPME_MODEL_PROFILES='{"localai:<model-id>":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":16384,"timeout_seconds":240,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
+```
+
+Add provider-specific fields such as `chat_template_kwargs` only when that model documents them.
+The application does not send them to unrelated models.
 
 Open [http://localhost:8080](http://localhost:8080). The useful first action is simply to write a
 sentence, for example:
@@ -66,8 +77,8 @@ storage layer; it is not the same thing as the optional browser console token.
 ```bash
 export HELPME_MASTER_KEY="$(python3 -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
 export HELPME_AI_ENABLED=1
-export HELPME_MODEL='localai:muse-glimmer-30B'
-export HELPME_LOCALAI_BASE_URL='http://192.168.68.57:8090/v1'
+export HELPME_MODEL='localai:auto'
+export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'  # replace with your model endpoint
 docker compose up -d --build
 curl http://127.0.0.1:8080/healthz
 ```

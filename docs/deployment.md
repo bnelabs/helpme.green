@@ -16,11 +16,16 @@ Create the required encryption key in the current shell and start the app:
 ```bash
 export HELPME_MASTER_KEY="$(python3 -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
 export HELPME_AI_ENABLED=1
-export HELPME_MODEL='localai:muse-glimmer-30B'
-export HELPME_LOCALAI_BASE_URL='http://192.168.68.57:8090/v1'
+export HELPME_MODEL='localai:auto'
+export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'  # replace with your model endpoint
 docker compose up -d --build
 curl http://127.0.0.1:8080/healthz
 ```
+
+`localai:auto` asks the configured OpenAI-compatible local endpoint for its model list and selects
+the model only when exactly one is advertised. If the endpoint serves multiple models, set
+`HELPME_MODEL='localai:<model-id>'`. Keep model-specific sampling, context, reasoning, and timeout
+settings in `HELPME_MODEL_PROFILES`; do not bake a model name into Compose or application code.
 
 ## Use a cloned, bootstrapped digest
 
