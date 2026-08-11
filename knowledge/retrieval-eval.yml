@@ -1,7 +1,7 @@
-schemaVersion: "1"
+formatVersion: "1"
 purpose: >-
   Small human-maintained retrieval regression set. Expected source IDs are relevance judgments for
-  retrieval evaluation, not a complete truth set and not permission to promote claims.
+  retrieval evaluation, not a complete truth set or permission to treat a passage as a conclusion.
 queries:
   - id: plastics-mixed-polymer-contamination
     query: mixed plastics polymer identity contamination additives route compatibility

@@ -1,141 +1,93 @@
 # helpme.green
 
-helpme.green is a local-first, advisory circular-economy assistant. A person describes a material,
-object, problem, or idea in ordinary language; the assistant responds conversationally, uses focused
-domain skills and a governed reference corpus, and makes uncertainty visible.
+helpme.green is Circular Econ AI Backed R&D: a local-first assistant for understanding materials,
+objects, processes, machines, risks, and circular-economy possibilities.
 
-It is deliberately not an approval engine. It does not decide that a batch is recyclable, safe,
-legal, permitted, economically viable, or ready for sale. Those decisions require current facts,
-qualified review, measurements, and accountable operators.
+It is for the public as well as practitioners. Someone can write “I have rubber”, “what can I do
+with this dirty film?”, “is this machine suitable?”, or ask a completely unrelated question. The
+assistant starts from the user’s actual words, uses a relevant knowledge slice when one exists, and
+responds like a capable collaborator. It does not force a fixed questionnaire or introduce a local
+download, source, machine, or material that is not relevant to the question.
 
-## What the project is now
+The knowledge base is valuable reference infrastructure, not a single source of truth. Current
+measurements, product markings, machine trials, local rules, professional judgement, and the user’s
+actual material can change the answer.
 
-The repository combines five cooperating layers:
+## What runs today
 
-- A conversation-first local web surface backed by a configurable OpenAI-compatible model. LocalAI
-  can run without a user-entered API key; a browser token appears only when
-  `HELPME_CONSOLE_TOKEN` is explicitly configured.
-- A deterministic, reviewable evaluator for the governed case workflow. AI may understand, ask,
-  translate, and explain; it cannot overwrite deterministic blocks or promote knowledge.
-- A governed knowledge pipeline that registers source provenance, downloads bounded public sources,
-  extracts text into a local SQLite working store, records candidate claims, and exposes health and
-  hashes through a portable catalog snapshot.
-- A provider-independent retrieval layer: exact lexical search, optional embeddings, hybrid rank
-  fusion, and an opt-in second-stage reranker. Graph relationships support provenance and
-  navigation; they are not a substitute for search or source review.
-- Read-only compatibility surfaces for capability inspection, source catalog access, sessions, and
-  GraphQL queries. The browser conversation remains the primary user experience.
+- Conversation-first web application at `http://localhost:8080`.
+- AI-backed answers through any supported OpenAI-compatible provider.
+- Automatic local-model discovery through `localai:auto`; no model name is embedded in the image.
+- Domain skills that focus context internally without exposing forms, commands, or labels.
+- Local SQLite retrieval using full-text search, optional embeddings, hybrid ranking, and optional
+  second-stage reranking.
+- Source-aware machinery and process references.
+- A separate digest pipeline for scientific, engineering, chemical, HSE, regulatory, industry, and
+  low-tech resources.
+- Read-only source, capability, health, and GraphQL endpoints for inspection and integration.
 
-## Start locally
+The assistant may explain uncertainty, limitations, and what would make an answer more specific. It
+does not pretend that a source passage proves a particular batch, machine, site, product, or business
+outcome.
 
-Install the package and development tools:
+## Run locally
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
-```
 
-Point the app at a running LocalAI/llama-server-compatible endpoint. No model name is built into the
-application. `localai:auto` discovers the model when the endpoint advertises exactly one model; set
-an explicit `provider:model` when the endpoint serves more than one:
-
-```bash
 export HELPME_AI_ENABLED=1
 export HELPME_MODEL='localai:auto'
-export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'  # replace with your model endpoint
+export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'
 export HELPME_LOCALAI_TLS_VERIFY=1
 
 PYTHONPATH=src .venv/bin/python -m helpme_green --serve --host 127.0.0.1 --port 8080
 ```
 
-Model-specific request settings belong in `HELPME_MODEL_PROFILES`, keyed by the provider and the
-model ID advertised by that endpoint. For a model that supports these controls, for example:
+Open [http://localhost:8080](http://localhost:8080). Type a normal sentence. Enter sends; Shift+Enter
+adds a line break; New conversation starts a fresh thread.
+
+LocalAI does not need a user-entered API key. A browser access-token field appears only when
+`HELPME_ACCESS_TOKEN` is explicitly configured. `HELPME_MASTER_KEY` protects optional encrypted
+local provider-key storage; it is not a browser login token.
+
+## Run the local Docker deployment
+
+```bash
+export HELPME_MASTER_KEY="$(python3 -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+export HELPME_AI_ENABLED=1
+export HELPME_MODEL='localai:auto'
+export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'
+
+docker compose up -d --build
+curl http://127.0.0.1:8080/healthz
+```
+
+Compose binds the service to loopback and persists sessions, audit history, the runtime database, and
+source downloads in `helpme_data`. No particular local download is mounted into the conversation
+runtime. Sources enter the answer only through the same relevance-ranked knowledge path used for any
+other registered reference.
+
+Model settings belong in `HELPME_MODEL_PROFILES` and are keyed by the advertised provider/model ID:
 
 ```bash
 export HELPME_MODEL='localai:<model-id>'
 export HELPME_MODEL_PROFILES='{"localai:<model-id>":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":16384,"timeout_seconds":240,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
 ```
 
-Add provider-specific fields such as `chat_template_kwargs` only when that model documents them.
-The application does not send them to unrelated models. The natural-language conversation does not
-add a hidden output-token default or truncate the user-facing reply; the provider or the selected
-model profile controls how much it generates. Internal critics may use their own bounded requests,
-but they cannot replace or shorten the user answer.
+These settings are deployment configuration, not hardcoded model behavior. If a profile does not
+specify `max_tokens`, the application omits it and lets the provider/model choose. The application
+does not truncate the completed user-facing answer. Auxiliary quality checks may use smaller requests;
+they never replace or shorten the main answer.
 
-Open [http://localhost:8080](http://localhost:8080). The useful first action is simply to write a
-sentence, for example:
+## Knowledge digest
 
-> I have mixed LDPE film from a greenhouse, with soil, moisture, labels, and some unknown clips. I
-> want to know whether a small recycler should process it or sell it as a separated stream.
+The checked-in [source manifest](knowledge/source-manifest.yml) is a broad, expandable queue covering
+science, chemistry, engineering, machinery, HSE, regulation, industry practice, low-tech methods,
+packaging, and circular-economy policy. Each source carries publisher, URL, material scope,
+jurisdiction, scale, access mode, reuse note, and limitations.
 
-In the conversation surface, **Enter** sends and **Shift+Enter** adds a line break. **New
-conversation** clears the current thread. The user should not need to learn slash commands,
-schemas, evidence labels, or a token when local auth is disabled.
-
-## Run the local Docker deployment
-
-Docker is the reproducible local deployment. `HELPME_MASTER_KEY` is required by the encrypted local
-storage layer; it is not the same thing as the optional browser console token.
-
-```bash
-export HELPME_MASTER_KEY="$(python3 -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
-export HELPME_AI_ENABLED=1
-export HELPME_MODEL='localai:auto'
-export HELPME_LOCALAI_BASE_URL='http://127.0.0.1:8090/v1'  # replace with your model endpoint
-docker compose up -d --build
-curl http://127.0.0.1:8080/healthz
-```
-
-Open [http://localhost:8080](http://localhost:8080). Leave `HELPME_CONSOLE_TOKEN` unset for a
-local no-token browser. If it is set, the page will correctly show a token gate and use that token
-for protected API calls.
-
-The Compose volume `helpme_data` holds sessions, audit history, the runtime SQLite database, and
-raw source downloads. The Precious Plastic kit is mounted read-only from
-`HELPME_KIT_HOST_PATH` (default: `/Users/barisnacierzeren/Downloads/precious-plastic-kit`) and is
-candidate orientation material, not a safety, legal, engineering, or financial approval.
-
-## Obtain the prepared knowledge digest
-
-The checked-in [`knowledge/artifact-manifest.json`](knowledge/artifact-manifest.json) records the
-current digest's identity, checksums, and coverage. The full 212.9 MB SQLite snapshot is currently
-marked `pending-redistribution-review` because it contains extracted text and vectors from sources
-with mixed reuse terms. It is not committed to Git or silently downloaded by a clone.
-
-After a scrubbed, explicitly redistributable release asset is published and the manifest is marked
-`ready`, a user can install the digest with:
-
-```bash
-python3 scripts/bootstrap_knowledge.py
-```
-
-The command verifies HTTPS, the artifact checksum, the uncompressed database checksum, file size,
-and SQLite integrity before replacing `.data/knowledge.db`. It requires no AI key. Git itself does
-not execute post-clone download scripts; an explicit bootstrap keeps the artifact and licensing
-boundary visible.
-
-Lexical search works without a provider. The current snapshot's vectors use
-`nvidia/nemotron-3-embed-1b:free`; semantic/hybrid query-time search needs a matching embedding
-endpoint or a deliberate re-embedding run with a different model.
-
-To make Docker use the bootstrapped host database rather than its isolated named volume:
-
-```bash
-export HELPME_DATA_HOST_PATH="$PWD/.data"
-docker compose -f docker-compose.yml -f docker-compose.host-data.yml up -d --build
-```
-
-The full distribution workflow, private-artifact override, and maintainer publication gate are in
-[`docs/knowledge-artifact.md`](docs/knowledge-artifact.md).
-
-## Build and digest the knowledge base
-
-The checked-in manifest is the source queue. It covers scientific and chemical literature, official
-law and regulator material, HSE, industry statistics, machinery pages and technical sheets, low-tech
-practice, packaging guidance, and circular-economy policy. Every source retains publisher, URL,
-jurisdiction, authority tier, scale, limitations, and access mode.
-
-Build the host working store and portable metadata snapshot:
+Build or refresh the local working database:
 
 ```bash
 PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
@@ -145,15 +97,13 @@ PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
   --export-catalog knowledge/catalog.snapshot.json
 ```
 
-Add `--embed` only when an embedding provider is deliberately configured. The operation is
-incremental: an existing extracted document whose chunks have no vector will be embedded without
-being downloaded again.
+Add embeddings only when an endpoint is intentionally configured:
 
 ```bash
 export HELPME_EMBEDDING_BASE_URL='https://openrouter.ai/api/v1'
 export HELPME_EMBEDDING_MODEL='nvidia/nemotron-3-embed-1b:free'
 export HELPME_EMBEDDING_API_KEY='set-in-your-shell-or-secret-manager'
-export HELPME_EMBEDDING_TLS_VERIFY=1
+export HELPME_EMBEDDING_QUERY_ENABLED=1
 
 PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
   --manifest knowledge/source-manifest.yml \
@@ -163,109 +113,57 @@ PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
   --embed
 ```
 
-Populate the separate Docker runtime store when the running container should search the digest:
+Reranking is an optional adapter. It is useful when the corpus grows or several sources use similar
+language, but it is not required for lexical search and is never treated as a source-authority
+judge.
+
+The full SQLite digest and raw downloads remain outside the normal Git tree because they contain
+extracted text and sources with mixed reuse terms. [knowledge/artifact-manifest.json](knowledge/artifact-manifest.json)
+records the digest identity, checksums, coverage, and publication status. A reviewed release asset
+can be installed explicitly with:
 
 ```bash
-docker compose run --rm helpme-green \
-  python -m helpme_green.knowledge_loop \
-  --manifest /app/knowledge/source-manifest.yml \
-  --db /app/.data/knowledge.db \
-  --downloads /app/.data/source-downloads
+python3 scripts/bootstrap_knowledge.py
 ```
 
-To embed the Docker store, pass the embedding variables transiently through the command or a
-Git-ignored environment file. Never put the key in `docker-compose.yml`, the manifest, a shell
-script, a commit, or a catalog snapshot.
+See [docs/knowledge-artifact.md](docs/knowledge-artifact.md) for the distribution boundary.
 
-The raw downloads and the current full `.data/knowledge.db` remain intentionally untracked. They can
-contain extracted copyrighted text, provider-generated vectors, and future candidate material.
-GitHub receives the reproducible source queue, source research register, artifact identity and
-health snapshot, retrieval benchmark, and tooling. A scrubbed, explicitly cleared database may be
-distributed later as a versioned GitHub Release asset; it must never be added to the normal source
-tree by accident.
-
-If a source is blocked by a 403, challenge page, dynamic legal portal, 404, or unsupported format,
-the run records the failure and excludes that content from usable retrieval. See the current
-[manual-download queue](knowledge/research/manual-download-queue.md) for resources that can be
-downloaded manually and added through a reviewed local import.
-
-## Retrieval design
-
-The recommended path is:
+## How retrieval is used
 
 ```text
-user question → relevant skill → focused source context → lexical + semantic retrieval
-             → optional reranker → model answer → quality gate → natural reply
+user message → relevant context selection → lexical/semantic retrieval
+             → optional reranking → model answer → quality pass → natural reply
 ```
 
-- FTS5 catches exact polymer, regulation, chemistry, and machine terminology.
-- Embeddings recover related passages expressed in different language.
-- Hybrid retrieval fuses both rank lists and preserves source metadata.
-- The reranker is optional and only sees a bounded candidate pool; it fails back safely.
-- The graph projection preserves source/document/chunk/claim relationships and is useful for
-  provenance and multi-hop navigation.
-- GraphQL is a read-only access surface, not the truth layer or a replacement for the SQLite
-  working store.
+The model receives a small relevant context, not the entire database. Registered source metadata and
+retrieval determine what is relevant; there is no special prompt path for a particular download.
+Graph relationships are useful for provenance and navigation; GraphQL is a read-only access surface,
+not a replacement for retrieval or a truth authority.
 
-Query-time semantic/hybrid retrieval is separately opt-in:
-
-```bash
-export HELPME_EMBEDDING_QUERY_ENABLED=1
-```
-
-Reranking is separately opt-in:
-
-```bash
-export HELPME_RERANK_ENABLED=1
-export HELPME_RERANK_BASE_URL='https://openrouter.ai/api/v1'
-export HELPME_RERANK_MODEL='nvidia/llama-nemotron-rerank-vl-1b-v2:free'
-export HELPME_RERANK_API_KEY='set-outside-the-repository'
-```
-
-Free remote endpoints should receive only public source text unless the operator has explicitly
-accepted the privacy and logging boundary. See [docs/knowledge-retrieval.md](docs/knowledge-retrieval.md)
-for the full process and [knowledge/retrieval-eval.yml](knowledge/retrieval-eval.yml) for the
-human-maintained retrieval regression set.
-
-## HTTP and GraphQL surfaces
-
-With local authorization disabled, `/healthz` is public. Protected endpoints use the configured
-bearer token when one is set:
+## HTTP surfaces
 
 - `GET /healthz` — process and audit-chain health.
-- `POST /api/sessions` — create a case session.
-- `POST /api/sessions/{id}/message` — send a natural-language message.
-- `POST /api/sessions/{id}/command` — compatibility command API for controlled workflows.
-- `GET /api/expert/capabilities` — skills, machines, MCP capabilities, and KB health.
+- `POST /api/sessions` — create a conversation session.
+- `POST /api/sessions/{id}/message` — send ordinary language.
+- `GET /api/sessions/{id}` — read a persisted session.
+- `GET /api/expert/capabilities` — skills, machinery, reference health, and read-only capabilities.
 - `GET /api/knowledge/sources` — source metadata, hashes, status, and limitations.
-- `POST /graphql` — read-only skills, machines, sources, lexical/semantic/hybrid search, graph
-  neighbors, and digest status.
+- `POST /graphql` — read-only source, machine, skill, search, graph, and digest queries.
 
-Example read-only GraphQL query:
-
-```graphql
-{
-  search(query: "mixed LDPE film moisture contamination", mode: "hybrid", limit: 4) {
-    sourceId title authorityTier retrievalMode text score
-  }
-  status { sourceCount documentCount searchableChunks embeddedChunks failedSources }
-}
-```
+The browser conversation is the application’s primary user surface; its retrieval and digest
+services remain available through read-only integration endpoints.
 
 ## Verification
 
-Run the repository checks:
-
 ```bash
-PYTHONPATH=src .venv/bin/python -m pytest -q
+.venv/bin/pytest -q
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
 .venv/bin/python -m mypy src
-PYTHONPATH=src .venv/bin/python scripts/verify_phase_a.py
 bash scripts/verify_container.sh
 ```
 
-Run retrieval evaluation against a local digest:
+Retrieval regression evaluation:
 
 ```bash
 PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
@@ -274,30 +172,18 @@ PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
   --output .data/retrieval-evaluation.json
 ```
 
-The benchmark reports hit rate, Recall@k, and reciprocal rank by retrieval mode. It is a regression
-instrument, not a claim that the KB is complete or that a retrieved passage is correct for a live
-case.
-
 ## Repository map
 
-- `src/helpme_green/` — application, deterministic engine, conversation surface, source ingestion,
-  SQLite store, retrieval, GraphQL projection, and model adapters.
-- `knowledge/source-manifest.yml` — candidate source queue and provenance metadata.
-- `knowledge/machine-catalog.yml` — vendor-reference machine profiles linked to source IDs.
-- `knowledge/retrieval-eval.yml` — retrieval regression queries and expected source IDs.
-- `knowledge/research/` — research registers, manual-download queue, and limitations.
-- `knowledge/artifact-manifest.json` — version, checksum, coverage, and publication status for a
-  distributable digest artifact.
-- `knowledge/catalog.snapshot.json` — versioned metadata, hashes, extraction/retrieval health; no
-  raw passages.
-- `docs/knowledge-artifact.md` — digest distribution, bootstrap, Docker mounting, and publication
-  controls.
-- `docs/knowledge-pipeline.md` — source lifecycle and storage boundary.
-- `docs/knowledge-retrieval.md` — lexical/semantic/hybrid/reranker/graph utilization.
-- `docs/deployment.md` — local Docker and dedicated deployment boundaries.
-- `docs/phase-a-verification.md` — requirement-to-control and verification record.
-- `REQUIREMENTS.md` — binding product/invariant contract.
-- `AGENTS.md` — repository rules for coding agents.
+- `src/helpme_green/application.py` — runtime assembly and conversation service.
+- `src/helpme_green/conversation.py` — natural-language orchestration.
+- `src/helpme_green/model_gateway.py` — provider/model routing and profiles.
+- `src/helpme_green/knowledge_store.py` — SQLite source, chunk, vector, and graph projection.
+- `src/helpme_green/source_ingest.py` — bounded downloads, extraction, embeddings, and reranking.
+- `src/helpme_green/knowledge.py` — source-catalog identity and digest.
+- `src/helpme_green/machinery.py` — machine-reference catalog.
+- `knowledge/` — source manifest, machine profiles, research register, retrieval benchmark, and
+  distribution metadata.
+- `docs/` — deployment, retrieval, pipeline, source reuse, and artifact boundaries.
 
-The application remains advisory-only. It never fabricates a price, turns a user statement into
-verified evidence, silently promotes a candidate source, or treats a graph edge as proof.
+The project is advisory and educational. It helps people think, research, compare, and ask better
+questions; it does not authorize physical, legal, financial, or operational action.

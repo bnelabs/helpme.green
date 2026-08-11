@@ -7,12 +7,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from openpyxl import load_workbook
-
-from .domain import CaseFact
 
 
 class ReadOnlyViolation(PermissionError):
@@ -40,6 +39,16 @@ class _WhitelistRedirectHandler(urllib.request.HTTPRedirectHandler):
             unverifiable=True,
             method=req.get_method(),
         )
+
+
+@dataclass(frozen=True)
+class ImportedRecord:
+    """Untrusted data read from a user-selected file or approved URL."""
+
+    key: str
+    value: Any
+    reference: str
+    untrusted: bool = True
 
 
 class ReadOnlyMCP:
@@ -70,14 +79,14 @@ class ReadOnlyMCP:
             "max_bytes": self.max_bytes,
         }
 
-    def load(self, target: Path | str) -> tuple[CaseFact, ...]:
+    def load(self, target: Path | str) -> tuple[ImportedRecord, ...]:
         text_target = str(target)
         parsed = urllib.parse.urlparse(text_target)
         if parsed.scheme in {"http", "https"}:
             return self.load_url(text_target)
         return self.load_file(Path(target))
 
-    def load_file(self, path: Path) -> tuple[CaseFact, ...]:
+    def load_file(self, path: Path) -> tuple[ImportedRecord, ...]:
         resolved = path.expanduser().resolve()
         if not any(resolved == root or root in resolved.parents for root in self.file_roots):
             raise ReadOnlyViolation("MCP file access is outside the configured read-only roots.")
@@ -87,13 +96,13 @@ class ReadOnlyMCP:
             raise ReadOnlyViolation("MCP input exceeds the configured read limit.")
         suffix = resolved.suffix.casefold()
         if suffix == ".json":
-            return self._facts_from_payload(
+            return self._records_from_payload(
                 json.loads(resolved.read_text(encoding="utf-8")), str(resolved)
             )
         if suffix == ".csv":
             with resolved.open("r", encoding="utf-8", newline="") as handle:
                 rows = list(csv.DictReader(handle))
-            return self._facts_from_rows(rows, str(resolved))
+            return self._records_from_rows(rows, str(resolved))
         if suffix in {".xlsx", ".xlsm"}:
             workbook = load_workbook(resolved, read_only=True, data_only=True)
             try:
@@ -112,10 +121,10 @@ class ReadOnlyMCP:
                 }
                 for row in values[1:]
             ]
-            return self._facts_from_rows(rows, str(resolved))
+            return self._records_from_rows(rows, str(resolved))
         raise ReadOnlyViolation("MCP supports JSON, CSV, and XLSX reads only.")
 
-    def load_url(self, url: str) -> tuple[CaseFact, ...]:
+    def load_url(self, url: str) -> tuple[ImportedRecord, ...]:
         parsed = urllib.parse.urlparse(url)
         host = (parsed.hostname or "").casefold()
         if parsed.scheme != "https" or host not in self.allowed_url_hosts:
@@ -134,8 +143,8 @@ class ReadOnlyMCP:
             raise ReadOnlyViolation("MCP response exceeds the configured read limit.")
         if content_type == "text/csv" or url.casefold().endswith(".csv"):
             rows = list(csv.DictReader(io.StringIO(data.decode("utf-8"))))
-            return self._facts_from_rows(rows, url)
-        return self._facts_from_payload(json.loads(data.decode("utf-8")), url)
+            return self._records_from_rows(rows, url)
+        return self._records_from_payload(json.loads(data.decode("utf-8")), url)
 
     def execute(self, command: str) -> None:
         del command
@@ -145,34 +154,25 @@ class ReadOnlyMCP:
         del target, content
         raise ReadOnlyViolation("The MCP contract forbids writes.")
 
-    def _facts_from_payload(self, payload: Any, reference: str) -> tuple[CaseFact, ...]:
-        if isinstance(payload, dict) and isinstance(payload.get("facts"), dict):
-            payload = payload["facts"]
+    def _records_from_payload(self, payload: Any, reference: str) -> tuple[ImportedRecord, ...]:
+        if isinstance(payload, dict) and isinstance(payload.get("data"), dict):
+            payload = payload["data"]
         if isinstance(payload, dict):
             return tuple(
-                self._fact(str(key), value, reference)
+                ImportedRecord(str(key), value, reference)
                 for key, value in payload.items()
                 if str(key) != "_metadata"
             )
         if isinstance(payload, list):
-            return self._facts_from_rows(payload, reference)
+            return self._records_from_rows(payload, reference)
         raise ReadOnlyViolation("MCP input must be a JSON object or list of rows.")
 
-    def _facts_from_rows(self, rows: list[dict[str, Any]], reference: str) -> tuple[CaseFact, ...]:
-        facts: list[CaseFact] = []
+    def _records_from_rows(
+        self, rows: list[dict[str, Any]], reference: str
+    ) -> tuple[ImportedRecord, ...]:
+        records: list[ImportedRecord] = []
         for row in rows:
             for key, value in row.items():
                 if key:
-                    facts.append(self._fact(str(key), value, reference))
-        return tuple(facts)
-
-    @staticmethod
-    def _fact(key: str, value: Any, reference: str) -> CaseFact:
-        return CaseFact.user(
-            key,
-            value,
-            "unknown" if value is None or value == "" else "declared",
-            note="Imported from user-supplied MCP content; unverified and injection-isolated.",
-            untrusted=True,
-            reference=reference,
-        )
+                    records.append(ImportedRecord(str(key), value, reference))
+        return tuple(records)

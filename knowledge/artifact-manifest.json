@@ -7,19 +7,19 @@
     "name": "helpme-green-knowledge-2026-08-11.sqlite.gz",
     "url": "",
     "compression": "gzip",
-    "sha256": "da0de10ff3f810155026b5ab7a51560e5ec297e63aa9bc9c7b82b93b8cde027d",
-    "sizeBytes": 75008500
+    "sha256": "54a9a7dddc61920476bd66c1038d3d48fa5254c635d19599dfda2930adb44db1",
+    "sizeBytes": 75003282
   },
   "database": {
-    "sha256": "b403d6558a566ca350348422029b94a5ba86b4608844f8379d9122b1f0749bf5",
+    "sha256": "01229b501df5f692af3f7ad64571769d82a66f86ff7714b91ba77049fac72c52",
     "sizeBytes": 212910080,
-    "logicalDigest": "e8180263ecc966a66e0acf276e14e00324eccfcf1393cb6a4e738b46ce5ed0c9",
-    "schemaVersion": 2,
+    "logicalDigest": "5eec432bd869fabcf55b942081d64c17fa90885b9d753b32311671e67acae740",
+    "databaseVersion": 3,
     "journalMode": "delete",
     "snapshotType": "stable-checkpointed-copy"
   },
   "localWorkingCopy": {
-    "sha256": "59edd0f9da53dbf58f6619ded0244bc02578d0c1264a08960f276998eb54bea2",
+    "sha256": "3a03a1e532848b80aecbbdb2c034a02798e77b6ed3ed5f0d38c2826b44267d66",
     "sizeBytes": 212910080,
     "journalMode": "wal"
   },

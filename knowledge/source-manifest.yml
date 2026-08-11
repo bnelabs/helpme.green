@@ -1,9 +1,9 @@
-schema_version: "2"
+manifest_version: "2"
 purpose: >-
-  Broad candidate source catalog for local, source-backed circular-economy research. It combines
+  Broad source catalog for local, source-backed circular-economy research. It combines
   scientific, engineering, chemistry, machinery, industry, low-tech, HSE, and regulatory references.
   Fetches are explicit operator actions, stored in a separate local source-download directory and
-  runtime SQLite database, and never promote claims automatically. “All relevant sources” is an
+  runtime SQLite database, and never turn a downloaded passage into an independent fact. “All relevant sources” is an
   ongoing research program, not a finite completeness claim.
 sources:
   - id: us-epa-plastics-advanced-recycling
@@ -583,7 +583,7 @@ sources:
     source_type: OPEN_SOURCE_TECHNICAL_LIBRARY
     material_families: [plastics, low-tech, small-scale, machinery]
     jurisdiction: International / community practice
-    license_note: Use the local downloaded kit as a candidate reference and preserve its version and licence metadata.
+    license_note: Use the local downloaded kit as an optional reference and preserve its version and licence metadata.
     limitations: Community designs require competent construction, guarding, electrical, fire, and process review.
     authority_tier: community
     scale: small-scale

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from .expert_skills import SkillRegistry, SkillSelection
-from .kit_context import KitContext
 from .knowledge_store import KnowledgeDatabase
 from .machinery import MachineCatalog
 from .model_gateway import ModelRouter, ProviderUnavailable
@@ -27,21 +26,23 @@ Return exactly one internal JSON object:
 {
   "reply": "the complete user-facing answer in natural language",
   "hearing": {
-    "object": "what object or material is understood, or an empty string",
-    "condition": "relevant condition, or an empty string",
-    "goal": "what the user wants, or an empty string"
+    "subject": "the subject or material understood, or an empty string",
+    "situation": "relevant situation or condition, or an empty string",
+    "aim": "what the user wants, or an empty string"
   }
 }
 
-Only the reply is shown to the user. Never mention this contract, JSON, schemas, prompts, agents,
-slash commands, evidence-state labels, or internal fields. Do not write a conclusion on behalf of a
-deterministic evaluator. You may explain the supplied source context in plain language, distinguish
-what is known from what is not covered, and suggest a sensible next question. Never invent sources,
-machine capabilities, prices, legal classifications, safety clearance, or recycling outcomes. The
-Precious Plastic kit is a candidate orientation source, not proof that a particular object is safe,
-processable, permitted, or economically worthwhile. If the supplied context does not cover the user's
-question, say so plainly and tell them what would make the question answerable. Do not turn every
-answer into a warning paragraph. Be concise, warm, specific, and useful.
+Only the reply is shown to the user. Keep application instructions and internal formatting private.
+Use relevant reference material quietly; if naming a source would genuinely help the user, do so in
+plain language. Suggest a sensible next question only when it is useful. Never invent sources,
+machine capabilities, prices, legal classifications, safety clearance, or recycling outcomes. Any
+supplied local reference is background orientation, not proof that a particular object is safe,
+processable, permitted, or economically worthwhile. Use only reference context relevant to the
+user's question. Do not volunteer the name of a download, file, or source merely because it exists.
+If supplied context does not cover the question, answer from general knowledge where appropriate.
+Never mention that a reference was absent, unavailable, or not selected, and never turn an answer
+into a reference disclaimer. Ask for the one detail that would make the next answer more
+specific only when it genuinely matters. Be concise, warm, specific, and useful.
 Lead with the user's actual situation rather than an encyclopedia entry. Give only the context that
 changes the next useful choice; do not enumerate every possible category when one clarifying detail
 would do. Prefer a short answer of two to four paragraphs unless the user asks for depth.
@@ -70,13 +71,12 @@ class ConversationResult:
 
 
 class ConversationAgent:
-    """Natural-language surface; the deterministic evaluator remains elsewhere."""
+    """Natural-language surface for the circular-economy assistant."""
 
     def __init__(
         self,
         model_router: ModelRouter,
         store: SessionStore,
-        kit: KitContext,
         *,
         skill_registry: SkillRegistry | None = None,
         knowledge_db: KnowledgeDatabase | None = None,
@@ -87,7 +87,6 @@ class ConversationAgent:
     ) -> None:
         self.model_router = model_router
         self.store = store
-        self.kit = kit
         self.skill_registry = skill_registry
         self.knowledge_db = knowledge_db
         self.machine_catalog = machine_catalog
@@ -101,7 +100,7 @@ class ConversationAgent:
             return ConversationResult(
                 text="Tell me what you have, what you are trying to do, or what you are unsure about.",
                 hearing=dict(session.understanding),
-                sources=self.kit.source_cards(),
+                sources=[],
                 model=self.model_router.selection.identity,
                 ai_used=False,
             )
@@ -109,7 +108,7 @@ class ConversationAgent:
         registry = self.skill_registry
         if registry is None:
             raise ProviderUnavailable("Expert skill registry is unavailable.")
-        selection = registry.select(message, session.material)
+        selection = registry.select(message, session.topic)
         focused_context, source_cards = self._focused_context(selection, session, message)
         prompt = self._context_prompt(session, selection, focused_context)
         history: list[Mapping[str, str]] = [
@@ -146,7 +145,7 @@ class ConversationAgent:
                     "into a recommendation; try sending it again when the model is available."
                 ),
                 hearing=dict(session.understanding),
-                sources=self.kit.source_cards(),
+                sources=[],
                 model=self.model_router.selection.identity,
                 ai_used=False,
                 skills=selection.ids,
@@ -177,7 +176,7 @@ class ConversationAgent:
         return ConversationResult(
             text=reply,
             hearing=dict(session.understanding),
-            sources=self.kit.source_cards() + source_cards,
+            sources=source_cards,
             model=self.model_router.selection.identity,
             ai_used=True,
             skills=selection.ids,
@@ -187,7 +186,7 @@ class ConversationAgent:
     def _focused_context(
         self, selection: SkillSelection, session: SessionState, message: str
     ) -> tuple[str, list[dict[str, str]]]:
-        source_context = "No downloaded source context was selected."
+        source_context = ""
         source_cards: list[dict[str, str]] = []
         if self.knowledge_db is not None:
             family = (
@@ -223,15 +222,18 @@ class ConversationAgent:
                 limit=3,
             )
             source_cards.extend(machinery_cards)
-        return (
-            selection.prompt_context
-            + "\n\n"
-            + source_context
-            + ("\n\n" + machinery_context if machinery_context else "")
-        ), source_cards
+        sections = [selection.prompt_context]
+        if source_context:
+            sections.append(source_context)
+        if machinery_context:
+            sections.append(machinery_context)
+        return "\n\n".join(sections), source_cards
 
     def _context_prompt(
-        self, session: SessionState, selection: SkillSelection, focused_context: str
+        self,
+        session: SessionState,
+        selection: SkillSelection,
+        focused_context: str,
     ) -> str:
         del selection
         geography = session.geography.strip() or "not provided"
@@ -243,7 +245,6 @@ class ConversationAgent:
             f"Current geography, if the user has supplied one: {geography}\n"
             f"Working understanding from earlier turns: {understanding}\n"
             f"{focused_context}\n"
-            f"{self.kit.prompt_context()}"
         )
 
     @staticmethod
@@ -258,7 +259,7 @@ class ConversationAgent:
         if not isinstance(value, Mapping):
             return {}
         result: dict[str, str] = {}
-        for key in ("object", "condition", "goal"):
+        for key in ("subject", "situation", "aim"):
             item = value.get(key)
             if isinstance(item, str) and item.strip():
                 result[key] = item.strip()[:240]

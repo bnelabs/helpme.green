@@ -30,8 +30,10 @@ def _sha256(path: Path) -> str:
 def _make_db(path: Path) -> None:
     connection = sqlite3.connect(path)
     try:
-        connection.execute("create table facts (id integer primary key, text text not null)")
-        connection.execute("insert into facts(text) values ('open source test fixture')")
+        connection.execute(
+            "create table fixture_records (id integer primary key, text text not null)"
+        )
+        connection.execute("insert into fixture_records(text) values ('open source test fixture')")
         connection.commit()
     finally:
         connection.close()

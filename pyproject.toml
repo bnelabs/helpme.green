@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "helpme-green"
 version = "0.1.0"
-description = "Advisory-only deterministic circular-economy decision support"
+description = "Circular-economy AI-backed R&D assistant with source-aware reference retrieval"
 requires-python = ">=3.11"
 dependencies = [
   "cryptography>=43.0",

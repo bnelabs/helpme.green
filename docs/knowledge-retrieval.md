@@ -18,8 +18,8 @@ The layers have different jobs:
 4. **Reranking** is an optional second-stage precision step. It receives only the top hybrid
    candidates and reorders them; it is not the index and it is not a source-confidence judge.
 5. **The graph projection** is for provenance and relationship questions: source → document →
-   chunk, source → material family, and source/chunk → candidate claim. It is not a replacement for
-   retrieval and it should not be used to infer a conclusion merely because two nodes are connected.
+   chunk, source → material family, and source/chunk → source note. It is not a replacement for
+   retrieval and it should not be used to assert a result merely because two nodes are connected.
 6. **GraphQL** is a read-only access surface over these capabilities. It is not the database, a
    vector index, or a truth authority. `search(mode: "lexical"|"semantic"|"hybrid")` is an API
    choice, while the SQLite store remains the local derived working store.
@@ -79,12 +79,12 @@ Embedding refreshes are incremental and also repair an existing document whose c
 
 - Preserve source ID, URL, publisher, authority tier, jurisdiction, scale, limitations, and fetch
   hash with every passage.
-- Keep candidate sources distinguishable from promoted governed knowledge.
+- Keep registered sources distinguishable from compact source notes.
 - Use primary law and regulator material for legal gates; use peer-reviewed work for mechanism and
-  process evidence; use manufacturers for declared machine capability; use community/low-tech
+  process support; use manufacturers for declared machine capability; use community/low-tech
   material for orientation and failure modes.
 - Never convert a vendor throughput into annual capacity, a policy statistic into project economics,
-  or a review article into a batch acceptance decision.
+  or a review article into a batch-specific operating instruction.
 - Treat a failed or challenge-blocked source as a coverage gap, not as a negative finding.
 - Keep raw downloads and extracted SQLite local unless licensing, privacy, and redistribution rights
   have been reviewed. Commit the manifest, source register, catalog metadata, benchmark, and tooling.

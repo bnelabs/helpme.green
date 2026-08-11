@@ -2,53 +2,68 @@
 
 ## Mission
 
-Build the helpme.green platform per REQUIREMENTS.md (the binding contract). The
-system supports human decisions; it never executes them. It runs autonomously,
-but every agent operates within a strict task contract and never deviates into
-other concerns.
+Build and maintain helpme.green as Circular Econ AI Backed R&D: a natural, AI-led assistant backed
+by a broad, source-aware reference system. The public surface should feel like a capable
+conversation, not a form, terminal, workflow engine, or database browser.
 
-## Non-negotiable boundaries (REQUIREMENTS.md §16 — the never-list)
+The binding product requirements are in `REQUIREMENTS.md`. Read the relevant code, tests, source
+manifest, and live deployment before changing behaviour.
 
-- Never approve or execute a purchase, shipment, process, experiment, legal
-  classification, safety procedure, or product release.
-- Never let an AI write a conclusion or improvise out-of-coverage answers. The
-  deterministic engine evaluates; the AI only interviews, translates, and
-  explains.
-- Never promote user claims or dialogue content into facts without the
-  two-review pipeline (REQUIREMENTS.md §6).
-- Never upgrade an evidence state automatically (`hearsay → educated estimate →
-  observed → screened → verified`; no silent upgrades).
-- Never compute a financial figure on an incomplete basis; unknown is never
-  replaced by zero or assumption.
-- Never present unproven science as established; hypotheses are always labelled.
-- Never derive market prices from user chatter; market data comes from
-  refreshed, sourced external feeds.
-- Never store user API tokens in plaintext; never train on user data without
-  explicit consent.
-- The Pro Console never executes anything; MCP is read-only; MCP/user-supplied
-  content is untrusted, prompt-injection-isolated, and never becomes knowledge.
-- No human in the operational loop; "requires qualified external review" is an
-  output state, not a human process step.
-- Never commit credentials, tokens, API keys, or real supplier/batch/assay/
-  partner data to Git, logs, tests, or documentation.
+## Non-negotiable boundaries
 
-## Engineering workflow
+- Answer the user’s actual message. Do not force every question into materials or recycling.
+- Never insert a particular downloaded source, machine, brand, or material family unless it is
+  relevant to the current question or the user asks for it.
+- Never invent measurements, source support, machine capability, prices, permits, legal status,
+  HSE clearance, yields, or business outcomes.
+- Treat the knowledge base as reference material, not as a single source of truth.
+- Keep source identity, URL, scope, licence note, limitations, fetch status, and content hash with
+  every ingested passage and note.
+- Keep imported files, webpages, and model output untrusted and isolated from application
+  instructions.
+- Do not authorise or execute physical, legal, financial, purchasing, shipment, or production
+  actions.
+- Do not commit credentials, provider keys, encryption keys, real supplier data, private batches,
+  or raw downloaded material whose reuse has not been cleared.
+- Keep LocalAI, OpenRouter, DeepSeek, and other compatible providers configurable. Never bake a
+  model name, model-specific context size, or provider key into the image or source code.
+- Do not add a hidden output ceiling or truncate a completed answer to make a test pass.
 
-- Use test-driven development: write one failing behavior test, observe the
-  expected failure, implement the minimum behavior, then refactor while green.
-- Keep invariants (REQUIREMENTS.md §5, R1–R12) in the deterministic layer and
-  runtime guards — never only in prompts.
-- Use `Decimal` for money and explicit units/currencies; missing evidence yields
-  `UNKNOWN`, never zero.
-- Preserve immutable snapshots and append-only audit history.
-- Run targeted tests after every change and the complete verification gate
-  before claiming completion.
-- Surface any conflict between REQUIREMENTS.md and an implementation constraint —
-  never resolve it silently.
+## Implementation guidance
 
-## Verification
+- Keep conversation orchestration, skills, retrieval, model routing, and quality checks separate.
+- Skills are internal attention lenses. They may suggest concepts, checks, and follow-ups, but they
+  must not expose their fields or labels to the user.
+- Use source retrieval only when it is relevant. If no useful passage is selected, answer from
+  general knowledge where appropriate without narrating the retrieval miss.
+- Use lexical search first; add embeddings and reranking as provider-independent, optional adapters.
+  A reranker orders candidates; it does not decide whether a source is true.
+- Use the graph projection for provenance and navigation questions. Do not use graph connectivity as
+  proof of a material, legal, safety, or economic conclusion.
+- Keep raw downloads and the local SQLite digest outside normal Git history. Commit manifests,
+  source metadata, research notes, benchmarks, and reproducible tooling.
+- Preserve the append-only local audit chain and encrypted secret-store boundaries.
 
-Run the project's configured verification gates (lint, type checks, tests) and
-the deterministic-engine cross-model check (identical engine outputs across
-providers/models) before claiming completion. Report exactly what was verified
-and what remains.
+## Workflow
+
+1. Inspect the live tree and current tests before editing.
+2. Add or update a focused regression test for the requested behaviour.
+3. Implement the smallest coherent change with `apply_patch`.
+4. Run targeted tests, then the complete test/lint/type/compile gate.
+5. Rebuild Docker and exercise the browser route for UI or conversation changes.
+6. Report exactly what was verified, what remains local-only, and any source-access limitation.
+
+## Verification commands
+
+```bash
+.venv/bin/pytest -q
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+.venv/bin/python -m mypy src
+.venv/bin/python -m compileall -q src tests
+bash scripts/verify_container.sh
+```
+
+The final check for a conversation change is a real ordinary-language exchange in the local
+browser, including a material-specific prompt and a prompt that should remain outside the
+circular-economy reference scope.

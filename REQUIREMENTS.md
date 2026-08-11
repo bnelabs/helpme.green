@@ -1,198 +1,171 @@
-# helpme.green — Autonomous Circular-Economy Decision Platform
-## Requirements & Plan (v3.0 — consolidated, codex goal brief)
+# helpme.green — Product and Runtime Requirements
 
-## 0. Identity
+## Purpose
 
-- **Name:** helpme.green
-- **One line:** *Describe any material stream. Get an honest, evidence-grounded, geography-aware answer: what it could become, what routes are actually applied, what evidence is missing, and what it is conservatively worth.*
-- **Character:** advisory only. Deterministic engine + governed knowledge base + AI that interviews and explains but **never concludes**.
-- **Scope for this phase:** the autonomous core + a **conversation-first local web surface**. The
-  deterministic evaluator and compatibility command API remain available underneath; slash
-  commands are not the primary user interaction. A broader public web product can be decided
-  separately.
+helpme.green is **Circular Econ AI Backed R&D**: a local-first assistant that helps people
+understand materials, objects, processes, machines, chemicals, risks, and circular-economy
+possibilities.
 
-## 1. Vision
+It serves the public as well as practitioners. A person can write “I have rubber”, describe a
+dirty film, ask whether a machine fits a process, explore an HSE question, or ask something
+outside the circular-economy domain. The assistant begins with the actual message and uses the
+knowledge base only when it improves that answer.
 
-Anyone — a curious person, a small recycler, an upcycler, an investor — can describe a material stream and receive an honest assessment of its potential: which processing routes are real and applied (with sources), what evidence is missing before anyone should act, and what it is conservatively worth *here, in this economy*. The platform runs autonomously: every process is auto-fed, every issue is handled by AI agents with strict task contracts, and the knowledge base compounds — getting cheaper and smarter with use.
+The knowledge base is a valuable reference layer, never a single source of truth. The user’s real
+material, current measurements, machine trials, supplier documents, local rules, professional
+judgement, and current market conditions may change the answer.
 
-## 2. Problem statement
+## Product behaviour
 
-1. **The honesty gap** — general chat AIs confidently guess yields, prices, and process steps; non-experts can't tell. Real decisions need "I don't know, and here is what would prove it" as a first-class answer.
-2. **The knowledge gap** — recycling knowledge is fragmented across regulations, standards, literature, local practice, and buyer specifications; no governed, source-linked, jurisdiction-scoped compilation exists.
-3. **The access gap** — small recyclers and the public can't afford consultants; investors can't cheaply sanity-check streams. helpme.green makes professional-grade evaluation affordable, with **zero marginal cost for repeated questions**.
+The primary experience is an ordinary-language conversation:
 
-## 3. Audiences, tiers, and surfaces
+- Start from what the user actually said. Do not force a questionnaire, command language, material
+  label, token, or source ritual.
+- Answer the question that was asked before asking for more information.
+- Ask at most one follow-up when a missing detail genuinely changes the useful next step.
+- Keep internal skills, retrieval, ranking, prompt context, and quality checks invisible.
+- Do not introduce a particular downloaded file, machine brand, material family, or source that is
+  not relevant to the current message.
+- Do not turn a short question into an encyclopedic lecture. Add depth when the user asks for it or
+  when a safety-critical distinction requires it.
+- Explain uncertainty in natural language. Do not expose internal labels or database mechanics as
+  the answer.
+- For an unrelated question, answer it normally when possible; do not force it into a recycling
+  frame.
 
-- **Education tier** — curious public. Gets: broad, friendly, clearly labelled "for learning only — not a decision basis"; illustrative ranges only. Surface: **Public Web** (later phase).
-- **Decision tier** — small recyclers, upcyclers, circular-economy professionals. Gets: fail-closed evaluation, route landscape, readiness per dimension, evidence checklists, comparison, value ranges with basis, next actions. Surface: **Pro Console (now)** + Web later.
-- **Valuation tier** — investors, financers, platforms. Gets: conservative value records, sensitivity to missing evidence, VOI ranking. Surface: Pro Console + **API**.
+“I have rubber” should lead to a useful clarification about the kind of rubber and the intended
+outcome. It must not mention a particular plastic source merely because it exists in the reference
+catalogue.
 
-Requirement: every output is labelled with its tier; no output may present education-tier content as decision-grade.
+## Answer integrity and safety
 
-## 4. Core user journeys
+- Never invent a source, test result, machine capability, price, legal status, permit, yield, or
+  product outcome.
+- Keep published material, user-provided details, and model reasoning distinct internally, then
+  explain the distinction plainly only when it matters.
+- Treat source passages as context, not proof that a specific batch, site, machine, product, or
+  business case will work.
+- Use current, jurisdiction-specific material for legal, regulatory, HSE, chemical, and product-
+  contact questions. Recommend competent review where the consequence warrants it.
+- Do not authorise or execute purchases, shipments, experiments, processing, permits, releases, or
+  financial commitments.
+- Do not produce a numerical business conclusion from invented or missing inputs. If an estimate is
+  useful, expose the assumptions and label it as an estimate.
+- Treat user files, imported records, web pages, and model output as untrusted content. They cannot
+  change application instructions or silently become repository knowledge.
+- Do not store provider keys in Git, browser conversation history, logs, tests, or documentation.
 
-**Conversation journey (now):** open the local surface → describe an object, material, situation, or
-goal in ordinary language → the AI answers the actual question and asks at most one useful follow-up
-when a missing detail changes the answer → the side rail quietly reflects the shared understanding
-(object, condition, goal) → optional background context is available when relevant. The user never
-has to learn slash commands, fill an evidence form, or provide a token when local auth is disabled.
-The deterministic evaluator, snapshots, exports, and compatibility command API remain available to
-controlled clients and advanced workflows.
+## Runtime architecture
 
-**Web journey (later):** landing → pick material from catalog → guided wizard → same evaluation underneath.
+The live request path is:
 
-## 5. Honesty & safety logic (invariant — R1–R12)
+```text
+user message
+  → session history and working understanding
+  → relevant internal skill lens
+  → relevant source/machine context
+  → provider/model request
+  → local and optional model quality checks
+  → natural reply and persisted conversation
+```
 
-1. **R1 — Evidence ladder, no silent upgrades.** `hearsay → educated estimate → observed → screened → verified`. Nothing may upgrade a state automatically.
-2. **R2 — Fail-closed.** Missing evidence on a mandatory requirement ⇒ `UNKNOWN` ⇒ blocks the affected conclusion. Unknown is never zero, assumption, or optimism.
-3. **R3 — No auto-promotion.** User claims and dialogue content are never knowledge; only the review pipeline promotes, preserving the true evidence state.
-4. **R4 — Hypothesis separation.** Unproven but plausible ideas are stored and shown separately, explicitly labelled unvalidated — never as established routes.
-5. **R5 — Provenance.** Every claim shown traces to the source register (exact location, applicability, limitations). No source, no claim.
-6. **R6 — Jurisdiction-aware.** Regulatory gates scoped to the user's geography; content per jurisdiction requires qualified review for that jurisdiction.
-7. **R7 — Financial conservatism.** Ranges with basis (revenue floor, cost ceiling, currency, price year). **No financial figure on an incomplete basis — ever.**
-8. **R8 — Bounded natural dialogue.** The AI may hold a natural conversation, answer the user’s
-   actual question, translate ordinary language, and ask one useful follow-up; it cannot drift into
-   deterministic conclusions, fabricated sources, or unsupported recommendations.
-9. **R9 — Coverage honesty.** "Not yet covered" is an acceptable, required answer; never improvise beyond vetted knowledge.
-10. **R10 — Contamination presumption.** The AI actively probes contamination and condition even if the user asserts cleanliness; non-expert "none" = hearsay, never clearance.
-11. **R11 — The AI never writes the conclusion.** The engine evaluates; the AI interviews, translates, explains.
-12. **R12 — Explainability.** Every status and block is explainable: rule → claim → source → evidence state → what's missing.
+The model is the intelligence layer. Skills focus attention; they do not decide the answer. The
+application is provider- and model-agnostic:
 
-## 6. Autonomous operation & agent organization
+- `localai:auto` discovers a single model advertised by a configured local OpenAI-compatible
+  endpoint.
+- Explicit provider/model identities are accepted for LocalAI, OpenRouter, DeepSeek, and compatible
+  deployments supported by the gateway.
+- Model-specific sampling, context, reasoning, timeout, and output settings live in an external
+  profile keyed by provider/model identity.
+- If a profile does not define an output limit, the gateway omits the limit and lets the provider
+  choose. The application does not truncate the completed user reply.
+- A profile may set Muse Glimmer’s `reasoning_strength` to `xhigh`, but that setting is not sent to
+  models whose profile does not request it.
 
-The system runs unattended. No human in the operational loop. Humans only (a) set policy outside the runtime, and (b) receive formal escalation requests. **"Requires qualified external review" is an output state, not a human process step** — the machine correctly refusing to exceed its authority.
+## Knowledge system
 
-Every agent is **code + prompt + bounded tools** with a five-part contract: **Mission / Inputs → Outputs / Autonomy scope / Forbidden actions / Escalation**, plus a mandatory anti-myopia clause.
+The checked-in source manifest and skill packs are the reproducible identity of the reference
+system. The local digest is a derived asset built by:
 
-- **Intake Agent** — interviews, produces labelled `CaseFacts`. Forbidden: conclusions, over-crediting evidence, skipping confirmation. Escalates contradictions → Conflict.
-- **Evaluator Core** — *not an agent*; the deterministic engine; enforces R1–R12; agents cannot change it.
-- **Explainer Agent** — renders engine output in plain language with sources and tier labels. Forbidden: adding claims, softening blocks, omitting unknowns.
-- **Sourcer Agent** — discovers authoritative sources; produces candidate source-register entries (exact location, applicability, limitations). Forbidden: creating claims, non-authoritative sources for legal gates.
-- **Knowledge Curator Agent** — composes candidate claims from sources + consented dialogue candidates; assigns evidence states. Forbidden: promoting, upgrading states, inventing units/currency context.
-- **Domain Reviewer Agents** (materials, safety/EHS, legal, product/buyer, commercial/financial) — approve / reject / request-more-evidence with recorded reasoning. Forbidden: self-review, cross-domain decisions, waiving evidence minimums.
-- **Conflict Agent** — detects contradictions; blocks conflicting promotions; surfaces conflicts. Forbidden: silently picking a winner.
-- **Market Data Agent** — scheduled fetch/validation/expiry of prices, FX, energy. Forbidden: deriving data from dialogue, extrapolation, stale backfill.
-- **Economics Agent** — composes value records under conservative rules. Forbidden: incomplete-basis computation, single-point estimates, unit/currency mismatches.
-- **QA Auditor Agent** — audits: source verification, hallucination detection, evidence-state audits, re-review triggers, pipeline pauses. Forbidden: rewriting knowledge, overriding invariants.
-- **Ops Agent** — health, cache invalidation, token budgets, retries, backups, incidents. Forbidden: changing logic/invariants, masking failures.
-- **Policy Agent** (top) — enforces the invariant layer, resolves cross-domain conflicts, decides when an external authority is required. Forbidden: modifying invariants, overriding fail-closed blocks, reversing a review rejection. Escalates anything unresolvable within invariants → owner, as a formal decision request.
+```text
+source manifest
+  → bounded download and extraction
+  → source/document/chunk records
+  → optional embeddings
+  → optional source notes
+  → lexical, semantic, or hybrid retrieval
+  → optional second-stage reranking
+```
 
-**Anti-myopia mechanisms:** invariants are code, not policy; separation of duties (propose ≠ review ≠ promote; two independent domain reviews required for promotion); the global-objective clause in every contract ("if completing your task degrades another pipeline's guarantee, stop and escalate"); cross-check pairs; the escalation contract (never punished); fail-closed operation (invariant violation pauses the pipeline); full audit of every agent decision; budget discipline enforced by Ops.
+The corpus covers science, chemistry, engineering, machinery, HSE, regulation, industry practice,
+low-tech methods, policy, and circular-economy examples. Each source retains its publisher, URL,
+scope, jurisdiction, scale, licence note, limitations, fetch status, and content hash.
 
-## 7. Auto-fed pipelines
+Source notes are compact aids for navigation and explanation. They remain linked to the original
+source and do not replace reading the source or checking current conditions. A failed or inaccessible
+source is recorded as a coverage gap, not treated as a negative answer.
 
-- **Intake** — input → Intake Agent → confirmed labelled facts → Evaluator Core.
-- **Evaluation** — facts → landscape + readiness + next actions → Explainer → answer + value record (if eligible) → caches updated.
-- **Knowledge** — Sourcer → Curator → Conflict check → two independent domain reviews → Policy promotion → active knowledge → cache invalidation. Dialogue candidates enter via the same gate.
-- **Market** — scheduled fetches → validation → normalization → expiry windows.
-- **QA** — scheduled audits, source verification, invariant checks → flags / re-reviews / incidents.
-- **Ops** — health, backups, cache, budgets, incidents → self-healing or owner flag.
-- **Moderation** — user content triaged automatically; ambiguous edge cases escalate to owner.
+SQLite is the local working store. Full-text search is always available after extraction; embeddings
+and reranking are optional adapters. The graph projection and GraphQL endpoint support provenance,
+navigation, inspection, and integration. They are not a truth engine and do not replace retrieval.
 
-## 8. Knowledge base & governance logic (agentic)
+Raw downloads and the full derived database stay in a separate local directory until source-by-
+source redistribution rights have been reviewed. The repository may carry manifests, checksums,
+research notes, retrieval evaluations, and tooling. A cleared database can be distributed as a
+versioned release asset with checksum verification.
 
-Sources register → candidate claims (evidence state + provenance) → dedupe + conflict check → two independent domain reviews → promotion with logged decision → active knowledge with review due-dates and expiry → versioned immutability (published content changes only via new version + re-review). Conflicts surfaced, never silently resolved. Jurisdiction-scoped. Dialogue-derived candidates always tagged with their true state.
+## Interface and persistence
 
-## 9. Value & economics logic
+The browser surface contains one conversation composer, a new-conversation action, optional access
+authentication, and a quiet summary of what the assistant is hearing. It does not require the user
+to understand the internals.
 
-Three layers, never conflated: **governed economics knowledge** (typed, source-linked, review-gated cost/yield/output data), **market data** (time-stamped, externally refreshed, never from dialogue), **value records / cache** (composed, digested snapshots: profile + geography + route + ranges + price basis + currency + date + sources). Value record computed only on complete basis (R7); conservative (revenue floor, cost ceiling); range-shaped; sensitivity shown; the evidence that would change the number shown. **VOI:** rank next evidence actions by expected value gain minus cost — the platform tells users whether testing is worth paying for. **Geography & income context:** jurisdiction gates, local prices, income-level feasibility framing, locale. Politics/regulation surface as gated requirements, never editorial.
+The application exposes:
 
-## 10. Reuse & cost logic
+- `GET /healthz` for process and local audit-chain health;
+- `POST /api/sessions` to create a conversation;
+- `POST /api/sessions/{id}/message` to send ordinary language;
+- `GET /api/sessions/{id}` to read a persisted conversation;
+- `GET /api/expert/capabilities` for read-only runtime capability metadata;
+- `GET /api/knowledge/sources` for source metadata and retrieval health;
+- `POST /graphql` for read-only source, machine, skill, search, graph, and digest queries.
 
-Deterministic evaluation ⇒ same facts + same knowledge version = same result forever. Cache keys: knowledge digests + normalized fact sets + geography + locale; invalidate only on knowledge change. Pattern-level caching only (never per-user transcripts). First novel question pays for extraction/rendering; repeats are free; tier budgets; BYOK controls own spend.
+Sessions retain conversation history, a small working understanding, model identity, and optional
+geography. Snapshots and the append-only audit chain protect local continuity without turning the
+conversation into a case file or exposing internal record formats.
 
-## 11. AI & token logic
+The read-only import boundary may read explicitly allowed JSON, CSV, XLSX, and HTTPS resources. It
+cannot execute code, write files, mutate configuration, or send imported content to an unconfigured
+destination.
 
-Provider-agnostic interface (swap models without behavior change — verified by asserting identical engine outputs across models). **DeepSeek primary for testing (cheap), OpenRouter free models selectable.** BYOK: user tokens encrypted at rest, never in browser/logs, metered and audited. Platform default tier: cost-capped, model identity shown. AI roles hard-constrained (interviewer/translator/explainer). Fallback: engine still answers from cache when a model fails; clearly says the interview cannot continue. No training on user data without explicit consent.
+## Repository and deployment rules
 
-## 12. Interface strategy — conversation-first local surface
+- The container image contains application code and checked-in metadata, not a hardcoded model.
+- Compose binds local development to loopback by default.
+- LocalAI requires no browser-entered provider key. An access-token field appears only when the
+  operator explicitly configures the optional browser gate.
+- Provider keys and encryption keys come from the environment or an encrypted local store and are
+  never printed.
+- Docker, local Python, and a browser smoke test must exercise the same natural-language route.
+- The digest must remain rebuildable from the manifest and its local source-download directory.
 
-**Primary surface:** a local web conversation with a calm editorial layout. It has one message box,
-one natural-language send action, and a quiet “What I’m hearing” summary. It does not expose slash
-commands, internal schemas, evidence-state labels, or a required token prompt. The user can begin
-with an incomplete sentence, a question, or frustration; the assistant meets that message at its
-level and continues from there.
+## Acceptance criteria
 
-**Compatibility surface:** the existing command endpoint and CLI remain available for deterministic
-engine tests, snapshots, exports, and controlled professional workflows. They are implementation
-interfaces, not onboarding instructions for the conversation surface.
+A change is complete only when the relevant checks pass and the result is tested at the user
+surface:
 
-**Session model:** case-oriented sessions; state = labelled fact set + knowledge version + geography; resume by snapshot; every decision appended to the audit chain. Sessions persist, cases resume.
+1. ordinary messages reach the configured model and preserve the complete reply;
+2. an irrelevant local reference is absent from the prompt and answer context;
+3. a non-domain question is not forced through a material-specific lens;
+4. changing the provider or model changes configuration, not application code;
+5. a missing model or source fails honestly and does not fabricate an answer;
+6. source retrieval is bounded, attributable, and optional where it does not help;
+7. source notes and graph records remain read-only reference infrastructure;
+8. tests, lint, type checks, container verification, and the browser flow are green.
 
-**Read-only MCP contract:** allowed tools = read files/CSV/XLSX, fetch whitelisted URLs, query the user's configured data sources. **Forbidden = execute code, write anywhere, send data outside, mutate knowledge or config.** MCP/user-supplied content is **untrusted input**: enters as `CaseFacts` with evidence states and provenance ("from user's file, unverified"), is **prompt-injection-isolated** from agent instructions (same treatment as user text), can never promote itself into knowledge, and every tool call is logged. The console **never executes anything** — slash commands run against the engine, never against the user's machine.
+## Explicit non-goals
 
-**Public Web (later phase):** landing + education tier + mobile-first guided wizard, same engine underneath. Separate build, separate budget.
-
-## 13. Public platform logic (applies to both surfaces)
-
-Accounts: optional for education, required for decision/valuation (snapshots, BYOK, history). Privacy: data minimization, GDPR-default for EU, deletion on request, explicit consent for knowledge-pipeline use. Moderation: automated triage; ambiguous cases escalate to owner. Licensing: users grant the platform license to use anonymized contributions in the governed knowledge pipeline.
-
-## 14. Business model
-
-Free education tier (funnel/public good) · Decision tier subscription/credits (console + snapshots + BYOK) · Valuation tier / API (investors, bulk evaluation, value records) · Enterprise (private catalogs, private knowledge packs). **Never monetized: fabricated confidence; converting `UNKNOWN` into a number.**
-
-## 15. Legal & compliance posture
-
-Advisory-only on every surface; "not legal/regulatory/safety/investment advice" framing; GDPR-default; content liability = governed publisher, not open wiki; jurisdiction expansion requires qualified review per jurisdiction before offering content there.
-
-## 16. Boundaries — the final never-list
-
-1. Never approves, executes, or recommends execution of purchases, shipments, processes, experiments, legal classifications, or product releases.
-2. Never presents itself as legal, regulatory, safety, or investment advice.
-3. Never lets the AI write a conclusion or improvise out-of-coverage answers.
-4. Never promotes user claims or dialogue content into facts without the two-review pipeline.
-5. Never upgrades an evidence state automatically.
-6. Never computes a financial figure on an incomplete basis; never replaces unknown with zero.
-7. Never presents unproven science as established.
-8. Never derives market prices from user chatter.
-9. Never mixes helpme.green data with Konverta's operational data (separate systems).
-10. Never trains on user data without explicit consent; never stores API tokens in plaintext.
-11. **No human in the operational loop** — humans set policy outside the runtime and receive escalation requests only.
-12. No agent deviates from its contract, decides outside its autonomy scope, modifies invariants or the engine, or spends outside budget.
-13. No single agent promotes knowledge (two independent reviews required).
-14. **The console never executes anything; MCP is read-only; MCP/user content is untrusted, injection-isolated, and never becomes knowledge.**
-15. The console serves the pro tier only; education tier waits for the public web.
-16. No matchmaking, brokerage, or marketplace execution (separate future decision).
-17. Frontend design (public web) is out of scope until a separate decision.
-
-## 17. Plan & roadmap
-
-- **Phase 0 — Decisions** (owner): pricing skeleton; launch jurisdictions; initial domain-review agent configuration; trademark/domain check on helpme.green. *Exit:* decisions recorded.
-- **Phase A — Honest spine + conversation surface:** engine wiring, bounded natural conversation on
-  LocalAI/OpenAI-compatible providers, sessions, snapshots, read-only MCP, compatibility API, one
-  material family (copper cable), and local Docker deployment. *Exit:* 100 evaluations, 0 fabricated
-  sources, identical engine outputs across models, conversational sessions persist and resume.
-- **Phase B — Knowledge pipeline:** Sourcer + Curator + Domain Reviewers + Conflict + Policy promotion; dialogue candidate intake. *Exit:* autonomous knowledge growth; two-review promotion only; zero single-agent promotions in audit.
-- **Phase C — Value generation:** Market Data + Economics agents, value records, VOI. *Exit:* zero incomplete-basis numbers in QA audits.
-- **Phase D — Autonomy hardening:** QA Auditor, Ops Agent, incidents, budgets, fail-closed pauses, escalation contract. *Exit:* 72-hour unattended run, no invariant violations, no human steps.
-- **Phase E — Breadth:** catalog expansion, more material families, more jurisdictions, public API. *Exit:* coverage KPIs met.
-- **Phase F — Public Web (separate work stream):** landing, education tier, mobile wizard. *Exit:* live education tier, funnel to console.
-
-## 18. Success metrics
-
-Honesty: 0 fabricated sources in audits; 100% of decision outputs show `BLOCKED`/`UNKNOWN` when applicable. Cost: cache hit >80%; marginal cost of repeat answer ≈ €0. Adoption: evaluations/week, returning users, coverage growth, time-to-first-landscape < 1 min. Compounding: candidates → reviewed → promoted per month; catalog coverage growth. Trust: acted-on-output rate, complaint rate, reviewer/pipeline error metrics.
-
-## 19. Risks & mitigations
-
-1. **Extractor soft spot** → confirmation step, unlabelled-fact rejection, strict translation schema, QA audits.
-2. **Breadth gap vs ChatGPT** → coverage honesty (R9), phased breadth, decision-tier value (determinism, audit, fail-closed) where ChatGPT cannot follow.
-3. **Knowledge poisoning via dialogue/community** → candidate-only intake, two-review promotion, conflict gates, expiry.
-4. **Regulatory exposure** → tier labelling, advisory framing, jurisdiction gates.
-5. **Token cost blowout** → deterministic cache, templated question agenda, budgets, BYOK.
-6. **Agent myopia / drift** → contracts, separation of duties, cross-check pairs, fail-closed pauses, audit.
-7. **Conversation drift or model failure** → keep the model bounded, preserve the deterministic
-   evaluator, state when the provider is unavailable, and never turn a missing answer into a guess.
-8. **Scope creep toward execution/marketplace** → boundary §16.16, explicit separate decision.
-
-## 20. Open decisions
-
-1. Pricing skeleton and launch paid tiers.
-2. Launch jurisdictions and expansion order.
-3. Default free-tier model budget per user/month.
-4. Community contribution model: open to all users or verified recyclers only.
-5. Whether the console is permanently the pro surface or a bridge to a web-based pro dashboard.
-6. Marketplace/matchmaking future: yes/no/never (explicit decision, not drift).
-
-## 21. Handoff note for Codex
-
-This document is the **contract**. Invariants (R1–R12) and the never-list (§16) outrank implementation convenience. Agent contracts (§6) are binding specifications — turn them into prompts + tool scopes + validation, not suggestions. Every pipeline maps to a produced asset; every agent to its five-part contract. The engine is deterministic; the AI never concludes; MCP is read-only; the console never executes. Surface any conflict between this document and an implementation constraint — never resolve it silently.
+The product does not expose internal retrieval, skill, persistence, or quality mechanics as a user
+workflow. Internal implementation should remain replaceable and must not leak into onboarding text
+or model replies.

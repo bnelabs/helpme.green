@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-image_name="${HELPME_CONTAINER_IMAGE:-helpme-green:phase-a}"
+image_name="${HELPME_CONTAINER_IMAGE:-helpme-green:local}"
 container_name="${HELPME_CONTAINER_NAME:-helpme-green-rehearsal}"
 container_port="${HELPME_CONTAINER_PORT:-18084}"
-console_token="${HELPME_TEST_TOKEN:-helpme-green-local-test-token}"
+access_token="${HELPME_TEST_TOKEN:-helpme-green-local-test-token}"
 data_dir=$(mktemp -d)
 
 cleanup() {
@@ -21,8 +21,9 @@ docker run --detach \
   --name "$container_name" \
   --publish "$container_port:8080" \
   --volume "$data_dir:/app/.data" \
-  --env "HELPME_CONSOLE_TOKEN=$console_token" \
+  --env "HELPME_ACCESS_TOKEN=$access_token" \
   --env "HELPME_MASTER_KEY=$master_key" \
+  --env "HELPME_AI_ENABLED=0" \
   "$image_name" >/dev/null
 
 wait_for_health() {
@@ -46,47 +47,39 @@ wait_for_health "$health_before"
 
 created=$(curl --fail --silent --show-error --max-time 5 \
   --request POST \
-  --header "Authorization: Bearer $console_token" \
+  --header "Authorization: Bearer $access_token" \
   --header "Content-Type: application/json" \
-  --data '{"material":"copper cable","geography":"Bulgaria / EU"}' \
+  --data '{}' \
   "http://127.0.0.1:$container_port/api/sessions")
 session_id=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["session_id"])' <<<"$created")
 
-answer_response=$(curl --fail --silent --show-error --max-time 5 \
+message_response=$(curl --fail --silent --show-error --max-time 5 \
   --request POST \
-  --header "Authorization: Bearer $console_token" \
+  --header "Authorization: Bearer $access_token" \
   --header "Content-Type: application/json" \
-  --data '{"command":"/answer contamination unknown"}' \
-  "http://127.0.0.1:$container_port/api/sessions/$session_id/command")
-snapshot_response=$(curl --fail --silent --show-error --max-time 5 \
-  --request POST \
-  --header "Authorization: Bearer $console_token" \
-  --header "Content-Type: application/json" \
-  --data '{"command":"/snapshot"}' \
-  "http://127.0.0.1:$container_port/api/sessions/$session_id/command")
+  --data '{"message":"I have rubber"}' \
+  "http://127.0.0.1:$container_port/api/sessions/$session_id/message")
 
 docker restart "$container_name" >/dev/null
 wait_for_health "$health_after"
 resumed=$(curl --fail --silent --show-error --max-time 5 \
-  --header "Authorization: Bearer $console_token" \
+  --header "Authorization: Bearer $access_token" \
   "http://127.0.0.1:$container_port/api/sessions/$session_id")
 
 python3 -c '
 import json
 import sys
 
-answer = json.loads(sys.argv[1])
-snapshot = json.loads(sys.argv[2])
+message = json.loads(sys.argv[1])
+resumed = json.loads(sys.argv[2])
 health = json.load(open(sys.argv[3], encoding="utf-8"))
-resumed = json.loads(sys.argv[4])
-assert answer["error"] is None
-assert snapshot["error"] is None and snapshot["data"]["snapshot_id"]
+assert message["error"] is None
+assert message["data"]["ai_used"] is False
 assert health["status"] == "ok" and health["audit_chain_valid"]
-assert resumed["session"]["facts"]["contamination"]["label"] == "unknown"
+assert "topic" in resumed["session"] and "material" not in resumed["session"]
 print(json.dumps({
     "health_after_restart": health,
     "session_resumed": True,
-    "snapshot_created": True,
-    "fact_label": "unknown",
+    "natural_message_endpoint": True,
 }))
-' "$answer_response" "$snapshot_response" "$health_after" "$resumed"
+' "$message_response" "$resumed" "$health_after"

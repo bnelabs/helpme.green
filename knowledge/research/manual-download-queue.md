@@ -1,9 +1,9 @@
 # Manual-download queue
 
-Last checked: **2026-08-11** against the expanded 153-source manifest. The current digest has 102 sources with a latest extracted document; 51 registered candidates have no latest readable document.
+Last checked: **2026-08-11** against the expanded 153-source manifest. The current digest has 102 sources with a latest extracted document; 51 registered sources have no latest readable document.
 
 These are reputable references that the bounded fetcher could not digest automatically. They remain
-registered in `knowledge/source-manifest.yml`, but their failed fetches are not treated as evidence.
+registered in `knowledge/source-manifest.yml`, but their failed fetches are not treated as usable source context.
 If you manually download a file, keep the original filename, URL, publication/version date, and a
 SHA-256 hash. Do not commit the file or the SQLite database. Put the local copy under an untracked
 folder such as `.data/manual-source-downloads/<source-id>/` and provide it for a reviewed local
@@ -82,4 +82,4 @@ The following selected Airtable references were registered but could not be fetc
 4. Run the reviewed extractor and inspect the first/last pages for truncation, OCR failure, tables,
    and legal footnotes.
 5. Mark the source as extracted only after the content hash and extraction status are recorded.
-6. Keep any claim candidate subject to the existing two-review promotion gate.
+6. Keep any generated source note linked to the original passage and clearly subordinate to the source itself.

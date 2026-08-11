@@ -9,7 +9,8 @@ has been deliberately designed and reviewed.
 
 Docker Compose exposes the web app only on `127.0.0.1:8080`. The container persists sessions, audit
 history, the runtime knowledge database, and raw source downloads in the named `helpme_data` volume.
-The Precious Plastic kit is mounted read-only.
+No particular local download is mounted into the conversation runtime; registered sources are used
+through the normal knowledge pipeline.
 
 Create the required encryption key in the current shell and start the app:
 
@@ -45,11 +46,11 @@ override is also useful for a controlled private artifact supplied with explicit
 [`knowledge-artifact.md`](knowledge-artifact.md) for the publication and checksum contract.
 
 `HELPME_MASTER_KEY` protects encrypted local BYOK storage. It is not a browser login token.
-`HELPME_CONSOLE_TOKEN` is optional. Leave it unset for a local no-token browser; set it only when a
+`HELPME_ACCESS_TOKEN` is optional. Leave it unset for a local no-token browser; set it only when a
 token gate is wanted:
 
 ```bash
-export HELPME_CONSOLE_TOKEN='local-development-only-token'
+export HELPME_ACCESS_TOKEN='local-development-only-token'
 ```
 
 When the token is configured, open [http://localhost:8080](http://localhost:8080), enter the token,
@@ -90,7 +91,7 @@ the current full digest is not silently copied into Git history or a public rele
 ## HTTP protection
 
 `/healthz` is intentionally available for local health checks. The other HTTP endpoints use the
-configured bearer token when `HELPME_CONSOLE_TOKEN` is set. Bind the service to loopback for local
+configured bearer token when `HELPME_ACCESS_TOKEN` is set. Bind the service to loopback for local
 use. If it is ever shared, put it behind HTTPS and a real identity/access layer; a static bearer
 token is a minimum development gate, not a production account system.
 
@@ -115,7 +116,7 @@ touch /srv/helpme-green/.env
 chmod 600 /srv/helpme-green/.env
 ```
 
-The env file must contain a stable `HELPME_MASTER_KEY` and a strong `HELPME_CONSOLE_TOKEN`, plus the
+The env file must contain a stable `HELPME_MASTER_KEY` and a strong `HELPME_ACCESS_TOKEN`, plus the
 model endpoint configuration. Keep it outside Git and do not print it in CI logs. Put the app behind
 an HTTPS reverse proxy before sharing it.
 

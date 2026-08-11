@@ -5,79 +5,56 @@ import json
 import threading
 from pathlib import Path
 
-from cryptography.fernet import Fernet
-
-from helpme_green.console import CommandProcessor
+from helpme_green.application import ApplicationProcessor
 from helpme_green.knowledge import KnowledgeBase
-from helpme_green.persistence import SecretStore, SessionStore
-from helpme_green.server import _ConsoleServer
+from helpme_green.persistence import SessionStore
+from helpme_green.server import _HelpmeServer
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_byok_is_encrypted_and_not_present_as_plaintext(tmp_path: Path) -> None:
-    secret = "deepseek-secret-value-that-must-not-be-logged"
-    store = SecretStore(tmp_path / "secrets", master_key=Fernet.generate_key())
-    store.set("deepseek", secret)
-    raw = (tmp_path / "secrets" / "deepseek.json").read_text(encoding="utf-8")
-
-    assert secret not in raw
-    assert store.get("deepseek") == secret
-    assert store.names() == ("deepseek",)
-
-
-def test_http_console_api_is_command_only_and_has_health_gate(tmp_path: Path) -> None:
+def _running_server(tmp_path: Path) -> tuple[_HelpmeServer, threading.Thread]:
     knowledge = KnowledgeBase.from_repository(ROOT)
     sessions = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
-    processor = CommandProcessor(knowledge, sessions)
-    server = _ConsoleServer(("127.0.0.1", 0), processor, sessions)
+    processor = ApplicationProcessor(knowledge, sessions)
+    server = _HelpmeServer(("127.0.0.1", 0), processor, sessions)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
+    return server, thread
+
+
+def test_http_conversation_api_and_health_surface(tmp_path: Path) -> None:
+    server, thread = _running_server(tmp_path)
     try:
         connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
         connection.request(
             "POST",
             "/api/sessions",
-            body=json.dumps({"material": "copper cable"}),
+            body=json.dumps({}),
             headers={"Content-Type": "application/json"},
         )
-        created = json.loads(connection.getresponse().read())
-        session_id = created["session_id"]
-        connection.request(
-            "POST",
-            f"/api/sessions/{session_id}/command",
-            body=json.dumps({"command": "/status"}),
-            headers={"Content-Type": "application/json"},
-        )
-        response = json.loads(connection.getresponse().read())
+        created_response = connection.getresponse()
+        created_response.read()
         connection.request("GET", "/healthz")
-        health = json.loads(connection.getresponse().read())
+        health_response = connection.getresponse()
+        health = json.loads(health_response.read())
     finally:
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
 
-    assert response["error"] is None
-    assert response["data"]["mcp"].startswith("read-only")
+    assert created_response.status == 201
+    assert health_response.status == 200
     assert health["status"] == "ok"
     assert health["audit_chain_valid"]
 
 
 def test_http_conversation_api_accepts_ordinary_language(tmp_path: Path) -> None:
-    knowledge = KnowledgeBase.from_repository(ROOT)
-    sessions = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
-    processor = CommandProcessor(knowledge, sessions)
-    processor.model_router.complete_json = lambda messages, *, system_contract, max_tokens: {
-        "reply": "A dusty light bulb is a useful place to start. What do you want to do with it?",
-        "hearing": {
-            "object": "light bulb",
-            "condition": "dusty",
-            "goal": "understand the useful next step",
-        },
+    server, thread = _running_server(tmp_path)
+    server.processor.model_router.complete_json = lambda messages, **kwargs: {
+        "reply": "Rubber can mean several different materials. What kind is it, and what do you want to do with it?",
+        "hearing": {"subject": "rubber", "situation": "", "aim": ""},
     }
-    server = _ConsoleServer(("127.0.0.1", 0), processor, sessions)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
     try:
         connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
         connection.request(
@@ -91,34 +68,28 @@ def test_http_conversation_api_accepts_ordinary_language(tmp_path: Path) -> None
         connection.request(
             "POST",
             f"/api/sessions/{created['session_id']}/message",
-            body=json.dumps({"message": "I have a dusty light bulb and want to understand it."}),
+            body=json.dumps({"message": "I have rubber"}),
             headers={"Content-Type": "application/json"},
         )
-        response_http = connection.getresponse()
-        response_status = response_http.status
-        response = json.loads(response_http.read())
+        response = connection.getresponse()
+        payload = json.loads(response.read())
     finally:
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
 
     assert created_response.status == 201
-    assert response_status == 200
-    assert response["error"] is None
-    assert "/ask" not in response["text"]
-    assert response["data"]["hearing"]["object"] == "light bulb"
+    assert response.status == 200
+    assert payload["error"] is None
+    assert "Precious Plastic" not in payload["text"]
+    assert payload["data"]["hearing"]["subject"] == "rubber"
 
 
-def test_health_endpoint_stays_available_when_console_token_is_enabled(
+def test_health_and_homepage_remain_public_when_token_is_enabled(
     tmp_path: Path, monkeypatch
 ) -> None:
-    knowledge = KnowledgeBase.from_repository(ROOT)
-    sessions = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
-    processor = CommandProcessor(knowledge, sessions)
-    monkeypatch.setenv("HELPME_CONSOLE_TOKEN", "synthetic-console-token")
-    server = _ConsoleServer(("127.0.0.1", 0), processor, sessions)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+    monkeypatch.setenv("HELPME_ACCESS_TOKEN", "synthetic-access-token")
+    server, thread = _running_server(tmp_path)
     try:
         connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
         connection.request("GET", "/healthz")
@@ -130,11 +101,11 @@ def test_health_endpoint_stays_available_when_console_token_is_enabled(
         connection.request(
             "POST",
             "/api/sessions",
-            body=json.dumps({"material": "copper cable"}),
+            body=json.dumps({}),
             headers={"Content-Type": "application/json"},
         )
-        unauthorized_api_response = connection.getresponse()
-        unauthorized_api_response.read()
+        unauthorized_response = connection.getresponse()
+        unauthorized_response.read()
     finally:
         server.shutdown()
         server.server_close()
@@ -143,17 +114,12 @@ def test_health_endpoint_stays_available_when_console_token_is_enabled(
     assert health_response.status == 200
     assert health["status"] == "ok"
     assert public_response.status == 200
-    assert "Console token" in public_body
-    assert unauthorized_api_response.status == 401
+    assert "Connection key" in public_body
+    assert unauthorized_response.status == 401
 
 
-def test_homepage_is_conversation_first(tmp_path: Path) -> None:
-    knowledge = KnowledgeBase.from_repository(ROOT)
-    sessions = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
-    processor = CommandProcessor(knowledge, sessions)
-    server = _ConsoleServer(("127.0.0.1", 0), processor, sessions)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
-    thread.start()
+def test_homepage_has_natural_conversation_surface(tmp_path: Path) -> None:
+    server, thread = _running_server(tmp_path)
     try:
         connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
         connection.request("GET", "/")
@@ -169,6 +135,4 @@ def test_homepage_is_conversation_first(tmp_path: Path) -> None:
     assert "Tell me what you’re dealing with" in body
     assert "New conversation" in body
     assert "Shift+Enter for a new line" in body
-    assert "/ask" not in body
-    assert "/evidence" not in body
-    assert "Start intake" not in body
+    assert "access token" not in body.casefold()

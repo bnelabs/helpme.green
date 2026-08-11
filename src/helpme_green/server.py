@@ -8,14 +8,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import unquote, urlparse
 
-from .console import CommandProcessor
+from .application import ApplicationProcessor
 from .knowledge_graphql import execute_graphql
 from .persistence import SessionState, SessionStore
 from .web import INDEX_HTML as _CONVERSATION_HTML
 
 
 class _Handler(BaseHTTPRequestHandler):
-    server: _ConsoleServer
+    server: _HelpmeServer
 
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
@@ -34,10 +34,9 @@ class _Handler(BaseHTTPRequestHandler):
                 {
                     "skills": self.server.processor.skill_registry.public_catalog(),
                     "machines": self.server.processor.machine_catalog.public_catalog(),
-                    "agent_contracts": self.server.processor.skill_registry.expert_contracts(),
                     "mcp": self.server.processor.mcp.capabilities(),
                     "knowledge": {
-                        "schema_version": self.server.processor.knowledge_db.schema_version,
+                        "database_version": self.server.processor.knowledge_db.database_version,
                         "digest": self.server.processor.knowledge_db.digest(),
                         "sources": len(self.server.processor.knowledge_db.source_catalog()),
                         "machine_profiles": len(self.server.processor.machine_catalog.profiles),
@@ -87,14 +86,14 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/sessions":
             session = SessionState.new(
-                material=str(body.get("material", "")),
+                topic=str(body.get("topic", "")),
                 geography=str(body.get("geography", "")),
             )
             self.server.store.save_session(session)
             self._send_json(
                 {
                     "session_id": session.session_id,
-                    "message": "Tell me what you have, what you are trying to figure out, or what you want to change.",
+                    "message": "Tell me what you’re exploring, what you have, or what you want to change.",
                     "model": session.model_identity,
                 },
                 HTTPStatus.CREATED,
@@ -116,35 +115,13 @@ class _Handler(BaseHTTPRequestHandler):
                     "text": response.text,
                     "data": response.data,
                     "error": response.error,
-                    "exit_requested": response.exit_requested,
                 }
-            )
-            return
-        if len(parts) == 4 and parts[:2] == ["api", "sessions"] and parts[3] == "command":
-            try:
-                session = self.server.store.load_session(parts[2])
-                command = body.get("command")
-                if not isinstance(command, str) or len(command) > 4000:
-                    raise ValueError("command must be a short string")
-                response = self.server.processor.execute(session, command)
-            except (FileNotFoundError, ValueError) as exc:
-                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
-                return
-            status = HTTPStatus.BAD_REQUEST if response.error else HTTPStatus.OK
-            self._send_json(
-                {
-                    "text": response.text,
-                    "data": response.data,
-                    "error": response.error,
-                    "exit_requested": response.exit_requested,
-                },
-                status,
             )
             return
         self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
 
     def _authorized(self) -> bool:
-        expected = os.environ.get("HELPME_CONSOLE_TOKEN")
+        expected = os.environ.get("HELPME_ACCESS_TOKEN")
         if not expected:
             return True
         supplied = self.headers.get("Authorization", "")
@@ -185,18 +162,18 @@ class _Handler(BaseHTTPRequestHandler):
         del format, args
 
 
-class _ConsoleServer(ThreadingHTTPServer):
+class _HelpmeServer(ThreadingHTTPServer):
     def __init__(
-        self, address: tuple[str, int], processor: CommandProcessor, store: SessionStore
+        self, address: tuple[str, int], processor: ApplicationProcessor, store: SessionStore
     ) -> None:
         super().__init__(address, _Handler)
         self.processor = processor
         self.store = store
 
 
-def serve(processor: CommandProcessor, store: SessionStore, *, host: str, port: int) -> None:
-    server = _ConsoleServer((host, port), processor, store)
-    print(f"helpme.green console listening on http://{host}:{port}")
+def serve(processor: ApplicationProcessor, store: SessionStore, *, host: str, port: int) -> None:
+    server = _HelpmeServer((host, port), processor, store)
+    print(f"helpme.green listening on http://{host}:{port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

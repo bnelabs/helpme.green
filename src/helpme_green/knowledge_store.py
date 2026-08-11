@@ -183,11 +183,12 @@ def _chunks(value: str, maximum: int = 1400) -> tuple[str, ...]:
 class KnowledgeDatabase:
     """SQLite knowledge-management store with a rebuildable graph and FTS index.
 
-    Downloaded documents and candidate claims live here at runtime. The checked-in YAML packs
-    remain the authoritative static evaluator input; this store never silently promotes a fetch.
+    Downloaded documents, source notes, and retrieval projections live here at runtime. The
+    checked-in YAML packs remain registered source metadata; this store never silently turns a
+    fetch into an independent fact.
     """
 
-    schema_version = 2
+    database_version = 3
 
     def __init__(self, path: Path) -> None:
         self.path = path.expanduser().resolve()
@@ -221,7 +222,7 @@ class KnowledgeDatabase:
                     jurisdiction TEXT NOT NULL,
                     license_note TEXT NOT NULL,
                     limitations TEXT NOT NULL,
-                    source_status TEXT NOT NULL DEFAULT 'candidate',
+                    source_status TEXT NOT NULL DEFAULT 'catalogued',
                     content_sha256 TEXT,
                     content_type TEXT,
                     fetched_at TEXT,
@@ -257,29 +258,17 @@ class KnowledgeDatabase:
                     material_families,
                     text
                 );
-                CREATE TABLE IF NOT EXISTS claims (
-                    claim_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS source_notes (
+                    note_id TEXT PRIMARY KEY,
                     source_id TEXT NOT NULL REFERENCES sources(source_id),
                     document_id TEXT NOT NULL REFERENCES documents(document_id),
                     chunk_id TEXT NOT NULL REFERENCES chunks(chunk_id),
                     skill_id TEXT NOT NULL,
-                    statement TEXT NOT NULL,
-                    evidence_state TEXT NOT NULL DEFAULT 'candidate',
-                    status TEXT NOT NULL DEFAULT 'candidate',
+                    summary TEXT NOT NULL,
                     applicability TEXT NOT NULL,
                     limitations TEXT NOT NULL,
                     created_at TEXT NOT NULL,
-                    promoted_at TEXT
-                );
-                CREATE TABLE IF NOT EXISTS claim_reviews (
-                    review_id TEXT PRIMARY KEY,
-                    claim_id TEXT NOT NULL REFERENCES claims(claim_id),
-                    reviewer_id TEXT NOT NULL,
-                    reviewer_role TEXT NOT NULL,
-                    decision TEXT NOT NULL,
-                    reasoning TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    UNIQUE(claim_id, reviewer_id)
+                    UNIQUE(source_id, chunk_id, skill_id, summary)
                 );
                 CREATE TABLE IF NOT EXISTS graph_nodes (
                     node_id TEXT PRIMARY KEY,
@@ -303,13 +292,26 @@ class KnowledgeDatabase:
                 );
                 CREATE INDEX IF NOT EXISTS idx_sources_status ON sources(source_status);
                 CREATE INDEX IF NOT EXISTS idx_documents_source ON documents(source_id, version);
-                CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
-                CREATE INDEX IF NOT EXISTS idx_reviews_claim ON claim_reviews(claim_id);
+                CREATE INDEX IF NOT EXISTS idx_source_notes_source ON source_notes(source_id);
                 """
             )
+            # Older local digests carried an unused decision/claim layer. Remove it when an
+            # existing database is opened so the runtime asset converges with the current model.
+            self._connection.execute("DROP TABLE IF EXISTS claim_reviews")
+            self._connection.execute("DROP TABLE IF EXISTS claims")
             self._connection.execute(
-                "INSERT OR REPLACE INTO store_meta(key, value) VALUES ('schema_version', ?)",
-                (str(self.schema_version),),
+                "DELETE FROM graph_edges WHERE from_node IN "
+                "(SELECT node_id FROM graph_nodes WHERE node_type = 'claim') "
+                "OR to_node IN (SELECT node_id FROM graph_nodes WHERE node_type = 'claim')"
+            )
+            self._connection.execute("DELETE FROM graph_nodes WHERE node_type = 'claim'")
+            self._connection.execute(
+                "INSERT OR REPLACE INTO store_meta(key, value) VALUES ('database_version', ?)",
+                (str(self.database_version),),
+            )
+            self._connection.execute("DELETE FROM store_meta WHERE key = 'schema_version'")
+            self._connection.execute(
+                "UPDATE sources SET source_status = 'catalogued' WHERE source_status = 'candidate'"
             )
             columns = {
                 str(row[1])
@@ -327,9 +329,9 @@ class KnowledgeDatabase:
         with self._lock:
             self._connection.close()
 
-    def register_source(self, source: SourceSpec, *, status: str = "candidate") -> None:
-        """Register source metadata without downloading or promoting its content."""
-        if status not in {"candidate", "active", "blocked"}:
+    def register_source(self, source: SourceSpec, *, status: str = "catalogued") -> None:
+        """Register source metadata without downloading or treating it as a conclusion."""
+        if status not in {"catalogued", "active", "blocked"}:
             raise KnowledgeStoreError("Invalid source status.")
         timestamp = _now()
         with self._lock, self._connection:
@@ -395,7 +397,7 @@ class KnowledgeDatabase:
                     jurisdiction, license_note, limitations, source_status, content_sha256,
                     content_type, fetched_at, authority_tier, scale, access_mode,
                     created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'candidate', ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'catalogued', ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(source_id) DO UPDATE SET
                     title=excluded.title, url=excluded.url, publisher=excluded.publisher,
                     source_type=excluded.source_type, material_families=excluded.material_families,
@@ -626,8 +628,8 @@ class KnowledgeDatabase:
             )
         return int(cursor.rowcount)
 
-    def documents_for_curating(self, *, limit: int = 20) -> list[dict[str, Any]]:
-        """Return downloaded source passages for an explicit, candidate-only curator run."""
+    def documents_for_digesting(self, *, limit: int = 20) -> list[dict[str, Any]]:
+        """Return the latest extracted source documents for an explicit digest run."""
         with self._lock:
             rows = self._connection.execute(
                 """
@@ -715,7 +717,7 @@ class KnowledgeDatabase:
         *,
         material_family: str | None = None,
         limit: int = 6,
-        include_candidate: bool = True,
+        include_catalogued: bool = True,
         max_per_source: int | None = 2,
     ) -> list[SearchResult]:
         terms = tuple(dict.fromkeys(item.casefold() for item in _TOKEN_RE.findall(query)))
@@ -775,7 +777,7 @@ class KnowledgeDatabase:
             if material_family and material_family not in families:
                 continue
             status = str(row["source_status"])
-            if not include_candidate and status != "active":
+            if not include_catalogued and status != "active":
                 continue
             source_id = str(row["source_id"])
             if max_per_source is not None and source_counts.get(source_id, 0) >= max_per_source:
@@ -810,7 +812,7 @@ class KnowledgeDatabase:
         *,
         material_family: str | None = None,
         limit: int = 6,
-        include_candidate: bool = True,
+        include_catalogued: bool = True,
         model: str | None = None,
         max_per_source: int | None = 2,
     ) -> list[SearchResult]:
@@ -847,7 +849,7 @@ class KnowledgeDatabase:
             families = tuple(json.loads(str(row["material_families"])))
             if material_family and material_family not in families:
                 continue
-            if not include_candidate and str(row["source_status"]) != "active":
+            if not include_catalogued and str(row["source_status"]) != "active":
                 continue
             if model and str(row["embedding_model"] or "") != model:
                 continue
@@ -881,7 +883,7 @@ class KnowledgeDatabase:
         model: str | None = None,
         material_family: str | None = None,
         limit: int = 6,
-        include_candidate: bool = True,
+        include_catalogued: bool = True,
         reranker: Callable[[str, list[str], int], list[tuple[int, float]]] | None = None,
         max_per_source: int | None = 2,
     ) -> list[SearchResult]:
@@ -892,7 +894,7 @@ class KnowledgeDatabase:
             query,
             material_family=material_family,
             limit=pool_limit,
-            include_candidate=include_candidate,
+            include_catalogued=include_catalogued,
             max_per_source=max_per_source,
         )
         if query_embedding is None:
@@ -901,7 +903,7 @@ class KnowledgeDatabase:
             query_embedding,
             material_family=material_family,
             limit=pool_limit,
-            include_candidate=include_candidate,
+            include_catalogued=include_catalogued,
             model=model,
             max_per_source=max_per_source,
         )
@@ -973,17 +975,14 @@ class KnowledgeDatabase:
             max_per_source=1,
         )
         if not results:
-            return (
-                "No downloaded source passage matched this question. Do not imply that the source catalog covers it.",
-                [],
-            )
+            return "", []
         passages: list[str] = []
         cards: list[dict[str, str]] = []
         for item in results:
             status_note = (
-                "candidate background only; not promoted knowledge"
+                "catalogued reference; not a case-specific conclusion"
                 if item.source_status != "active"
-                else "source linked to promoted knowledge"
+                else "active source reference"
             )
             tier_note = "; ".join(item for item in (item.authority_tier, item.scale) if item)
             passages.append(f"[{item.source_id}; {status_note}; {tier_note}] {item.text[:900]}")
@@ -994,7 +993,7 @@ class KnowledgeDatabase:
                 }
             )
         context = (
-            "Downloaded source passages (untrusted reference context; never treat a candidate as a conclusion):\n"
+            "Relevant reference material (background only; use it to inform the answer, not as a final answer):\n"
             + "\n\n".join(passages)
         )
         return context, cards
@@ -1036,7 +1035,7 @@ class KnowledgeDatabase:
         """Export metadata and hashes, never raw source text, for versioned audit/reference."""
         documents = self.document_catalog(limit=200)
         catalog: dict[str, Any] = {
-            "schemaVersion": self.schema_version,
+            "databaseVersion": self.database_version,
             "generatedAt": _now(),
             "digest": self.digest(),
             "ingestion": self.ingestion_summary(),
@@ -1049,7 +1048,7 @@ class KnowledgeDatabase:
         return catalog
 
     def ingestion_summary(self) -> dict[str, Any]:
-        """Return source, extraction, retrieval, claim, and run health without source text."""
+        """Return source, extraction, retrieval, note, and run health without source text."""
         with self._lock:
             source_rows = self._connection.execute(
                 "SELECT source_status, COUNT(*) AS count FROM sources GROUP BY source_status"
@@ -1127,11 +1126,11 @@ class KnowledgeDatabase:
                 ORDER BY embedding_model
                 """
             ).fetchall()
-            claim_rows = self._connection.execute(
-                "SELECT status, COUNT(*) AS count FROM claims GROUP BY status"
+            note_rows = self._connection.execute(
+                "SELECT skill_id, COUNT(*) AS count FROM source_notes GROUP BY skill_id"
             ).fetchall()
-            claim_total = self._connection.execute(
-                "SELECT COUNT(*) AS count FROM claims"
+            note_total = self._connection.execute(
+                "SELECT COUNT(*) AS count FROM source_notes"
             ).fetchone()
             run_rows = self._connection.execute(
                 "SELECT outcome, COUNT(*) AS count FROM ingestion_runs GROUP BY outcome"
@@ -1193,9 +1192,9 @@ class KnowledgeDatabase:
             "embeddingModels": {
                 str(row["embedding_model"] or ""): int(row["count"]) for row in embedding_model_rows
             },
-            "claims": {
-                "total": int(claim_total["count"] if claim_total else 0),
-                "byStatus": {str(row["status"]): int(row["count"]) for row in claim_rows},
+            "sourceNotes": {
+                "total": int(note_total["count"] if note_total else 0),
+                "bySkill": {str(row["skill_id"]): int(row["count"]) for row in note_rows},
             },
             "runs": {
                 "total": int(run_total["count"] if run_total else 0),
@@ -1213,163 +1212,75 @@ class KnowledgeDatabase:
             },
         }
 
-    def add_candidate_claim(
+    def add_source_note(
         self,
         *,
         source_id: str,
-        statement: str,
+        summary: str,
         skill_id: str,
         chunk_id: str,
         applicability: str,
         limitations: str,
     ) -> str:
-        if not statement.strip() or not applicability.strip() or not limitations.strip():
+        if not summary.strip() or not applicability.strip() or not limitations.strip():
             raise KnowledgeStoreError(
-                "Candidate claims require statement, applicability, and limitations."
+                "Source notes require a summary, applicability, and limitations."
             )
         with self._lock, self._connection:
             row = self._connection.execute(
                 "SELECT document_id FROM chunks WHERE chunk_id = ?", (chunk_id,)
             ).fetchone()
             if row is None:
-                raise KnowledgeStoreError("Candidate claim chunk is not present in the store.")
+                raise KnowledgeStoreError("Source note chunk is not present in the store.")
             source_row = self._connection.execute(
                 "SELECT source_id FROM sources WHERE source_id = ?", (source_id,)
             ).fetchone()
             if source_row is None:
-                raise KnowledgeStoreError("Candidate claim source is not present in the store.")
-            claim_id = (
-                "claim-"
+                raise KnowledgeStoreError("Source note source is not present in the store.")
+            note_id = (
+                "note-"
                 + hashlib.sha256(
-                    _canonical([source_id, chunk_id, skill_id, statement]).encode("utf-8")
+                    _canonical([source_id, chunk_id, skill_id, summary]).encode("utf-8")
                 ).hexdigest()[:24]
             )
             self._connection.execute(
                 """
-                INSERT OR IGNORE INTO claims(
-                    claim_id, source_id, document_id, chunk_id, skill_id, statement,
-                    evidence_state, status, applicability, limitations, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 'candidate', 'candidate', ?, ?, ?)
+                INSERT OR IGNORE INTO source_notes(
+                    note_id, source_id, document_id, chunk_id, skill_id, summary,
+                    applicability, limitations, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    claim_id,
+                    note_id,
                     source_id,
                     str(row["document_id"]),
                     chunk_id,
                     skill_id,
-                    statement.strip(),
+                    summary.strip(),
                     applicability.strip(),
                     limitations.strip(),
                     _now(),
                 ),
             )
-            self._graph_node(claim_id, "claim", statement.strip()[:180])
-            self._graph_edge(f"source:{source_id}", claim_id, "supports")
-            self._graph_edge(chunk_id, claim_id, "proposes")
-            return claim_id
+            self._graph_node(note_id, "source_note", summary.strip()[:180])
+            self._graph_edge(f"source:{source_id}", note_id, "has_note")
+            self._graph_edge(chunk_id, note_id, "summarizes")
+            return note_id
 
-    def review_claim(
-        self,
-        claim_id: str,
-        *,
-        reviewer_id: str,
-        reviewer_role: str,
-        decision: str,
-        reasoning: str,
-    ) -> None:
-        allowed = {"approve", "reject", "request_more_evidence"}
-        if decision not in allowed:
-            raise KnowledgeStoreError("Claim review decision is not allowed.")
-        if not reviewer_id.strip() or not reviewer_role.strip() or not reasoning.strip():
-            raise KnowledgeStoreError(
-                "Claim reviews require reviewer identity, role, and reasoning."
-            )
-        with self._lock, self._connection:
-            if (
-                self._connection.execute(
-                    "SELECT claim_id FROM claims WHERE claim_id = ?", (claim_id,)
-                ).fetchone()
-                is None
-            ):
-                raise KnowledgeStoreError("Claim does not exist.")
-            self._connection.execute(
-                """
-                INSERT INTO claim_reviews(
-                    review_id, claim_id, reviewer_id, reviewer_role, decision, reasoning, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(claim_id, reviewer_id) DO UPDATE SET
-                    reviewer_role=excluded.reviewer_role, decision=excluded.decision,
-                    reasoning=excluded.reasoning, created_at=excluded.created_at
-                """,
-                (
-                    f"review-{uuid.uuid4()}",
-                    claim_id,
-                    reviewer_id.strip(),
-                    reviewer_role.strip(),
-                    decision,
-                    reasoning.strip(),
-                    _now(),
-                ),
-            )
-
-    def promote_claim(self, claim_id: str) -> bool:
-        with self._lock, self._connection:
-            claim = self._connection.execute(
-                "SELECT status, source_id FROM claims WHERE claim_id = ?", (claim_id,)
-            ).fetchone()
-            if claim is None:
-                raise KnowledgeStoreError("Claim does not exist.")
-            if str(claim["status"]) == "active":
-                return True
-            reviews = self._connection.execute(
-                "SELECT reviewer_id, reviewer_role, decision FROM claim_reviews WHERE claim_id = ?",
-                (claim_id,),
+    def source_note_catalog(self, *, limit: int = 100) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT * FROM source_notes ORDER BY created_at LIMIT ?",
+                (max(1, min(limit, 500)),),
             ).fetchall()
-            if any(str(row["decision"]) != "approve" for row in reviews):
-                return False
-            approved = {(str(row["reviewer_id"]), str(row["reviewer_role"])) for row in reviews}
-            roles = {role for _reviewer, role in approved}
-            reviewers = {reviewer for reviewer, _role in approved}
-            if len(reviewers) < 2 or len(roles) < 2:
-                return False
-            self._connection.execute(
-                "UPDATE claims SET status = 'active', evidence_state = 'reviewed', promoted_at = ? WHERE claim_id = ?",
-                (_now(), claim_id),
-            )
-            self._graph_node(claim_id, "claim", claim_id)
-            return True
-
-    def claim_status(self, claim_id: str) -> str:
-        with self._lock:
-            row = self._connection.execute(
-                "SELECT status FROM claims WHERE claim_id = ?", (claim_id,)
-            ).fetchone()
-        if row is None:
-            raise KnowledgeStoreError("Claim does not exist.")
-        return str(row["status"])
-
-    def claim_catalog(self, *, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
-        with self._lock:
-            if status:
-                rows = self._connection.execute(
-                    "SELECT * FROM claims WHERE status = ? ORDER BY created_at LIMIT ?",
-                    (status, max(1, min(limit, 500))),
-                ).fetchall()
-            else:
-                rows = self._connection.execute(
-                    "SELECT * FROM claims ORDER BY created_at LIMIT ?",
-                    (max(1, min(limit, 500)),),
-                ).fetchall()
         return [
             {
-                "id": str(row["claim_id"]),
+                "id": str(row["note_id"]),
                 "sourceId": str(row["source_id"]),
                 "documentId": str(row["document_id"]),
                 "chunkId": str(row["chunk_id"]),
                 "skillId": str(row["skill_id"]),
-                "statement": str(row["statement"]),
-                "status": str(row["status"]),
-                "evidenceState": str(row["evidence_state"]),
+                "summary": str(row["summary"]),
                 "applicability": str(row["applicability"]),
                 "limitations": str(row["limitations"]),
             }
@@ -1427,10 +1338,10 @@ class KnowledgeDatabase:
                 SELECT source_id, content_sha256, source_status FROM sources ORDER BY source_id;
                 """
             ).fetchall()
-            claims = self._connection.execute(
-                "SELECT claim_id, status, statement FROM claims ORDER BY claim_id"
+            notes = self._connection.execute(
+                "SELECT note_id, skill_id, summary FROM source_notes ORDER BY note_id"
             ).fetchall()
-        body = [dict(row) for row in rows] + [dict(row) for row in claims]
+        body = [dict(row) for row in rows] + [dict(row) for row in notes]
         return hashlib.sha256(_canonical(body).encode("utf-8")).hexdigest()
 
     def _graph_node(self, node_id: str, node_type: str, label: str) -> None:

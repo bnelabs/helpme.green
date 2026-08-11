@@ -6,7 +6,7 @@ Input: `Academic Library_ Library - Airtable.pdf` supplied outside the repositor
 
 ## Decision
 
-Add the high-value sources to the governed candidate manifest, then ingest them through the normal source pipeline. The selected set is concentrated on the questions this KB must answer well:
+Add the high-value sources to the governed source manifest, then ingest them through the normal source pipeline. The selected set is concentrated on the questions this KB must answer well:
 
 - feedstock composition, contamination, and source separation;
 - mechanical-recycling routes for PE, HDPE, PP, PET, and flexible films;
@@ -15,7 +15,7 @@ Add the high-value sources to the governed candidate manifest, then ingest them 
 - route comparison, LCA, techno-economics, and limits of chemical recycling;
 - sorting and characterization methods, including NIR and machine learning.
 
-The sources are references, not a single source of truth. They are registered with limitations and authority tiers; ingestion does not promote their statements to claims automatically.
+The sources are references, not a single source of truth. They are registered with limitations and authority tiers; ingestion does not turn their statements into independent facts automatically.
 
 ## Sources added to the manifest
 
@@ -82,7 +82,7 @@ Deferral is not a quality judgement. It keeps retrieval focused and avoids allow
 
 ## Ingestion and access handling
 
-The selected sources remain candidate references until fetched and extracted. A paywall, anti-bot page, JavaScript shell, or inaccessible PDF is recorded as an access failure and placed in the manual-download queue; it is never represented as if its full text had been read.
+The selected sources remain registered references until fetched and extracted. A paywall, anti-bot page, JavaScript shell, or inaccessible PDF is recorded as an access failure and placed in the manual-download queue; it is never represented as if its full text had been read.
 
 For manually downloaded material:
 
