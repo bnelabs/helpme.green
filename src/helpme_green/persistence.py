@@ -18,7 +18,15 @@ from .domain import CaseFact, canonical_json
 
 
 def _default_model_identity() -> str:
-    return os.environ.get("HELPME_MODEL", "localai:Qwen3.6-27B")
+    identity = os.environ.get("HELPME_MODEL", "").strip()
+    provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold() or "localai"
+    if identity:
+        if ":" not in identity:
+            return f"{provider}:{identity}"
+        configured_provider, configured_model = identity.split(":", 1)
+        if configured_provider.strip() and configured_model.strip():
+            return f"{configured_provider.strip().casefold()}:{configured_model.strip()}"
+    return f"{provider}:auto"
 
 
 def _mkdir_secure(path: Path) -> None:

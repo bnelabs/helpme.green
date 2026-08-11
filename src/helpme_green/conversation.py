@@ -127,7 +127,7 @@ class ConversationAgent:
             response = self.model_router.complete_json(
                 history,
                 system_contract=f"{_CONVERSATION_CONTRACT}\n\n{prompt}",
-                max_tokens=1000,
+                max_tokens=None,
             )
             reply = self._reply(response)
             hearing = self._hearing(response.get("hearing"))

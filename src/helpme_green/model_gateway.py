@@ -26,6 +26,7 @@ class ModelSelection:
 
 
 _PROFILE_RESERVED_KEYS = {"model", "messages", "response_format", "stream"}
+_AUTO_MODEL_NAMES = {"", "auto", "*"}
 
 
 def _json_object(value: Any, *, label: str) -> dict[str, Any]:
@@ -58,13 +59,21 @@ class ModelRouter:
 
     @staticmethod
     def _default_selection() -> ModelSelection:
-        identity = os.environ.get("HELPME_MODEL", "localai:Qwen3.6-27B")
+        identity = os.environ.get("HELPME_MODEL", "").strip()
+        if not identity:
+            provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold() or "localai"
+            if provider not in ModelRouter.allowed:
+                provider = "localai"
+            return ModelSelection(provider, "auto")
         try:
             provider, model = identity.split(":", 1)
         except ValueError:
-            return ModelSelection("localai", "Qwen3.6-27B")
+            provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold() or "localai"
+            if provider not in ModelRouter.allowed:
+                provider = "localai"
+            return ModelSelection(provider, identity)
         if not provider or not model.strip():
-            return ModelSelection("localai", "Qwen3.6-27B")
+            return ModelSelection("localai", "auto")
         return ModelSelection(provider.casefold(), model)
 
     def select(self, identity: str) -> ModelSelection:
@@ -91,31 +100,30 @@ class ModelRouter:
         messages: list[Mapping[str, str]],
         *,
         system_contract: str,
-        max_tokens: int = 1200,
+        max_tokens: int | None = None,
     ) -> Mapping[str, Any]:
         """Call an OpenAI-compatible provider without giving it evaluator authority."""
         if not self._env_flag("HELPME_AI_ENABLED", default=False):
             raise ProviderUnavailable(
                 "AI interaction is disabled; set HELPME_AI_ENABLED=1 to enable the configured provider."
             )
-        endpoint, env_name = self._endpoint_and_key_env()
-        api_key = os.environ.get(env_name)
-        if self.selection.provider == "localai" and not api_key:
-            api_key = os.environ.get("LOCALAI_API_KEY")
-        if not api_key and self._key_provider is not None:
-            try:
-                api_key = self._key_provider(self.selection.provider)
-            except (OSError, ValueError):
-                api_key = None
-        if not api_key and self.selection.provider != "localai":
+        selection = self._resolve_selection()
+        endpoint, env_name = self._endpoint_and_key_env(selection.provider)
+        api_key = self._api_key(selection.provider, env_name)
+        if not api_key and selection.provider != "localai":
             raise ProviderUnavailable(
-                f"{self.selection.provider} key is not configured; the deterministic engine can continue from cache."
+                f"{selection.provider} key is not configured; the deterministic engine can continue from cache."
             )
-        profile = self._model_profile()
+        profile = self._model_profile(selection.identity)
         timeout_seconds = self._timeout_seconds(profile)
         profile.pop("timeout_seconds", None)
+        profile_max_tokens = profile.pop("max_tokens", None)
+        if max_tokens is None:
+            max_tokens = profile_max_tokens if profile_max_tokens is not None else 1200
+        if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or max_tokens <= 0:
+            raise ProviderUnavailable("max_tokens must be a positive integer.")
         payload = {
-            "model": self.selection.model,
+            "model": selection.model,
             "messages": [
                 {"role": "system", "content": system_contract},
                 *messages,
@@ -138,7 +146,7 @@ class ModelRouter:
             method="POST",
         )
         try:
-            context = self._tls_context(endpoint)
+            context = self._tls_context(endpoint, selection.provider)
             if context is None:
                 response_context = urllib.request.urlopen(request, timeout=timeout_seconds)
             else:
@@ -148,7 +156,7 @@ class ModelRouter:
             with response_context as response:
                 raw = json.loads(response.read().decode("utf-8"))
         except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise ProviderUnavailable(f"{self.selection.provider} request failed safely.") from exc
+            raise ProviderUnavailable(f"{selection.provider} request failed safely.") from exc
         if not isinstance(raw, Mapping):
             raise ProviderUnavailable("Model response was not a JSON object.")
         with self._counter_lock:
@@ -179,7 +187,7 @@ class ModelRouter:
             raise ProviderUnavailable("Model profile timeout_seconds must be positive.")
         return timeout
 
-    def _model_profile(self) -> dict[str, Any]:
+    def _model_profile(self, identity: str | None = None) -> dict[str, Any]:
         """Return request options for the selected model, without changing other models."""
         raw = os.environ.get("HELPME_MODEL_PROFILES", "").strip()
         if not raw:
@@ -189,7 +197,9 @@ class ModelRouter:
         except json.JSONDecodeError as exc:
             raise ProviderUnavailable("HELPME_MODEL_PROFILES must contain valid JSON.") from exc
 
-        candidates = (self.selection.identity, f"{self.selection.provider}:*", "*")
+        selected_identity = identity or self.selection.identity
+        selected_provider = selected_identity.split(":", 1)[0]
+        candidates = (selected_identity, f"{selected_provider}:*", "*")
         selected: Any = None
         for identity in candidates:
             if identity in profiles:
@@ -206,24 +216,123 @@ class ModelRouter:
         if "chat_template_kwargs" in options:
             _json_object(
                 options["chat_template_kwargs"],
-                label=f"Model profile {self.selection.identity}.chat_template_kwargs",
+                label=f"Model profile {selected_identity}.chat_template_kwargs",
             )
         self._timeout_seconds(options)
         return options
 
-    def _endpoint_and_key_env(self) -> tuple[str, str]:
-        if self.selection.provider == "localai":
-            base_url = os.environ.get("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8080/v1").rstrip(
-                "/"
+    def _resolve_selection(self) -> ModelSelection:
+        selection = self.selection
+        if selection.model.casefold() not in _AUTO_MODEL_NAMES:
+            return selection
+        if selection.provider != "localai":
+            raise ProviderUnavailable(
+                "Automatic model discovery is supported for localai; set HELPME_MODEL to provider:model."
             )
+        models = self._discover_localai_models()
+        if not models:
+            raise ProviderUnavailable(
+                "The configured local model endpoint did not advertise a model."
+            )
+        if len(models) > 1:
+            raise ProviderUnavailable(
+                "The configured local model endpoint advertises multiple models; "
+                "set HELPME_MODEL to localai:<model-id>."
+            )
+        resolved = ModelSelection(selection.provider, models[0])
+        self.selection = resolved
+        return resolved
+
+    def _api_key(self, provider: str, env_name: str) -> str | None:
+        api_key = os.environ.get(env_name)
+        if provider == "localai" and not api_key:
+            api_key = os.environ.get("LOCALAI_API_KEY")
+        if not api_key and self._key_provider is not None:
+            try:
+                api_key = self._key_provider(provider)
+            except (OSError, ValueError):
+                api_key = None
+        return api_key
+
+    def _provider_base_url(self, provider: str) -> tuple[str, str]:
+        if provider == "localai":
+            base_url = os.environ.get("HELPME_LOCALAI_BASE_URL", "").strip().rstrip("/")
+            if not base_url:
+                raise ProviderUnavailable(
+                    "Local model endpoint is not configured; set HELPME_LOCALAI_BASE_URL."
+                )
+            return base_url, "HELPME_LOCALAI_API_KEY"
+        if provider == "deepseek":
+            return "https://api.deepseek.com", "DEEPSEEK_API_KEY"
+        return "https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"
+
+    def _endpoint_and_key_env(self, provider: str | None = None) -> tuple[str, str]:
+        selected_provider = provider or self.selection.provider
+        base_url, env_name = self._provider_base_url(selected_provider)
+        if selected_provider == "localai":
             if base_url.endswith("/chat/completions"):
                 return base_url, "HELPME_LOCALAI_API_KEY"
             if base_url.endswith("/v1"):
-                return f"{base_url}/chat/completions", "HELPME_LOCALAI_API_KEY"
-            return f"{base_url}/v1/chat/completions", "HELPME_LOCALAI_API_KEY"
-        if self.selection.provider == "deepseek":
-            return "https://api.deepseek.com/chat/completions", "DEEPSEEK_API_KEY"
-        return "https://openrouter.ai/api/v1/chat/completions", "OPENROUTER_API_KEY"
+                return f"{base_url}/chat/completions", env_name
+            return f"{base_url}/v1/chat/completions", env_name
+        return f"{base_url}/chat/completions", env_name
+
+    def _discover_localai_models(self) -> list[str]:
+        base_url, env_name = self._provider_base_url("localai")
+        if base_url.endswith("/models"):
+            endpoint = base_url
+        elif base_url.endswith("/v1"):
+            endpoint = f"{base_url}/models"
+        else:
+            endpoint = f"{base_url}/v1/models"
+        headers = {"User-Agent": "helpme.green/0.2"}
+        api_key = self._api_key("localai", env_name)
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        request = urllib.request.Request(endpoint, headers=headers, method="GET")
+        timeout = self._discovery_timeout()
+        try:
+            context = self._tls_context(endpoint, "localai")
+            if context is None:
+                response_context = urllib.request.urlopen(request, timeout=timeout)
+            else:
+                response_context = urllib.request.urlopen(
+                    request, timeout=timeout, context=context
+                )
+            with response_context as response:
+                raw = json.loads(response.read().decode("utf-8"))
+        except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+            raise ProviderUnavailable("Local model discovery request failed safely.") from exc
+        if not isinstance(raw, Mapping):
+            raise ProviderUnavailable("Local model discovery returned an invalid response.")
+        entries = raw.get("data")
+        if not isinstance(entries, list):
+            entries = raw.get("models")
+        if not isinstance(entries, list):
+            raise ProviderUnavailable("Local model discovery returned no model list.")
+        models: list[str] = []
+        for entry in entries:
+            if isinstance(entry, Mapping):
+                for key in ("id", "model", "name"):
+                    candidate = entry.get(key)
+                    if isinstance(candidate, str) and candidate.strip():
+                        if candidate not in models:
+                            models.append(candidate)
+                        break
+        return models
+
+    @staticmethod
+    def _discovery_timeout() -> float:
+        raw = os.environ.get("HELPME_MODEL_DISCOVERY_TIMEOUT", "10")
+        try:
+            timeout = float(raw)
+        except (TypeError, ValueError) as exc:
+            raise ProviderUnavailable(
+                "HELPME_MODEL_DISCOVERY_TIMEOUT must be positive."
+            ) from exc
+        if timeout <= 0:
+            raise ProviderUnavailable("HELPME_MODEL_DISCOVERY_TIMEOUT must be positive.")
+        return timeout
 
     @staticmethod
     def _env_flag(name: str, *, default: bool) -> bool:
@@ -232,8 +341,10 @@ class ModelRouter:
             return default
         return raw.strip().casefold() not in {"", "0", "false", "no", "off"}
 
-    def _tls_context(self, endpoint: str) -> ssl.SSLContext | None:
-        if self.selection.provider != "localai" or not endpoint.casefold().startswith("https://"):
+    def _tls_context(self, endpoint: str, provider: str | None = None) -> ssl.SSLContext | None:
+        if (provider or self.selection.provider) != "localai" or not endpoint.casefold().startswith(
+            "https://"
+        ):
             return None
         if self._env_flag("HELPME_LOCALAI_TLS_VERIFY", default=True):
             return None
