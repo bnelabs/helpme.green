@@ -14,6 +14,8 @@ and the difference between a vendor description and an independently verified sp
 - `knowledge/catalog.snapshot.json` contains the database schema version, digest, source metadata,
   content hashes, extracted-document metadata, claim counts, and ingestion failures. It contains no
   source passages.
+- `knowledge/artifact-manifest.json` records the digest file checksum, logical digest, coverage,
+  and whether a reviewed runtime artifact is available for download.
 
 The manifest deliberately mixes primary public bodies and regulators, peer-reviewed research,
 industry specifications, manufacturer technical pages, community practice, and low-tech resources.
@@ -54,14 +56,24 @@ excluded from search and curation.
 The curator cannot promote claims, change evidence state, resolve conflicts, or make a case
 decision. Promotion requires independent reviews under the repository contract. Embeddings are
 optional and provider-independent; use `--embed` only with an explicitly configured
-OpenAI-compatible endpoint.
+OpenAI-compatible endpoint. Existing extracted documents are repaired incrementally: a digest run
+does not need to redownload a document merely because its chunks lack vectors. Search can fuse FTS
+and embeddings, while an opt-in reranker only reorders a bounded candidate pool. See
+`docs/knowledge-retrieval.md` for the retrieval contract and benchmark.
 
-## Why the DB is not committed
+## Why the current DB is not committed
 
-Uploading the raw SQLite file to GitHub would make extracted text, embeddings, and potentially
-future user-derived candidate material part of repository history. It would also make source
-licence review and deletion difficult. The portable snapshot plus the manifest gives GitHub the
-reproducible identity and health of the KB without copying the underlying documents. If a governed
-deployment later requires a DB artifact, publish an explicitly licensed, scrubbed export through a
-private artifact store or release process after a licence and privacy review; do not add it to the
-normal source tree by accident.
+Uploading the current raw SQLite file to the normal Git tree would make extracted text, embeddings,
+and potentially future user-derived candidate material part of repository history. At 212.9 MB it
+also exceeds GitHub's regular per-file limit. It would make source licence review, takedown, and
+database-right analysis difficult.
+
+The checked-in artifact manifest gives GitHub the reproducible identity and health of the local
+digest without copying its passages. The supported distribution path is a versioned, compressed
+GitHub Release asset or controlled private artifact, installed by
+[`scripts/bootstrap_knowledge.py`](../scripts/bootstrap_knowledge.py) only after checksum and
+SQLite-integrity verification. See [`docs/knowledge-artifact.md`](knowledge-artifact.md).
+
+The current snapshot remains `pending-redistribution-review` because the 153-source corpus has mixed
+reuse terms. A public artifact must be scrubbed and cleared source by source before the manifest can
+be changed to `ready`.

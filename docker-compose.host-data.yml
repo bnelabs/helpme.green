@@ -1,0 +1,7 @@
+# Optional override for a clone that has bootstrapped .data/knowledge.db locally.
+# It makes the checked-out host data (including the verified DB) the container's
+# runtime store. The default compose file keeps the named-volume boundary.
+services:
+  helpme-green:
+    volumes:
+      - ${HELPME_DATA_HOST_PATH:-./.data}:/app/.data

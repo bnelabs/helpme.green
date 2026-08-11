@@ -12,6 +12,7 @@ from .machinery import MachineCatalog
 from .model_gateway import ModelRouter, ProviderUnavailable
 from .persistence import SessionState, SessionStore
 from .quality import AnswerQualityGate
+from .source_ingest import EmbeddingProvider, Reranker
 
 _CONVERSATION_CONTRACT = """
 You are helpme.green, a thoughtful circular-economy assistant. Speak like a clear,
@@ -81,6 +82,8 @@ class ConversationAgent:
         knowledge_db: KnowledgeDatabase | None = None,
         machine_catalog: MachineCatalog | None = None,
         quality_gate: AnswerQualityGate | None = None,
+        embedding_provider: EmbeddingProvider | None = None,
+        reranker: Reranker | None = None,
     ) -> None:
         self.model_router = model_router
         self.store = store
@@ -89,6 +92,8 @@ class ConversationAgent:
         self.knowledge_db = knowledge_db
         self.machine_catalog = machine_catalog
         self.quality_gate = quality_gate or AnswerQualityGate(router=model_router)
+        self.embedding_provider = embedding_provider
+        self.reranker = reranker
 
     def respond(self, session: SessionState, user_text: str) -> ConversationResult:
         message = user_text.strip()
@@ -190,10 +195,23 @@ class ConversationAgent:
                 if selection.primary.material_families
                 else None
             )
+            query_embedding: list[float] | None = None
+            if self.embedding_provider is not None:
+                try:
+                    vectors = self.embedding_provider.embed([message])
+                    if vectors:
+                        query_embedding = vectors[0]
+                except (OSError, TypeError, ValueError):
+                    query_embedding = None
             source_context, source_cards = self.knowledge_db.context_for_query(
                 message,
                 material_family=family,
                 limit=3,
+                query_embedding=query_embedding,
+                embedding_model=(
+                    self.embedding_provider.model if self.embedding_provider is not None else None
+                ),
+                reranker=self.reranker.rerank if self.reranker is not None else None,
             )
         machinery_context = ""
         if self.machine_catalog and selection.primary.skill_id == "machinery-and-process-design":

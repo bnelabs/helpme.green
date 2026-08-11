@@ -10,7 +10,12 @@ from helpme_green.knowledge_graphql import execute_graphql
 from helpme_green.knowledge_store import KnowledgeDatabase, SourceSpec
 from helpme_green.machinery import MachineCatalog
 from helpme_green.quality import AnswerQualityGate
-from helpme_green.source_ingest import SourceManifest, _extract_content
+from helpme_green.source_ingest import (
+    SourceFetchError,
+    SourceManifest,
+    _extract_content,
+    ingest_manifest,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -333,3 +338,86 @@ def test_curator_adds_candidate_claims_without_promotion(tmp_path: Path) -> None
     claims = database.claim_catalog()
     assert len(claims) == 1
     assert claims[0]["status"] == "candidate"
+
+
+def test_hybrid_search_fuses_semantic_results_and_reports_mode(tmp_path: Path) -> None:
+    database = KnowledgeDatabase(tmp_path / "knowledge.db")
+    plastic = SourceSpec(
+        source_id="test-hybrid-plastics",
+        title="Hybrid plastics guide",
+        url="https://example.gov/hybrid-plastics",
+        publisher="Example public body",
+        source_type="OFFICIAL_GUIDANCE",
+        material_families=("plastics",),
+        license_note="Synthetic test source",
+    )
+    metal = SourceSpec(
+        source_id="test-hybrid-metals",
+        title="Hybrid metals guide",
+        url="https://example.gov/hybrid-metals",
+        publisher="Example public body",
+        source_type="OFFICIAL_GUIDANCE",
+        material_families=("metals",),
+        license_note="Synthetic test source",
+    )
+    plastic_doc = database.ingest_document(
+        plastic,
+        "Polymer film needs moisture and contamination checks before reprocessing.",
+        content_type="text/plain",
+    )
+    metal_doc = database.ingest_document(
+        metal,
+        "Copper cable needs representative sampling and output qualification.",
+        content_type="text/plain",
+    )
+    database.set_embeddings(plastic_doc.document_id, [[1.0, 0.0]], "test-embed")
+    database.set_embeddings(metal_doc.document_id, [[0.0, 1.0]], "test-embed")
+
+    results = database.hybrid_search(
+        "feedstock wetness",
+        query_embedding=[1.0, 0.0],
+        limit=1,
+    )
+
+    assert results[0].source_id == plastic.source_id
+    assert results[0].retrieval_mode == "hybrid"
+    assert results[0].to_dict()["retrievalMode"] == "hybrid"
+
+
+def test_embedding_repair_runs_for_existing_document_when_fetch_fails(tmp_path: Path) -> None:
+    database = KnowledgeDatabase(tmp_path / "knowledge.db")
+    source = SourceSpec(
+        source_id="test-embedding-repair",
+        title="Embedding repair source",
+        url="https://example.gov/repair",
+        publisher="Example public body",
+        source_type="OFFICIAL_GUIDANCE",
+        material_families=("plastics",),
+        license_note="Synthetic test source",
+    )
+    document = database.ingest_document(
+        source,
+        "An existing extracted passage can be embedded without another download.",
+        content_type="text/plain",
+    )
+
+    class FakeProvider:
+        model = "fake-embedding"
+
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            return [[float(len(text)), 1.0] for text in texts]
+
+    class FailingFetcher:
+        def fetch(self, _source: SourceSpec) -> tuple[str, str, str]:
+            raise SourceFetchError("manual test fetch failure")
+
+    manifest = SourceManifest((source,), frozenset({"example.gov"}))
+    ingest_manifest(
+        manifest,
+        database,
+        fetcher=FailingFetcher(),
+        embedding_provider=FakeProvider(),
+    )
+
+    assert database.chunks_missing_embeddings(document.document_id, "fake-embedding") == []
+    assert database.ingestion_summary()["retrieval"]["latestEmbeddedChunks"] == 1

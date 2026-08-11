@@ -28,6 +28,7 @@ def run_once(
     embed: bool = False,
     curate: bool = False,
     max_bytes: int = 32_000_000,
+    embedding_batch_size: int = 32,
     repository_root: Path | None = None,
 ) -> dict[str, Any]:
     manifest = SourceManifest.from_path(manifest_path)
@@ -45,6 +46,7 @@ def run_once(
                 download_dir=download_dir,
             ),
             embedding_provider=provider,
+            embedding_batch_size=embedding_batch_size,
         )
         curator_data: dict[str, Any] = {}
         if curate:
@@ -85,6 +87,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--curate", action="store_true")
     parser.add_argument("--max-bytes", type=int, default=32_000_000)
     parser.add_argument(
+        "--embedding-batch-size",
+        type=int,
+        default=32,
+        help="number of chunks per embedding request",
+    )
+    parser.add_argument(
         "--interval-seconds",
         type=int,
         default=0,
@@ -113,6 +121,7 @@ def main(argv: list[str] | None = None) -> int:
                     embed=args.embed,
                     curate=args.curate,
                     max_bytes=args.max_bytes,
+                    embedding_batch_size=args.embedding_batch_size,
                 ),
                 ensure_ascii=False,
             )

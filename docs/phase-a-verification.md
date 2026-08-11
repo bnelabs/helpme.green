@@ -1,8 +1,10 @@
-# Phase A verification record
+# Verification record: application and knowledge runtime
 
 This record maps the current implementation to the binding contract in
 [`REQUIREMENTS.md`](../REQUIREMENTS.md). It is an implementation verification record, not a
-material-knowledge source or a substitute for qualified external review.
+material-knowledge source or a substitute for qualified external review. The deterministic copper
+workflow remains governed separately from the broader candidate reference corpus used by the
+conversation surface.
 
 ## Governed inputs
 
@@ -11,6 +13,10 @@ material-knowledge source or a substitute for qualified external review.
 - The runtime verifies every manifest SHA-256 before loading a pack.
 - Claims and route references are resolved through the copied source register; unregistered
   source IDs fail the knowledge load or deterministic evaluation.
+- The multi-material candidate manifest is independently provenance-tagged and does not promote a
+  downloaded passage into a deterministic conclusion.
+- `knowledge/catalog.snapshot.json` is the checked-in digest health artifact; `.data/knowledge.db`
+  and `.data/source-downloads/` remain local derived state.
 
 ## Candidate-only external material
 
@@ -34,7 +40,7 @@ provenance and policy documentation, not an active claim pack.
 | R6 | Unsupported geography produces `R6_JURISDICTION_NOT_COVERED` and blocks routes. | `invariants.py`, jurisdiction test |
 | R7 | Phase A always returns `value: null`; incomplete economics remain explicit blockers. | `engine.py`, 100-case gate |
 | R8 | Intake and explainer contracts are bounded; the console routes commands to deterministic operations. | `intake.py`, `explainer.py`, `console.py` |
-| R9 | Coverage is limited to the loaded copper-cable family and covered geography; no out-of-pack conclusion is generated. | `knowledge.py`, `engine.py` |
+| R9 | The deterministic evaluator remains limited to the loaded copper-cable family and covered geography; the conversation reference catalog may cover more families but cannot create a deterministic conclusion outside the governed evaluator. | `knowledge.py`, `engine.py`, `knowledge_store.py` |
 | R10 | Missing or merely declared contamination evidence produces an R10 block and a screening action. | `invariants.py`, contamination tests |
 | R11 | The evaluator consumes facts and governed packs only; model selection cannot write a conclusion. | `engine.py`, `model_gateway.py`, cross-model gate |
 | R12 | Results expose rules, evidence states, claims, source references, blocks, and next actions. | `engine.py`, `explainer.py` |
@@ -59,6 +65,29 @@ selections.
 The container image has also been built and exercised locally with a bearer token. A session was
 created, an `unknown` contamination fact and immutable snapshot were recorded, the container was
 restarted against the same data volume, and the session was read back with a valid audit chain.
+
+## Knowledge and retrieval gates
+
+The source pipeline is checked separately from the deterministic evaluator:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
+  --manifest knowledge/source-manifest.yml \
+  --db .data/knowledge.db \
+  --downloads .data/source-downloads \
+  --export-catalog knowledge/catalog.snapshot.json
+
+PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
+  --db .data/knowledge.db \
+  --eval knowledge/retrieval-eval.yml \
+  --output .data/retrieval-evaluation.json
+```
+
+The catalog reports registered sources, extracted documents, searchable chunks, embedding models,
+candidate claims, graph projection health, and latest failed sources. A larger count is not a
+quality claim. Retrieval evaluation is a regression instrument; source IDs in the small benchmark
+are human-maintained relevance judgments, not a gold-standard truth set. Semantic and reranked
+metrics are present only when the corresponding provider is deliberately configured.
 
 ## VPS status
 

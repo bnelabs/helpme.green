@@ -7,6 +7,7 @@ from typing import Any
 from .expert_skills import SkillRegistry
 from .knowledge_store import KnowledgeDatabase
 from .machinery import MachineCatalog
+from .source_ingest import EmbeddingProvider, Reranker
 
 
 class GraphQLQueryError(ValueError):
@@ -129,6 +130,9 @@ def execute_graphql(
     registry: SkillRegistry,
     query: str,
     machine_catalog: MachineCatalog | None = None,
+    *,
+    embedding_provider: EmbeddingProvider | None = None,
+    reranker: Reranker | None = None,
 ) -> dict[str, Any]:
     try:
         fields = _Parser(query).parse()
@@ -162,6 +166,11 @@ def execute_graphql(
                             "status": item["status"],
                             "authorityTier": item["authorityTier"],
                             "scale": item["scale"],
+                            "jurisdiction": item["jurisdiction"],
+                            "licenseNote": item["licenseNote"],
+                            "limitations": item["limitations"],
+                            "accessMode": item["accessMode"],
+                            "contentSha256": item["contentSha256"],
                             "fetchedAt": item["fetchedAt"],
                         }
                         for item in database.source_catalog(
@@ -174,26 +183,48 @@ def execute_graphql(
                 query_text = field.arguments.get("query", "").strip()
                 if not query_text:
                     raise GraphQLQueryError("search requires a query argument.")
+                mode = field.arguments.get("mode", "lexical").casefold()
+                if mode not in {"lexical", "semantic", "hybrid"}:
+                    raise GraphQLQueryError("search mode must be lexical, semantic, or hybrid.")
+                query_embedding: list[float] | None = None
+                if mode in {"semantic", "hybrid"} and embedding_provider is not None:
+                    try:
+                        vectors = embedding_provider.embed([query_text])
+                        if vectors:
+                            query_embedding = vectors[0]
+                    except (OSError, TypeError, ValueError) as exc:
+                        if mode == "semantic":
+                            raise GraphQLQueryError(
+                                "The semantic embedding provider is unavailable."
+                            ) from exc
+                elif mode == "semantic":
+                    raise GraphQLQueryError(
+                        "Semantic search is disabled; configure a query embedding provider."
+                    )
+                if mode == "lexical":
+                    results = database.search(
+                        query_text,
+                        material_family=field.arguments.get("materialFamily"),
+                        limit=_limit(field.arguments, 6),
+                    )
+                elif mode == "semantic":
+                    results = database.semantic_search(
+                        query_embedding or [],
+                        material_family=field.arguments.get("materialFamily"),
+                        limit=_limit(field.arguments, 6),
+                        model=embedding_provider.model if embedding_provider else None,
+                    )
+                else:
+                    results = database.hybrid_search(
+                        query_text,
+                        query_embedding=query_embedding,
+                        model=embedding_provider.model if embedding_provider else None,
+                        material_family=field.arguments.get("materialFamily"),
+                        limit=_limit(field.arguments, 6),
+                        reranker=reranker.rerank if reranker is not None else None,
+                    )
                 data[field.name] = _project(
-                    [
-                        {
-                            "chunkId": item.chunk_id,
-                            "documentId": item.document_id,
-                            "sourceId": item.source_id,
-                            "title": item.title,
-                            "url": item.url,
-                            "sourceStatus": item.source_status,
-                            "authorityTier": item.authority_tier,
-                            "scale": item.scale,
-                            "text": item.text,
-                            "score": item.score,
-                        }
-                        for item in database.search(
-                            query_text,
-                            material_family=field.arguments.get("materialFamily"),
-                            limit=_limit(field.arguments, 6),
-                        )
-                    ],
+                    [item.to_dict() for item in results],
                     field.selection,
                 )
             elif field.name == "graph":
@@ -216,8 +247,15 @@ def execute_graphql(
                         "sourceCount": summary["sources"]["total"],
                         "documentCount": summary["documents"]["total"],
                         "searchableChunks": summary["chunks"]["searchable"],
+                        "embeddedChunks": summary["chunks"]["embedded"],
+                        "embeddingModels": [
+                            {"model": model, "count": count}
+                            for model, count in summary["embeddingModels"].items()
+                        ],
                         "failedSources": len(summary["runs"]["failures"]),
                         "latestExtractedSources": summary["retrieval"]["latestExtractedSources"],
+                        "latestSearchableChunks": summary["retrieval"]["latestSearchableChunks"],
+                        "latestEmbeddedChunks": summary["retrieval"]["latestEmbeddedChunks"],
                     },
                     field.selection,
                 )

@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import sqlite3
 import threading
 import uuid
-from collections.abc import Iterable
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -36,6 +37,7 @@ class SourceSpec:
     authority_tier: str = "secondary"
     scale: str = ""
     access_mode: str = "web"
+    fetch_urls: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         parsed = urlparse(self.url)
@@ -51,6 +53,10 @@ class SourceSpec:
             raise KnowledgeStoreError(
                 f"Knowledge source access mode must be one of {sorted(_ACCESS_MODES)}."
             )
+        for fetch_url in self.fetch_urls:
+            parsed_fetch_url = urlparse(fetch_url)
+            if parsed_fetch_url.scheme != "https" or not parsed_fetch_url.hostname:
+                raise KnowledgeStoreError("Knowledge source fallback URLs must use HTTPS.")
 
 
 @dataclass(frozen=True)
@@ -76,6 +82,7 @@ class SearchResult:
     scale: str
     text: str
     score: float
+    retrieval_mode: str = "lexical"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -91,6 +98,7 @@ class SearchResult:
             "scale": self.scale,
             "text": self.text,
             "score": self.score,
+            "retrievalMode": self.retrieval_mode,
         }
 
 
@@ -130,6 +138,20 @@ def _canonical(value: Any) -> str:
 def _normalise_text(value: str) -> str:
     lines = [" ".join(line.split()) for line in value.replace("\x00", " ").splitlines()]
     return "\n".join(line for line in lines if line).strip()
+
+
+def _cosine_similarity(left: list[float], right: list[Any]) -> float | None:
+    if len(left) != len(right) or not right:
+        return None
+    try:
+        values = [float(value) for value in right]
+    except (TypeError, ValueError):
+        return None
+    left_norm = math.sqrt(sum(value * value for value in left))
+    right_norm = math.sqrt(sum(value * value for value in values))
+    if left_norm == 0 or right_norm == 0:
+        return None
+    return sum(a * b for a, b in zip(left, values, strict=True)) / (left_norm * right_norm)
 
 
 def _chunks(value: str, maximum: int = 1400) -> tuple[str, ...]:
@@ -485,6 +507,90 @@ class KnowledgeDatabase:
                     (_canonical(embedding), model, row["chunk_id"]),
                 )
 
+    def chunks_missing_embeddings(self, document_id: str, model: str) -> list[tuple[str, str]]:
+        """Return chunks that are absent or stale for the requested embedding model."""
+        with self._lock:
+            rows = self._connection.execute(
+                """
+                SELECT chunk_id, text
+                FROM chunks
+                WHERE document_id = ?
+                  AND (embedding_json IS NULL OR embedding_model <> ?)
+                ORDER BY ordinal
+                """,
+                (document_id, model),
+            ).fetchall()
+        return [(str(row["chunk_id"]), str(row["text"])) for row in rows]
+
+    def documents_missing_embeddings(self, model: str) -> list[tuple[str, str]]:
+        """Return latest extracted documents with at least one missing or stale vector."""
+        with self._lock:
+            rows = self._connection.execute(
+                """
+                WITH latest_documents AS (
+                    SELECT d.*,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY d.source_id ORDER BY d.version DESC
+                           ) AS row_number
+                    FROM documents AS d
+                )
+                SELECT d.document_id, d.source_id
+                FROM latest_documents AS d
+                WHERE d.row_number = 1
+                  AND d.extraction_status = 'extracted'
+                  AND EXISTS (
+                      SELECT 1
+                      FROM chunks AS c
+                      WHERE c.document_id = d.document_id
+                        AND (c.embedding_json IS NULL OR c.embedding_model <> ?)
+                  )
+                ORDER BY d.source_id
+                """,
+                (model,),
+            ).fetchall()
+        return [(str(row["document_id"]), str(row["source_id"])) for row in rows]
+
+    def latest_extracted_source_ids(self) -> set[str]:
+        """Return sources whose latest document is currently extracted and searchable."""
+        with self._lock:
+            rows = self._connection.execute(
+                """
+                WITH latest_documents AS (
+                    SELECT d.source_id, d.extraction_status,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY d.source_id ORDER BY d.version DESC
+                           ) AS row_number
+                    FROM documents AS d
+                )
+                SELECT source_id
+                FROM latest_documents
+                WHERE row_number = 1 AND extraction_status = 'extracted'
+                """
+            ).fetchall()
+        return {str(row["source_id"]) for row in rows}
+
+    def set_chunk_embeddings(
+        self, chunk_ids: list[str], embeddings: list[list[float]], model: str
+    ) -> None:
+        if len(chunk_ids) != len(embeddings):
+            raise KnowledgeStoreError("Embedding count does not match the chunk count.")
+        if not model.strip():
+            raise KnowledgeStoreError("Embedding model is required.")
+        with self._lock, self._connection:
+            for chunk_id, embedding in zip(chunk_ids, embeddings, strict=True):
+                if not embedding or any(not isinstance(value, (int, float)) for value in embedding):
+                    raise KnowledgeStoreError("Embeddings must be non-empty numeric vectors.")
+                cursor = self._connection.execute(
+                    """
+                    UPDATE chunks
+                    SET embedding_json = ?, embedding_model = ?
+                    WHERE chunk_id = ?
+                    """,
+                    (_canonical(embedding), model, chunk_id),
+                )
+                if cursor.rowcount != 1:
+                    raise KnowledgeStoreError(f"Embedding chunk {chunk_id!r} is not present.")
+
     def chunks_for_document(self, document_id: str) -> list[str]:
         with self._lock:
             rows = self._connection.execute(
@@ -610,6 +716,7 @@ class KnowledgeDatabase:
         material_family: str | None = None,
         limit: int = 6,
         include_candidate: bool = True,
+        max_per_source: int | None = 2,
     ) -> list[SearchResult]:
         terms = tuple(dict.fromkeys(item.casefold() for item in _TOKEN_RE.findall(query)))
         if not terms:
@@ -662,6 +769,7 @@ class KnowledgeDatabase:
                     (f"%{terms[0]}%", max(1, min(limit * 4, 50))),
                 ).fetchall()
         result: list[SearchResult] = []
+        source_counts: dict[str, int] = {}
         for row in rows:
             families = tuple(json.loads(str(row["material_families"])))
             if material_family and material_family not in families:
@@ -669,30 +777,201 @@ class KnowledgeDatabase:
             status = str(row["source_status"])
             if not include_candidate and status != "active":
                 continue
-            result.append(
-                SearchResult(
-                    chunk_id=str(row["chunk_id"]),
-                    document_id=str(row["document_id"]),
-                    source_id=str(row["source_id"]),
-                    title=str(row["title"]),
-                    url=str(row["url"]),
-                    publisher=str(row["publisher"]),
-                    material_families=families,
-                    source_status=status,
-                    authority_tier=str(row["authority_tier"]),
-                    scale=str(row["scale"]),
-                    text=str(row["text"]),
-                    score=float(row["rank"]),
-                )
-            )
+            source_id = str(row["source_id"])
+            if max_per_source is not None and source_counts.get(source_id, 0) >= max_per_source:
+                continue
+            result.append(self._search_result(row, float(row["rank"]), "lexical"))
+            source_counts[source_id] = source_counts.get(source_id, 0) + 1
             if len(result) >= limit:
                 break
         return result
 
+    @staticmethod
+    def _search_result(row: sqlite3.Row, score: float, retrieval_mode: str) -> SearchResult:
+        return SearchResult(
+            chunk_id=str(row["chunk_id"]),
+            document_id=str(row["document_id"]),
+            source_id=str(row["source_id"]),
+            title=str(row["title"]),
+            url=str(row["url"]),
+            publisher=str(row["publisher"]),
+            material_families=tuple(json.loads(str(row["material_families"]))),
+            source_status=str(row["source_status"]),
+            authority_tier=str(row["authority_tier"]),
+            scale=str(row["scale"]),
+            text=str(row["text"]),
+            score=score,
+            retrieval_mode=retrieval_mode,
+        )
+
+    def semantic_search(
+        self,
+        query_embedding: list[float],
+        *,
+        material_family: str | None = None,
+        limit: int = 6,
+        include_candidate: bool = True,
+        model: str | None = None,
+        max_per_source: int | None = 2,
+    ) -> list[SearchResult]:
+        """Search the latest extracted chunks by cosine similarity.
+
+        This deliberately uses SQLite as the durable store and a bounded Python scan as the
+        derived retrieval layer. It keeps the index portable and makes a future ANN index
+        replaceable without changing source provenance or the public API.
+        """
+        if not query_embedding or any(
+            not isinstance(value, (int, float)) for value in query_embedding
+        ):
+            return []
+        with self._lock:
+            rows = self._connection.execute(
+                """
+                SELECT c.chunk_id, c.document_id, c.text, c.embedding_json, c.embedding_model,
+                       s.source_id, s.title, s.url, s.publisher, s.material_families,
+                       s.source_status, s.authority_tier, s.scale
+                FROM chunks AS c
+                JOIN documents AS d ON d.document_id = c.document_id
+                JOIN sources AS s ON s.source_id = d.source_id
+                WHERE d.extraction_status = 'extracted'
+                  AND d.version = (
+                      SELECT MAX(latest.version)
+                      FROM documents AS latest
+                      WHERE latest.source_id = d.source_id
+                  )
+                  AND c.embedding_json IS NOT NULL
+                """
+            ).fetchall()
+        ranked: list[tuple[float, sqlite3.Row]] = []
+        for row in rows:
+            families = tuple(json.loads(str(row["material_families"])))
+            if material_family and material_family not in families:
+                continue
+            if not include_candidate and str(row["source_status"]) != "active":
+                continue
+            if model and str(row["embedding_model"] or "") != model:
+                continue
+            try:
+                vector = json.loads(str(row["embedding_json"]))
+            except (TypeError, json.JSONDecodeError):
+                continue
+            if not isinstance(vector, list):
+                continue
+            score = _cosine_similarity(query_embedding, vector)
+            if score is not None:
+                ranked.append((score, row))
+        ranked.sort(key=lambda item: item[0], reverse=True)
+        result: list[SearchResult] = []
+        source_counts: dict[str, int] = {}
+        for score, row in ranked:
+            source_id = str(row["source_id"])
+            if max_per_source is not None and source_counts.get(source_id, 0) >= max_per_source:
+                continue
+            result.append(self._search_result(row, score, "semantic"))
+            source_counts[source_id] = source_counts.get(source_id, 0) + 1
+            if len(result) >= max(1, min(limit, 100)):
+                break
+        return result
+
+    def hybrid_search(
+        self,
+        query: str,
+        *,
+        query_embedding: list[float] | None = None,
+        model: str | None = None,
+        material_family: str | None = None,
+        limit: int = 6,
+        include_candidate: bool = True,
+        reranker: Callable[[str, list[str], int], list[tuple[int, float]]] | None = None,
+        max_per_source: int | None = 2,
+    ) -> list[SearchResult]:
+        """Fuse exact-term and semantic retrieval, with an optional second-stage reranker."""
+        bounded_limit = max(1, min(limit, 100))
+        pool_limit = max(24, bounded_limit * 6)
+        lexical = self.search(
+            query,
+            material_family=material_family,
+            limit=pool_limit,
+            include_candidate=include_candidate,
+            max_per_source=max_per_source,
+        )
+        if query_embedding is None:
+            return lexical[:bounded_limit]
+        semantic = self.semantic_search(
+            query_embedding,
+            material_family=material_family,
+            limit=pool_limit,
+            include_candidate=include_candidate,
+            model=model,
+            max_per_source=max_per_source,
+        )
+        if not semantic:
+            return lexical[:bounded_limit]
+        by_id: dict[str, SearchResult] = {item.chunk_id: item for item in lexical}
+        by_id.update({item.chunk_id: item for item in semantic})
+        scores: dict[str, float] = {}
+        for rank, item in enumerate(lexical, start=1):
+            scores[item.chunk_id] = scores.get(item.chunk_id, 0.0) + 1.0 / (60 + rank)
+        for rank, item in enumerate(semantic, start=1):
+            scores[item.chunk_id] = scores.get(item.chunk_id, 0.0) + 1.0 / (60 + rank)
+        candidates = [
+            replace(by_id[chunk_id], score=score, retrieval_mode="hybrid")
+            for chunk_id, score in sorted(scores.items(), key=lambda item: item[1], reverse=True)
+        ]
+        if max_per_source is not None:
+            source_counts: dict[str, int] = {}
+            diverse_candidates: list[SearchResult] = []
+            for item in candidates:
+                if source_counts.get(item.source_id, 0) >= max_per_source:
+                    continue
+                diverse_candidates.append(item)
+                source_counts[item.source_id] = source_counts.get(item.source_id, 0) + 1
+            candidates = diverse_candidates
+        if reranker and candidates:
+            try:
+                reranked = reranker(
+                    query,
+                    [item.text for item in candidates],
+                    min(pool_limit, len(candidates)),
+                )
+            except (OSError, TypeError, ValueError):
+                reranked = []
+            if reranked:
+                ordered: list[SearchResult] = []
+                seen: set[int] = set()
+                for index, score in reranked:
+                    if 0 <= index < len(candidates) and index not in seen:
+                        seen.add(index)
+                        ordered.append(
+                            replace(
+                                candidates[index],
+                                score=float(score),
+                                retrieval_mode="hybrid+rerank",
+                            )
+                        )
+                ordered.extend(item for index, item in enumerate(candidates) if index not in seen)
+                candidates = ordered
+        return candidates[:bounded_limit]
+
     def context_for_query(
-        self, query: str, *, material_family: str | None = None, limit: int = 4
+        self,
+        query: str,
+        *,
+        material_family: str | None = None,
+        limit: int = 4,
+        query_embedding: list[float] | None = None,
+        embedding_model: str | None = None,
+        reranker: Callable[[str, list[str], int], list[tuple[int, float]]] | None = None,
     ) -> tuple[str, list[dict[str, str]]]:
-        results = self.search(query, material_family=material_family, limit=limit)
+        results = self.hybrid_search(
+            query,
+            query_embedding=query_embedding,
+            model=embedding_model,
+            material_family=material_family,
+            limit=limit,
+            reranker=reranker,
+            max_per_source=1,
+        )
         if not results:
             return (
                 "No downloaded source passage matched this question. Do not imply that the source catalog covers it.",
@@ -711,7 +990,7 @@ class KnowledgeDatabase:
             cards.append(
                 {
                     "label": item.title,
-                    "detail": f"{item.publisher} · {status_note}",
+                    "detail": f"{item.publisher} · {status_note} · {item.retrieval_mode}",
                 }
             )
         context = (
@@ -823,6 +1102,31 @@ class KnowledgeDatabase:
                 JOIN documents AS d ON d.document_id = c.document_id
                 """
             ).fetchone()
+            latest_chunk_row = self._connection.execute(
+                """
+                WITH latest_documents AS (
+                    SELECT d.document_id, d.source_id, d.extraction_status,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY d.source_id ORDER BY d.version DESC
+                           ) AS row_number
+                    FROM documents AS d
+                )
+                SELECT COUNT(c.chunk_id) AS total,
+                       SUM(CASE WHEN c.embedding_json IS NOT NULL THEN 1 ELSE 0 END) AS embedded
+                FROM latest_documents AS d
+                JOIN chunks AS c ON c.document_id = d.document_id
+                WHERE d.row_number = 1 AND d.extraction_status = 'extracted'
+                """
+            ).fetchone()
+            embedding_model_rows = self._connection.execute(
+                """
+                SELECT embedding_model, COUNT(*) AS count
+                FROM chunks
+                WHERE embedding_json IS NOT NULL
+                GROUP BY embedding_model
+                ORDER BY embedding_model
+                """
+            ).fetchall()
             claim_rows = self._connection.execute(
                 "SELECT status, COUNT(*) AS count FROM claims GROUP BY status"
             ).fetchall()
@@ -874,11 +1178,20 @@ class KnowledgeDatabase:
                 "sourcesWithBlockedLatestDocument": int(
                     (latest_source_row["blocked_latest"] or 0) if latest_source_row else 0
                 ),
+                "latestSearchableChunks": int(
+                    (latest_chunk_row["total"] or 0) if latest_chunk_row else 0
+                ),
+                "latestEmbeddedChunks": int(
+                    (latest_chunk_row["embedded"] or 0) if latest_chunk_row else 0
+                ),
             },
             "chunks": {
                 "total": int((chunk_row["total"] or 0) if chunk_row else 0),
                 "searchable": int((chunk_row["searchable"] or 0) if chunk_row else 0),
                 "embedded": int((chunk_row["embedded"] or 0) if chunk_row else 0),
+            },
+            "embeddingModels": {
+                str(row["embedding_model"] or ""): int(row["count"]) for row in embedding_model_rows
             },
             "claims": {
                 "total": int(claim_total["count"] if claim_total else 0),

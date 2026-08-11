@@ -41,6 +41,10 @@ class EmbeddingProvider(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
 
 
+class Reranker(Protocol):
+    def rerank(self, query: str, documents: list[str], top_n: int) -> list[tuple[int, float]]: ...
+
+
 @dataclass(frozen=True)
 class SourceManifest:
     sources: tuple[SourceSpec, ...]
@@ -61,6 +65,17 @@ class SourceManifest:
             if parsed.scheme != "https" or not parsed.hostname:
                 raise SourceFetchError("Every source manifest URL must be explicit HTTPS.")
             hosts.add(parsed.hostname.casefold())
+            fallback_urls = item.get("fetch_urls", [])
+            if not isinstance(fallback_urls, list):
+                raise SourceFetchError("Source fetch_urls must be a list.")
+            normalized_fallbacks: list[str] = []
+            for fallback_url in fallback_urls:
+                fallback = str(fallback_url)
+                parsed_fallback = urllib.parse.urlparse(fallback)
+                if parsed_fallback.scheme != "https" or not parsed_fallback.hostname:
+                    raise SourceFetchError("Every source fallback URL must be explicit HTTPS.")
+                hosts.add(parsed_fallback.hostname.casefold())
+                normalized_fallbacks.append(fallback)
             families = item.get("material_families", [])
             if not isinstance(families, list):
                 raise SourceFetchError("Source material_families must be a list.")
@@ -78,6 +93,7 @@ class SourceManifest:
                     authority_tier=str(item.get("authority_tier", "secondary")),
                     scale=str(item.get("scale", "")),
                     access_mode=str(item.get("access_mode", "web")),
+                    fetch_urls=tuple(normalized_fallbacks),
                 )
             )
         return cls(tuple(sources), frozenset(hosts))
@@ -175,44 +191,57 @@ class OfficialSourceFetcher:
                 pass
 
     def fetch(self, source: SourceSpec) -> tuple[str, str, str]:
-        parsed = urllib.parse.urlparse(source.url)
-        host = (parsed.hostname or "").casefold()
-        if parsed.scheme != "https" or host not in self.allowed_hosts:
-            raise SourceFetchError("Source host is not in the explicit HTTPS allowlist.")
-        request = urllib.request.Request(
-            source.url,
-            headers={
-                "User-Agent": "helpme.green/0.2 source-catalog fetcher",
-                "Accept": "text/html, text/plain, application/json;q=0.8, */*;q=0.1",
-            },
-        )
         opener = urllib.request.build_opener(_AllowlistRedirectHandler(self.allowed_hosts))
-        for attempt in range(3):
-            try:
-                with opener.open(request, timeout=25) as response:
-                    data = response.read(self.max_bytes + 1)
-                    content_type = response.headers.get_content_type()
-            except (OSError, urllib.error.URLError) as exc:
-                raise SourceFetchError("Source fetch failed safely.") from exc
-            if len(data) > self.max_bytes:
-                raise SourceFetchError("Source exceeds the configured fetch limit.")
-            text, extracted_type = _extract_content(data, content_type, source.url)
-            if not text.strip():
-                raise SourceFetchError("Source extraction produced no readable text.")
-            if _is_access_challenge(text):
-                if attempt < 2:
-                    time.sleep(0.8)
-                    continue
-                raise SourceFetchError(
-                    "Source returned an access challenge instead of its content."
-                )
-            if self.download_dir is not None:
-                self._save_download(source, data, content_type)
-            fetched_at = datetime.now(UTC).isoformat()
-            return text, extracted_type, fetched_at
-        raise SourceFetchError("Source fetch exhausted its retry attempts.")
+        last_error: SourceFetchError | None = None
+        for candidate_url in (source.url, *source.fetch_urls):
+            parsed = urllib.parse.urlparse(candidate_url)
+            host = (parsed.hostname or "").casefold()
+            if parsed.scheme != "https" or host not in self.allowed_hosts:
+                last_error = SourceFetchError("Source host is not in the explicit HTTPS allowlist.")
+                continue
+            request = urllib.request.Request(
+                candidate_url,
+                headers={
+                    "User-Agent": "helpme.green/0.2 source-catalog fetcher",
+                    "Accept": "text/html, text/plain, application/json;q=0.8, */*;q=0.1",
+                },
+            )
+            for attempt in range(3):
+                try:
+                    with opener.open(request, timeout=25) as response:
+                        data = response.read(self.max_bytes + 1)
+                        content_type = response.headers.get_content_type()
+                except (OSError, urllib.error.URLError):
+                    last_error = SourceFetchError("Source fetch failed safely.")
+                    if attempt < 2:
+                        time.sleep(0.4)
+                        continue
+                    break
+                try:
+                    if len(data) > self.max_bytes:
+                        raise SourceFetchError("Source exceeds the configured fetch limit.")
+                    text, extracted_type = _extract_content(data, content_type, candidate_url)
+                    if not text.strip():
+                        raise SourceFetchError("Source extraction produced no readable text.")
+                    if _is_access_challenge(text):
+                        raise SourceFetchError(
+                            "Source returned an access challenge instead of its content."
+                        )
+                except SourceFetchError as exc:
+                    last_error = exc
+                    if "access challenge" in str(exc) and attempt < 2:
+                        time.sleep(0.8)
+                        continue
+                    break
+                if self.download_dir is not None:
+                    self._save_download(source, data, content_type, fetched_url=candidate_url)
+                fetched_at = datetime.now(UTC).isoformat()
+                return text, extracted_type, fetched_at
+        raise last_error or SourceFetchError("Source fetch exhausted its retry attempts.")
 
-    def _save_download(self, source: SourceSpec, data: bytes, content_type: str) -> None:
+    def _save_download(
+        self, source: SourceSpec, data: bytes, content_type: str, *, fetched_url: str
+    ) -> None:
         assert self.download_dir is not None
         digest = hashlib.sha256(data).hexdigest()
         safe_id = re.sub(r"[^a-zA-Z0-9._-]+", "_", source.source_id).strip("._") or "source"
@@ -236,6 +265,7 @@ class OfficialSourceFetcher:
                         "sourceId": source.source_id,
                         "title": source.title,
                         "url": source.url,
+                        "fetchedUrl": fetched_url,
                         "publisher": source.publisher,
                         "contentType": normalized_type,
                         "contentSha256": digest,
@@ -342,6 +372,79 @@ class OpenAICompatibleEmbeddingProvider:
         return vectors
 
 
+class OpenAICompatibleReranker:
+    """Optional second-stage reranker for OpenRouter-compatible /rerank endpoints."""
+
+    def __init__(
+        self,
+        *,
+        endpoint: str,
+        model: str,
+        api_key: str,
+        tls_verify: bool = True,
+        timeout: int = 45,
+    ) -> None:
+        if not endpoint.startswith("https://"):
+            raise ValueError("Reranker endpoint must use HTTPS.")
+        if not model.strip() or not api_key.strip():
+            raise ValueError("Reranker model and API key are required.")
+        self.endpoint = endpoint.rstrip("/")
+        if not self.endpoint.endswith("/rerank"):
+            self.endpoint += "/rerank"
+        self.model = model
+        self.api_key = api_key
+        self.tls_verify = tls_verify
+        self.timeout = timeout
+
+    def rerank(self, query: str, documents: list[str], top_n: int) -> list[tuple[int, float]]:
+        if not query.strip() or not documents:
+            return []
+        request = urllib.request.Request(
+            self.endpoint,
+            data=json.dumps(
+                {
+                    "model": self.model,
+                    "query": query,
+                    "documents": documents,
+                    "top_n": max(1, min(top_n, len(documents))),
+                }
+            ).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "helpme.green/0.2",
+            },
+            method="POST",
+        )
+        context = None
+        if not self.tls_verify:
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+        try:
+            if context is None:
+                response_context = urllib.request.urlopen(request, timeout=self.timeout)
+            else:
+                response_context = urllib.request.urlopen(
+                    request, timeout=self.timeout, context=context
+                )
+            with response_context as response:
+                raw = json.loads(response.read().decode("utf-8"))
+        except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
+            raise SourceFetchError("Reranker request failed safely.") from exc
+        if not isinstance(raw, Mapping) or not isinstance(raw.get("results"), list):
+            raise SourceFetchError("Reranker returned an invalid response.")
+        result: list[tuple[int, float]] = []
+        for item in raw["results"]:
+            if not isinstance(item, Mapping):
+                continue
+            try:
+                result.append((int(item["index"]), float(item["relevance_score"])))
+            except (KeyError, TypeError, ValueError) as exc:
+                raise SourceFetchError("Reranker returned an invalid result.") from exc
+        return result
+
+
 def embedding_provider_from_environment() -> EmbeddingProvider | None:
     endpoint = os.environ.get("HELPME_EMBEDDING_BASE_URL", "").strip()
     model = os.environ.get("HELPME_EMBEDDING_MODEL", "").strip()
@@ -357,6 +460,50 @@ def embedding_provider_from_environment() -> EmbeddingProvider | None:
     )
 
 
+def reranker_from_environment() -> Reranker | None:
+    enabled = os.environ.get("HELPME_RERANK_ENABLED", "").casefold()
+    if enabled not in {"1", "true", "yes", "on"}:
+        return None
+    endpoint = os.environ.get("HELPME_RERANK_BASE_URL", "").strip()
+    model = os.environ.get("HELPME_RERANK_MODEL", "").strip()
+    api_key = os.environ.get("HELPME_RERANK_API_KEY", "").strip()
+    if not endpoint or not model or not api_key:
+        return None
+    return OpenAICompatibleReranker(
+        endpoint=endpoint,
+        model=model,
+        api_key=api_key,
+        tls_verify=os.environ.get("HELPME_RERANK_TLS_VERIFY", "1").casefold()
+        not in {"", "0", "false", "no", "off"},
+    )
+
+
+def embed_missing_documents(
+    database: KnowledgeDatabase,
+    embedding_provider: EmbeddingProvider,
+    *,
+    embedding_batch_size: int = 32,
+) -> int:
+    """Repair latest extracted documents even when their source cannot be fetched again."""
+    if embedding_batch_size <= 0:
+        raise ValueError("Embedding batch size must be positive.")
+    embedded_count = 0
+    for document_id, source_id in database.documents_missing_embeddings(embedding_provider.model):
+        started = datetime.now(UTC).isoformat()
+        try:
+            pending = database.chunks_missing_embeddings(document_id, embedding_provider.model)
+            for offset in range(0, len(pending), embedding_batch_size):
+                batch = pending[offset : offset + embedding_batch_size]
+                vectors = embedding_provider.embed([text for _, text in batch])
+                database.set_chunk_embeddings(
+                    [chunk_id for chunk_id, _ in batch], vectors, embedding_provider.model
+                )
+                embedded_count += len(batch)
+        except (OSError, SourceFetchError, ValueError) as exc:
+            database.record_run(source_id, "embedding_failed", str(exc), started, _now())
+    return embedded_count
+
+
 def ingest_manifest(
     manifest: SourceManifest,
     database: KnowledgeDatabase,
@@ -364,7 +511,10 @@ def ingest_manifest(
     fetcher: OfficialSourceFetcher | None = None,
     embedding_provider: EmbeddingProvider | None = None,
     download_dir: Path | None = None,
+    embedding_batch_size: int = 32,
 ) -> list[IngestResult]:
+    if embedding_batch_size <= 0:
+        raise ValueError("Embedding batch size must be positive.")
     fetcher = fetcher or OfficialSourceFetcher(
         allowed_hosts=manifest.allowed_hosts,
         download_dir=download_dir,
@@ -380,19 +530,28 @@ def ingest_manifest(
                 content_type=content_type,
                 fetched_at=fetched_at,
             )
-            if embedding_provider and result.chunk_count:
-                chunks = database.chunks_for_document(result.document_id)
-                database.set_embeddings(
-                    result.document_id,
-                    embedding_provider.embed(chunks),
-                    embedding_provider.model,
+            if embedding_provider:
+                pending = database.chunks_missing_embeddings(
+                    result.document_id, embedding_provider.model
                 )
+                for offset in range(0, len(pending), embedding_batch_size):
+                    batch = pending[offset : offset + embedding_batch_size]
+                    vectors = embedding_provider.embed([text for _, text in batch])
+                    database.set_chunk_embeddings(
+                        [chunk_id for chunk_id, _ in batch], vectors, embedding_provider.model
+                    )
             results.append(result)
             database.record_run(
                 source.source_id, "ingested", result.content_sha256, started, _now()
             )
         except (OSError, SourceFetchError, ValueError) as exc:
             database.record_run(source.source_id, "failed", str(exc), started, _now())
+    if embedding_provider:
+        embed_missing_documents(
+            database,
+            embedding_provider,
+            embedding_batch_size=embedding_batch_size,
+        )
     return results
 
 
