@@ -5,6 +5,7 @@ import os
 import secrets
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any
 from urllib.parse import unquote, urlparse
 
@@ -12,6 +13,14 @@ from .application import ApplicationProcessor
 from .knowledge_graphql import execute_graphql
 from .persistence import SessionState, SessionStore
 from .web import INDEX_HTML as _CONVERSATION_HTML
+
+_ASSET_ROOT = Path(os.environ.get("HELPME_ROOT", str(Path.cwd()))) / "assets"
+_ASSET_CONTENT_TYPES = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+}
 
 
 class _Handler(BaseHTTPRequestHandler):
@@ -26,6 +35,9 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if path == "/":
             self._send(HTTPStatus.OK, _CONVERSATION_HTML, "text/html; charset=utf-8")
+            return
+        if path.startswith("/assets/"):
+            self._send_asset(path)
             return
         if not self._authorized():
             return
@@ -149,14 +161,38 @@ class _Handler(BaseHTTPRequestHandler):
             status, json.dumps(payload, ensure_ascii=False), "application/json; charset=utf-8"
         )
 
+    def _send_asset(self, path: str) -> None:
+        relative = path.removeprefix("/assets/")
+        if not relative or "/" in relative or "\\" in relative:
+            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+            return
+        asset = (_ASSET_ROOT / relative).resolve()
+        asset_root = _ASSET_ROOT.resolve()
+        try:
+            asset.relative_to(asset_root)
+        except ValueError:
+            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+            return
+        if not asset.is_file():
+            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+            return
+        self._send_bytes(
+            HTTPStatus.OK,
+            asset.read_bytes(),
+            _ASSET_CONTENT_TYPES.get(asset.suffix.casefold(), "application/octet-stream"),
+        )
+
     def _send(self, status: HTTPStatus, body: str, content_type: str) -> None:
         encoded = body.encode("utf-8")
+        self._send_bytes(status, encoded, content_type)
+
+    def _send_bytes(self, status: HTTPStatus, body: bytes, content_type: str) -> None:
         self.send_response(status)
         self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(encoded)))
+        self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
-        self.wfile.write(encoded)
+        self.wfile.write(body)
 
     def log_message(self, format: str, *args: Any) -> None:
         del format, args

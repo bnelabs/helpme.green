@@ -9,6 +9,7 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY src ./src
+COPY assets ./assets
 COPY knowledge ./knowledge
 COPY skills ./skills
 RUN pip install --no-cache-dir .

@@ -131,8 +131,67 @@ def test_homepage_has_natural_conversation_surface(tmp_path: Path) -> None:
         thread.join(timeout=5)
 
     assert response.status == 200
-    assert "What are you trying to figure out?" in body
-    assert "Tell me what you’re dealing with" in body
-    assert "New conversation" in body
+    assert "New material note" in body
+    assert "Describe what is in front of you" in body
+    assert "Material library" in body
+    assert "Nothing is lost when you move between phases." in body
     assert "Shift+Enter for a new line" in body
+    assert 'rel="icon" href="/assets/favicon.png"' in body
+    assert 'src="/assets/brand-mark.png"' in body
     assert "access token" not in body.casefold()
+
+
+def test_homepage_serves_the_owned_visual_asset(tmp_path: Path) -> None:
+    server, thread = _running_server(tmp_path)
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        connection.request("GET", "/assets/helpme-field-journal.png")
+        response = connection.getresponse()
+        asset = response.read()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert response.status == 200
+    assert response.getheader("Content-Type") == "image/png"
+    assert asset.startswith(b"\x89PNG\r\n\x1a\n")
+
+
+def test_homepage_serves_material_reference_assets(tmp_path: Path) -> None:
+    server, thread = _running_server(tmp_path)
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        for path in (
+            "/assets/material-plastics.webp",
+            "/assets/material-metals.webp",
+            "/assets/material-pp.webp",
+            "/assets/material-textiles.webp",
+        ):
+            connection.request("GET", path)
+            response = connection.getresponse()
+            asset = response.read()
+            assert response.status == 200
+            assert response.getheader("Content-Type") == "image/webp"
+            assert asset.startswith(b"RIFF") and asset[8:12] == b"WEBP"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
+def test_homepage_serves_the_brand_mark_for_logo_and_favicon(tmp_path: Path) -> None:
+    server, thread = _running_server(tmp_path)
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        for path in ("/assets/brand-mark.png", "/assets/favicon.png"):
+            connection.request("GET", path)
+            response = connection.getresponse()
+            asset = response.read()
+            assert response.status == 200
+            assert response.getheader("Content-Type") == "image/png"
+            assert asset.startswith(b"\x89PNG\r\n\x1a\n")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
