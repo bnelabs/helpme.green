@@ -431,6 +431,84 @@ a { color: inherit; }
 .reference-chip img { border-radius: 4px; height: 20px; object-fit: cover; width: 20px; }
 .reference-chip button { background: transparent; border: 0; color: var(--muted); font-size: 10px; min-height: auto; padding: 2px; }
 .reference-empty { color: var(--quiet); font-size: 11px; line-height: 1.45; }
+.evidence-capture { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 17px; }
+.evidence-intro { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 0 0 11px; }
+.evidence-photo-row { align-items: center; display: flex; flex-wrap: wrap; gap: 7px; }
+.evidence-photo {
+  background: var(--paper-warm);
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  height: 92px;
+  overflow: hidden;
+  position: relative;
+  width: 64px;
+}
+.evidence-photo img { display: block; height: 64px; object-fit: cover; width: 100%; }
+.evidence-photo button {
+  background: var(--paper-alt);
+  border: 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  display: block;
+  font-size: 9px;
+  height: 27px;
+  min-height: 27px;
+  padding: 0;
+  width: 100%;
+}
+.evidence-photo button:hover { background: var(--coral); }
+.evidence-empty { color: var(--quiet); font-size: 11px; padding: 8px 0; }
+.evidence-upload {
+  align-items: center;
+  background: var(--paper-alt);
+  border: 1px dashed var(--line-strong);
+  border-radius: 7px;
+  color: var(--forest-2);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 11px;
+  min-height: 92px;
+  padding: 0 11px;
+  transition: background .22s ease, border-color .22s ease, transform .22s ease;
+}
+.evidence-upload:hover { background: var(--moss-soft); border-color: var(--moss); transform: translateY(-1px); }
+.evidence-upload-input { display: none; }
+.evidence-fields { display: grid; gap: 8px; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); margin-top: 11px; }
+.evidence-field { color: var(--muted); display: grid; font-size: 10px; gap: 5px; letter-spacing: .04em; }
+.evidence-field input, .evidence-field select {
+  background: var(--paper-alt);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink-soft);
+  min-height: 36px;
+  min-width: 0;
+  padding: 0 9px;
+}
+.evidence-detail { margin-top: 8px; }
+.evidence-detail input { width: 100%; }
+.evidence-note { color: var(--quiet); font-size: 10px; line-height: 1.45; margin-top: 9px; }
+.evidence-guidance {
+  background: color-mix(in srgb, var(--amber-soft) 72%, var(--paper-alt));
+  border: 1px solid color-mix(in srgb, var(--amber) 38%, var(--line));
+  border-radius: 8px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  padding: 10px 11px;
+}
+.evidence-guidance strong { color: var(--amber); display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.evidence-guidance p { font-size: 11px; line-height: 1.5; margin: 5px 0 0; }
+.comparison-actions { align-items: center; display: flex; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+.comparison-hint { color: var(--quiet); font-size: 10px; line-height: 1.4; }
+.comparison-read {
+  background: color-mix(in srgb, var(--amber-soft) 64%, var(--paper-alt));
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--line));
+  border-radius: 9px;
+  margin-top: 20px;
+  padding: 13px;
+}
+.comparison-read p { color: var(--ink-soft); font-size: 13px; line-height: 1.65; margin: 8px 0 0; white-space: pre-wrap; }
+.comparison-read .page-kicker { color: var(--amber); }
+.comparison-disclaimer { color: var(--muted); font-size: 10px !important; line-height: 1.45 !important; margin-top: 10px !important; }
 .working-read { border-bottom: 1px solid var(--line); padding-bottom: 22px; }
 .working-read h2 {
   color: var(--ink);
@@ -753,6 +831,7 @@ a { color: inherit; }
   .evidence-board { margin-top: 19px; }
   .board-card img { min-height: 64px; }
   .board-card:first-child img { min-height: 136px; }
+  .evidence-fields { grid-template-columns: 1fr; }
   .observation-text, .working-read p, .read-list, .change-list, .next-question p { font-size: 12px; }
   .page-nav { grid-template-columns: 1fr 1fr; margin-top: 11px; padding: 8px; }
   .page-progress { grid-column: 1 / -1; grid-row: 1; }
@@ -842,27 +921,74 @@ a { color: inherit; }
             <input class="note-title" id="noteTitle" maxlength="90" value="New material note" aria-label="Investigation title">
             <p class="page-lede" id="pageLede">Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.</p>
 
-            <div class="evidence-board" aria-label="Illustrative material reference board">
+            <div class="evidence-board" aria-label="Material examples">
               <figure class="board-card">
-                <img id="boardImagePrimary" src="/assets/material-plastics.webp" alt="Illustrative plastic sample board">
+                <img id="boardImagePrimary" src="/assets/material-plastics.webp" alt="Plastic material example">
               </figure>
               <figure class="board-card">
-                <img id="boardImageSecondary" src="/assets/material-paper.webp" alt="Illustrative paper and board sample">
+                <img id="boardImageSecondary" src="/assets/material-paper.webp" alt="Paper and board example">
               </figure>
               <figure class="board-card">
-                <img id="boardImageTertiary" src="/assets/material-metals.webp" alt="Illustrative metal sample board">
+                <img id="boardImageTertiary" src="/assets/material-metals.webp" alt="Metal material example">
               </figure>
             </div>
-            <div class="board-caption">Reference board — post-use/process scrap cues, not identification evidence</div>
+            <div class="board-caption">Library examples — real scrap looks, not proof of what this is</div>
 
             <section aria-labelledby="observationsTitle">
               <h2 class="section-title" id="observationsTitle"><span>Observations</span><span id="observationCount">0 saved</span></h2>
               <ol class="observation-list" id="observationList"></ol>
             </section>
 
+            <section class="evidence-capture" aria-labelledby="sampleEvidenceTitle">
+              <h2 class="section-title" id="sampleEvidenceTitle"><span>Your material</span><span id="evidenceCount">0 photos</span></h2>
+              <p class="evidence-intro">Add a photo of the real scrap if you have one. The assistant compares your notes with the library examples. Your photos stay here for now.</p>
+              <div class="evidence-photo-row" id="evidencePhotos"></div>
+              <label class="evidence-upload" for="evidencePhotoInput">Add a photo</label>
+              <input class="evidence-upload-input" id="evidencePhotoInput" type="file" accept="image/*" capture="environment" multiple>
+              <div class="evidence-fields">
+                <label class="evidence-field" for="evidenceForm">What form is the sample?
+                  <select id="evidenceForm">
+                    <option value="">Choose sample form</option>
+                    <option value="whole">Whole piece</option>
+                    <option value="flakes">Flakes / chips</option>
+                    <option value="granules">Granules / pellets</option>
+                    <option value="powder">Powder / dust</option>
+                    <option value="mixed">Mixed pieces</option>
+                    <option value="closed">Closed container (do not open)</option>
+                  </select>
+                </label>
+                <label class="evidence-field" for="evidenceCondition">What is it like?
+                  <select id="evidenceCondition">
+                    <option value="">Choose condition</option>
+                    <option value="clean">Clean / intact</option>
+                    <option value="worn">Worn / weathered</option>
+                    <option value="dirty">Dirty / contaminated</option>
+                    <option value="mixed">Mixed / attached</option>
+                    <option value="damaged">Cut / damaged</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                </label>
+                <label class="evidence-field" for="evidenceOrigin">Where did it come from? (optional)
+                  <input id="evidenceOrigin" type="text" maxlength="140" placeholder="Where did it come from?">
+                </label>
+              </div>
+              <div class="evidence-guidance" id="evidenceGuidance" role="note" hidden>
+                <strong id="evidenceGuidanceTitle"></strong>
+                <p id="evidenceGuidanceText"></p>
+              </div>
+              <label class="evidence-field evidence-detail" for="evidenceDetails">What should the assistant look at? (optional)
+                <input id="evidenceDetails" type="text" maxlength="220" placeholder="For example: surface, stiffness, colour, or attached parts">
+              </label>
+              <div class="evidence-note" id="evidenceNote">No photo yet. Your notes are enough to start.</div>
+            </section>
+
             <section class="reference-section" aria-labelledby="referencesTitle">
-              <h2 class="section-title" id="referencesTitle"><span>Material references</span><span>Library</span></h2>
+              <h2 class="section-title" id="referencesTitle"><span>Library examples</span><span>Library</span></h2>
               <div class="reference-chips" id="referenceChips"></div>
+              <div class="comparison-actions">
+                <button class="text-button" id="compareEvidence" type="button">Compare with assistant</button>
+                <span class="comparison-hint" id="comparisonHint">Your notes + library examples</span>
+              </div>
             </section>
 
             <form class="observation-composer" id="composer" aria-busy="false">
@@ -876,14 +1002,14 @@ a { color: inherit; }
             <div class="status-note" id="statusNote" aria-live="polite">Autosaved in this browser. Nothing is lost when you move between phases.</div>
           </article>
 
-          <article class="page page-right" aria-label="Working read">
+          <article class="page page-right" aria-label="Assistant's first look">
             <section class="working-read">
-              <span class="page-kicker">Working read</span>
+              <span class="page-kicker">Assistant's first look</span>
               <h2 id="workingTitle">Start with the first look</h2>
-              <p id="workingRead">No conclusion is assumed. Add an observation and keep the first read, the open question, and the reference trail together.</p>
+              <p id="workingRead">No answer is assumed. Add a note and keep the first look, the open question, and the library examples together.</p>
             </section>
             <section class="read-section" aria-labelledby="evidenceTitle">
-              <h2 class="section-title" id="evidenceTitle">Evidence from this page</h2>
+              <h2 class="section-title" id="evidenceTitle">What we have so far</h2>
               <ul class="read-list" id="readEvidence"></ul>
             </section>
             <section class="read-section change" aria-labelledby="changeTitle">
@@ -896,9 +1022,15 @@ a { color: inherit; }
               <button class="text-button" id="usePrompt" type="button">Use as observation prompt</button>
             </section>
             <section class="assistant-read" id="assistantRead" hidden>
-              <span class="page-kicker">Assistant read — saved to this phase</span>
+              <span class="page-kicker">Assistant's note — saved here</span>
               <p id="assistantText"></p>
               <p class="source-note" id="sourceNote"></p>
+            </section>
+            <section class="comparison-read" id="comparisonRead" hidden>
+              <span class="page-kicker">Assistant comparison — first read</span>
+              <p id="comparisonText"></p>
+              <p class="source-note" id="comparisonSourceNote"></p>
+              <p class="comparison-disclaimer">This uses your notes and the library examples. It is not a test or a final answer.</p>
             </section>
           </article>
         </div>
@@ -918,7 +1050,7 @@ a { color: inherit; }
     <aside class="library-drawer" id="library" data-open="true" aria-label="Material library">
       <header class="library-header">
         <div>
-          <span class="library-kicker">Reference only</span>
+      <span class="library-kicker">Examples only</span>
           <h2>Material library</h2>
         </div>
         <button class="library-close" id="libraryClose" type="button">Close</button>
@@ -928,7 +1060,7 @@ a { color: inherit; }
         <input id="materialSearch" type="search" autocomplete="off" placeholder="Search materials...">
       </label>
       <div class="category-list" id="categoryList"></div>
-      <div class="library-note">Images show post-use or process scrap cues, not a way to identify a polymer or certify a material. Keep the observation, source, and any test result attached to the page.</div>
+      <div class="library-note">These are used or worked-on materials, not a way to name a plastic or metal with certainty. Keep your notes, where it came from, and any test with the page.</div>
     </aside>
     <div class="library-backdrop" id="libraryBackdrop" data-open="false"></div>
   </main>
@@ -940,10 +1072,10 @@ a { color: inherit; }
   const THEME_KEY = "helpme.green.theme";
   const phases = [
     {id: "observe", label: "Observe", detail: "What is in front of you?", heading: "Start with the first look", lede: "Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.", question: "What do you see, and what would you like to understand?", change: ["A clearer view of surface, form, or condition.", "A note about what is known, suspected, or still open."]},
-    {id: "identify", label: "Identify", detail: "Name with care", heading: "Name the material with care", lede: "Use the library to keep a working reference nearby. A visual resemblance is a starting point, not a confirmed identity.", question: "Which material family or subtype is worth checking next?", change: ["A label, source, or test result that supports the working name.", "A mixed, coated, or layered sample that changes the reading."]},
-    {id: "understand", label: "Understand", detail: "Hold the evidence", heading: "Hold the evidence together", lede: "Keep the observed details, references, and the question you are trying to answer on the same page.", question: "What context would change how this material is understood?", change: ["A missing condition, history, or composition detail.", "Evidence that conflicts with the current working read."]},
-    {id: "options", label: "Options", detail: "Compare routes", heading: "Compare possible routes", lede: "Separate possible directions from decisions. Use this page to compare what each route would need before you choose.", question: "Which direction is worth investigating first, and why?", change: ["A constraint that rules a route in or out.", "A missing source, measurement, or professional check."]},
-    {id: "next", label: "Next steps", detail: "Choose the next check", heading: "Choose the next useful check", lede: "End with a clear, reversible next action that is linked to the question—not a conclusion that outruns the evidence.", question: "What is the smallest useful next check you can make?", change: ["A new observation that resolves the open question.", "A result that makes the next decision safer or clearer."]}
+    {id: "identify", label: "Identify", detail: "Name with care", heading: "Name the material with care", lede: "Use the library to keep a helpful example nearby. A visual match is a starting point, not a confirmed answer.", question: "Which material type is worth checking next?", change: ["A label, document, or test result that supports the name.", "A mixed, coated, or layered piece that changes the first read."]},
+    {id: "understand", label: "Understand", detail: "Keep the details", heading: "Keep the details together", lede: "Keep what you saw, the examples you chose, and the question you are trying to answer on the same page.", question: "What would change how you see this material?", change: ["A missing detail about its condition or past use.", "Something that does not fit the first read."]},
+    {id: "options", label: "Options", detail: "Compare routes", heading: "Compare possible routes", lede: "Look at possible directions before you choose one. Keep the limits and the next check in view.", question: "Which direction is worth looking into first, and why?", change: ["A limit that makes one route less useful.", "A missing source, measurement, or expert check."]},
+    {id: "next", label: "Next steps", detail: "Choose the next check", heading: "Choose the next useful check", lede: "End with a clear, reversible next action linked to your question—not a conclusion that goes beyond what you know.", question: "What is the simplest useful next check?", change: ["A new detail that answers the open question.", "A result that makes the next choice clearer."]}
   ];
   const categories = [
     {id: "plastics", label: "Plastics", image: "/assets/material-plastics.webp", subtypes: [
@@ -1007,7 +1139,20 @@ a { color: inherit; }
     boardImageTertiary: document.getElementById("boardImageTertiary"),
     observationList: document.getElementById("observationList"),
     observationCount: document.getElementById("observationCount"),
+    evidencePhotos: document.getElementById("evidencePhotos"),
+    evidencePhotoInput: document.getElementById("evidencePhotoInput"),
+    evidenceCount: document.getElementById("evidenceCount"),
+    evidenceForm: document.getElementById("evidenceForm"),
+    evidenceCondition: document.getElementById("evidenceCondition"),
+    evidenceOrigin: document.getElementById("evidenceOrigin"),
+    evidenceDetails: document.getElementById("evidenceDetails"),
+    evidenceNote: document.getElementById("evidenceNote"),
+    evidenceGuidance: document.getElementById("evidenceGuidance"),
+    evidenceGuidanceTitle: document.getElementById("evidenceGuidanceTitle"),
+    evidenceGuidanceText: document.getElementById("evidenceGuidanceText"),
     referenceChips: document.getElementById("referenceChips"),
+    compareEvidence: document.getElementById("compareEvidence"),
+    comparisonHint: document.getElementById("comparisonHint"),
     composer: document.getElementById("composer"),
     message: document.getElementById("message"),
     send: document.getElementById("send"),
@@ -1021,6 +1166,9 @@ a { color: inherit; }
     assistantRead: document.getElementById("assistantRead"),
     assistantText: document.getElementById("assistantText"),
     sourceNote: document.getElementById("sourceNote"),
+    comparisonRead: document.getElementById("comparisonRead"),
+    comparisonText: document.getElementById("comparisonText"),
+    comparisonSourceNote: document.getElementById("comparisonSourceNote"),
     previousPage: document.getElementById("previousPage"),
     nextPage: document.getElementById("nextPage"),
     pageProgress: document.getElementById("pageProgress"),
@@ -1046,10 +1194,14 @@ a { color: inherit; }
   let token = "";
   let starting = false;
   let requestPending = false;
+  let comparisonPending = false;
   let turnTimer = null;
 
+  function blankEvidence() {
+    return {photos: [], form: "", condition: "", origin: "", details: ""};
+  }
   function blankPage() {
-    return {draft: "", observations: [], references: [], reply: "", sources: []};
+    return {draft: "", observations: [], references: [], reply: "", sources: [], comparison: "", comparisonSources: [], evidence: blankEvidence()};
   }
   function freshState() {
     return {
@@ -1064,6 +1216,9 @@ a { color: inherit; }
     if (typeof value !== "string") return value;
     return value.replace(/^(\/assets\/material-[^?]+)\.png$/, "$1.webp");
   }
+  function isAssistantFailureText(value) {
+    return typeof value === "string" && /^(I couldn.?t get a response from the local model just now|I couldn.?t answer that right now)/i.test(value.trim());
+  }
   function validState(value) {
     if (!value || !Array.isArray(value.pages)) return freshState();
     const next = freshState();
@@ -1077,11 +1232,32 @@ a { color: inherit; }
         draft: typeof source.draft === "string" ? source.draft : "",
         observations: Array.isArray(source.observations) ? source.observations.filter((item) => typeof item === "string").slice(0, 80) : [],
         references: Array.isArray(source.references) ? source.references.filter((item) => item && typeof item.id === "string").slice(0, 40).map((item) => Object.assign({}, item, {image: migrateMaterialAsset(item.image)})) : [],
-        reply: typeof source.reply === "string" ? source.reply : "",
-        sources: Array.isArray(source.sources) ? source.sources.slice(0, 20) : []
+        reply: typeof source.reply === "string" && !isAssistantFailureText(source.reply) ? source.reply : "",
+        sources: Array.isArray(source.sources) ? source.sources.slice(0, 20) : [],
+        comparison: typeof source.comparison === "string" && !isAssistantFailureText(source.comparison) ? source.comparison : "",
+        comparisonSources: Array.isArray(source.comparisonSources) ? source.comparisonSources.slice(0, 20) : [],
+        evidence: validEvidence(source.evidence)
       };
     });
     return next;
+  }
+  function validEvidence(value) {
+    const evidence = blankEvidence();
+    if (!value || typeof value !== "object") return evidence;
+    const allowedForms = ["", "whole", "flakes", "granules", "powder", "mixed", "closed"];
+    const allowedConditions = ["", "clean", "worn", "dirty", "mixed", "damaged", "unknown"];
+    evidence.form = allowedForms.includes(value.form) ? value.form : "";
+    evidence.condition = allowedConditions.includes(value.condition) ? value.condition : "";
+    evidence.origin = typeof value.origin === "string" ? value.origin.slice(0, 140) : "";
+    evidence.details = typeof value.details === "string" ? value.details.slice(0, 220) : "";
+    evidence.photos = Array.isArray(value.photos) ? value.photos.filter((photo) => (
+      photo && typeof photo.dataUrl === "string" && photo.dataUrl.startsWith("data:image/") && photo.dataUrl.length <= 1600000
+    )).slice(0, 3).map((photo, index) => ({
+      id: typeof photo.id === "string" ? photo.id : "photo-" + index,
+      name: typeof photo.name === "string" ? photo.name.slice(0, 80) : "Sample photo",
+      dataUrl: photo.dataUrl
+    })) : [];
+    return evidence;
   }
   function loadState() {
     try { return validState(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")); }
@@ -1103,7 +1279,10 @@ a { color: inherit; }
   }
   function phaseHasWork(index) {
     const page = state.pages[index];
-    return Boolean(page && (page.observations.length || page.references.length || page.reply || page.draft.trim()));
+    return Boolean(page && (
+      page.observations.length || page.references.length || page.reply || page.comparison || page.draft.trim() ||
+      page.evidence.photos.length || page.evidence.condition || page.evidence.origin.trim() || page.evidence.details.trim()
+    ));
   }
   function phaseState(index) {
     if (index === state.currentPhase) return "active";
@@ -1191,6 +1370,83 @@ a { color: inherit; }
       elements.observationList.appendChild(row);
     });
   }
+  function renderEvidence(page) {
+    const evidence = page.evidence || blankEvidence();
+    const formGuidance = {
+      whole: {
+        title: "Whole piece",
+        text: "A photo can show shape and surface. It still cannot confirm the exact material, grade, or blend."
+      },
+      flakes: {
+        title: "Flakes / chips",
+        text: "A photo can show colour, shape, and visible mix. If safe, add an overall view and a close-up. It cannot confirm the exact material from appearance alone."
+      },
+      granules: {
+        title: "Granules / pellets",
+        text: "A photo can show colour, size, shape, and whether the sample looks mixed. If safe, add a close-up with a size reference. It cannot confirm the polymer, alloy, or blend."
+      },
+      powder: {
+        title: "Powder / dust",
+        text: "Photos can show colour and texture, but not reliably name the material. If safe, photograph the container or settled sample. If the dust may be unsafe, keep it closed and do not spread it just for a photo."
+      },
+      mixed: {
+        title: "Mixed pieces",
+        text: "Treat this as a mixture first. If safe, add an overview and a close-up of the different pieces. The assistant will describe what is visible instead of forcing one material name."
+      },
+      closed: {
+        title: "Closed container",
+        text: "Keep an unknown sample closed. A photo of the container, label, and source can help, but a photo alone cannot name what is inside."
+      }
+    };
+    elements.evidencePhotos.replaceChildren();
+    elements.evidenceCount.textContent = evidence.photos.length + " photo" + (evidence.photos.length === 1 ? "" : "s");
+    if (!evidence.photos.length) {
+      const empty = document.createElement("span");
+      empty.className = "evidence-empty";
+      empty.textContent = "Add a photo of the real piece when you have one.";
+      elements.evidencePhotos.appendChild(empty);
+    } else {
+      evidence.photos.forEach((photo, index) => {
+        const frame = document.createElement("div");
+        frame.className = "evidence-photo";
+        const image = document.createElement("img");
+        image.src = photo.dataUrl;
+        image.alt = "User sample photo " + (index + 1);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Remove";
+        remove.setAttribute("aria-label", "Remove user sample photo " + (index + 1));
+        remove.addEventListener("click", () => {
+          activePage().evidence.photos = activePage().evidence.photos.filter((item) => item.id !== photo.id);
+          activePage().comparison = "";
+          activePage().comparisonSources = [];
+          saveState();
+          renderAll();
+        });
+        frame.append(image, remove);
+        elements.evidencePhotos.appendChild(frame);
+      });
+    }
+    elements.evidenceForm.value = evidence.form;
+    elements.evidenceCondition.value = evidence.condition;
+    elements.evidenceOrigin.value = evidence.origin;
+    elements.evidenceDetails.value = evidence.details;
+    const guidance = formGuidance[evidence.form];
+    elements.evidenceGuidance.hidden = !guidance;
+    if (guidance) {
+      elements.evidenceGuidanceTitle.textContent = guidance.title;
+      elements.evidenceGuidanceText.textContent = guidance.text;
+    } else {
+      elements.evidenceGuidanceTitle.textContent = "";
+      elements.evidenceGuidanceText.textContent = "";
+    }
+    const detail = evidence.form || evidence.condition || evidence.origin || evidence.details;
+    elements.evidenceNote.textContent = evidence.photos.length
+      ? "Your photo" + (evidence.photos.length === 1 ? " stays" : "s stay") + " here. The assistant will keep the sample form and limits with the comparison."
+      : detail
+        ? "These details stay with this page. Add a photo when you have one."
+        : "No photo yet. Your notes are enough to start.";
+  }
   function renderReferences(page) {
     elements.referenceChips.replaceChildren();
     if (!page.references.length) {
@@ -1214,6 +1470,8 @@ a { color: inherit; }
       remove.setAttribute("aria-label", "Remove " + reference.label);
       remove.addEventListener("click", () => {
         activePage().references = activePage().references.filter((item) => item.id !== reference.id);
+        activePage().comparison = "";
+        activePage().comparisonSources = [];
         saveState();
         renderAll();
       });
@@ -1233,10 +1491,10 @@ a { color: inherit; }
     });
     elements.readEvidence.replaceChildren();
     const evidence = [];
-    if (page.observations.length) evidence.push(page.observations.length + " observation" + (page.observations.length === 1 ? "" : "s") + " saved on this phase.");
-    if (page.references.length) evidence.push(page.references.length + " material reference" + (page.references.length === 1 ? "" : "s") + " kept with this phase.");
-    if (!evidence.length) evidence.push("No evidence has been added to this phase yet.");
-    evidence.push("The library images are illustrative references; identity still needs support from context or testing.");
+    if (page.observations.length) evidence.push(page.observations.length + " note" + (page.observations.length === 1 ? "" : "s") + " saved on this phase.");
+    if (page.references.length) evidence.push(page.references.length + " library example" + (page.references.length === 1 ? "" : "s") + " kept with this phase.");
+    if (!evidence.length) evidence.push("Nothing has been added to this phase yet.");
+    evidence.push("The library images are examples; a material name still needs context or a test.");
     evidence.forEach((text) => {
       const item = document.createElement("li");
       item.textContent = text;
@@ -1246,28 +1504,53 @@ a { color: inherit; }
       elements.assistantRead.hidden = false;
       elements.assistantText.textContent = page.reply;
       const sources = page.sources || [];
-      elements.sourceNote.textContent = sources.length ? sources.map((source) => source.label || "Reference").join(" · ") : "No source pointer was attached to this read.";
+      elements.sourceNote.textContent = sources.length ? sources.map((source) => source.label || "Reference").join(" · ") : "No source linked to this read yet.";
     } else {
       elements.assistantRead.hidden = true;
       elements.assistantText.textContent = "";
       elements.sourceNote.textContent = "";
     }
+    if (page.comparison) {
+      elements.comparisonRead.hidden = false;
+      elements.comparisonText.textContent = page.comparison;
+      const comparisonSources = page.comparisonSources || [];
+      elements.comparisonSourceNote.textContent = comparisonSources.length
+        ? comparisonSources.map((source) => source.label || "Reference").join(" · ")
+        : "No source linked to this comparison yet.";
+    } else {
+      elements.comparisonRead.hidden = true;
+      elements.comparisonText.textContent = "";
+      elements.comparisonSourceNote.textContent = "";
+    }
   }
   function renderNotebook() {
     const page = activePage();
     const phase = phases[state.currentPhase];
+    const difficultForm = ["granules", "powder", "mixed", "closed"].includes(page.evidence.form);
     elements.noteTitle.value = state.title;
     elements.leftPageTag.textContent = phase.label.toUpperCase();
     elements.pageState.textContent = "Phase " + (state.currentPhase + 1) + " of " + phases.length;
     elements.message.value = page.draft;
     elements.message.placeholder = "Add an observation for " + phase.label.toLowerCase() + "...";
     renderObservations(page);
+    renderEvidence(page);
     renderReferences(page);
     renderRead(page, phase);
     renderPageProgress();
     elements.previousPage.disabled = state.currentPhase === 0;
     elements.nextPage.textContent = state.currentPhase === phases.length - 1 ? "Finish this note" : "Continue to " + phases[state.currentPhase + 1].label.toLowerCase();
-    elements.statusNote.textContent = requestPending ? "Reading this page..." : "Autosaved in this browser. Nothing is lost when you move between phases.";
+    elements.statusNote.textContent = comparisonPending
+      ? difficultForm
+        ? "Making a careful comparison. The sample form may limit what a photo can show..."
+        : "Comparing your notes with the library examples..."
+      : requestPending
+        ? "Reading this page..."
+        : "Autosaved in this browser. Nothing is lost when you move between phases.";
+    elements.compareEvidence.disabled = comparisonPending || requestPending || !(
+      page.observations.length || page.references.length || page.evidence.photos.length || page.evidence.condition || page.evidence.origin || page.evidence.details
+    );
+    elements.compareEvidence.textContent = comparisonPending ? "Comparing..." : difficultForm ? "Compare carefully" : "Compare with assistant";
+    elements.comparisonHint.textContent = difficultForm ? "Photo alone may not be enough · Unclear from photo is valid" : "Your notes + library examples";
   }
   function renderHistory() {
     elements.historyList.replaceChildren();
@@ -1407,6 +1690,8 @@ a { color: inherit; }
     const existing = page.references.findIndex((reference) => reference.id === subtype.id);
     if (existing >= 0) page.references.splice(existing, 1);
     else page.references.push({id: subtype.id, code: subtype.code, label: subtype.label, image: subtype.image || category.image});
+    page.comparison = "";
+    page.comparisonSources = [];
     saveState();
     renderAll();
   }
@@ -1416,7 +1701,7 @@ a { color: inherit; }
     elements.libraryBackdrop.dataset.open = open ? "true" : "false";
   }
   function archiveCurrentNote() {
-    if (!state.pages.some((page) => page.observations.length || page.references.length || page.reply || page.draft.trim())) return;
+    if (!state.pages.some((_, index) => phaseHasWork(index))) return;
     state.history = [{title: state.title, pages: state.pages, savedAt: new Date().toISOString()}, ...(state.history || [])].slice(0, 5);
   }
   function startNewNote() {
@@ -1430,6 +1715,7 @@ a { color: inherit; }
     conversationGeneration += 1;
     sessionId = null;
     requestPending = false;
+    comparisonPending = false;
     renderAll();
     createSession();
     elements.noteTitle.focus({preventScroll: true});
@@ -1461,11 +1747,14 @@ a { color: inherit; }
     if (!response.ok) throw new Error(body.error || ("Request failed (" + response.status + ")"));
     return body;
   }
-  function showConnectionError(error) {
+  function showConnectionError(error, kind) {
     requestPending = false;
+    comparisonPending = false;
     renderNotebook();
     if (error && error.message === "auth_required") return;
-    elements.statusNote.textContent = "The observation is saved on this page. The assistant read is not available right now.";
+    elements.statusNote.textContent = kind === "comparison"
+      ? "Your notes are saved on this page. The comparison is not available right now."
+      : "The observation is saved on this page. The assistant read is not available right now.";
   }
   async function createSession() {
     if (starting || sessionId) return;
@@ -1485,7 +1774,7 @@ a { color: inherit; }
   async function saveObservation(event) {
     event.preventDefault();
     const text = elements.message.value.trim();
-    if (!text || requestPending) return;
+    if (!text || requestPending || comparisonPending) return;
     const phaseIndex = state.currentPhase;
     const requestGeneration = conversationGeneration;
     const requestSessionId = sessionId;
@@ -1494,6 +1783,8 @@ a { color: inherit; }
     page.draft = "";
     page.reply = "";
     page.sources = [];
+    page.comparison = "";
+    page.comparisonSources = [];
     saveState();
     renderAll();
     if (!requestSessionId) {
@@ -1521,6 +1812,136 @@ a { color: inherit; }
       elements.message.focus({preventScroll: true});
     }
   }
+  function comparisonPrompt(page, phase) {
+    const observations = page.observations.slice(-10).map((item, index) => (index + 1) + ". " + item.slice(0, 320)).join("\n") || "None recorded.";
+    const references = page.references.map((item) => item.code + " — " + item.label).join(", ") || "None selected.";
+    const evidence = page.evidence || blankEvidence();
+    const sampleFormLabels = {
+      whole: "whole piece",
+      flakes: "flakes or chips",
+      granules: "granules or pellets",
+      powder: "powder or dust",
+      mixed: "mixed pieces",
+      closed: "a closed container"
+    };
+    const sampleForm = sampleFormLabels[evidence.form] || "not provided";
+    const difficultForm = ["granules", "powder", "mixed", "closed"].includes(evidence.form);
+    const photoNote = evidence.photos.length
+      ? evidence.photos.length + " user-provided sample photo(s) are saved locally. Do not inspect or describe their pixels in this text-only comparison."
+      : "No user-provided sample photo is attached.";
+    return [
+      "Please compare this material investigation in ordinary language.",
+      "The phase is " + phase.label + ".",
+      "User notes (treat as supplied details, not verified fact):\n" + observations,
+      "Selected library examples (used or worked-on material examples only): " + references,
+      "Sample form: " + sampleForm + ".",
+      "Sample condition: " + (evidence.condition || "not provided") + ".",
+      "Sample origin: " + (evidence.origin || "not provided") + ".",
+      "What the user wants compared: " + (evidence.details || "not provided") + ".",
+      photoNote,
+      "Use everyday English. Say notes, library examples, first read, and next simple check. Avoid technical labels unless the user uses them first.",
+      "Explain what fits the examples, what the current details cannot tell us, what might change the first read, and the next simple check.",
+      difficultForm
+        ? "This is a difficult photo case. Start by saying that a photo alone is not enough to name the material. Describe only visible features, do not choose one material as the answer, and treat a mixed sample as mixed. Use the headings What I can see, What this photo cannot tell us, What might change this, and Next simple check."
+        : "Use the headings What fits, What this does not tell us, What might change this, and Next simple check.",
+      "If the photo or notes are not enough, use the plain result label Unclear from photo and explain what extra detail would help.",
+      "Do not claim image inspection, confirmed identity, test results, composition, grade, recyclability, legal status, safety clearance, price, yield, or process suitability. Name material types only as possibilities and keep uncertainty visible. Do not invent sources or measurements."
+    ].join("\n\n").slice(0, 3950);
+  }
+  async function compareEvidenceWithAssistant() {
+    if (comparisonPending || requestPending) return;
+    const phaseIndex = state.currentPhase;
+    const page = state.pages[phaseIndex];
+    if (!(
+      page.observations.length || page.references.length || page.evidence.photos.length || page.evidence.condition || page.evidence.origin || page.evidence.details
+    )) return;
+    const requestGeneration = conversationGeneration;
+    const requestSessionId = sessionId;
+    if (!requestSessionId) {
+      await createSession();
+      if (!sessionId) return;
+    }
+    comparisonPending = true;
+    renderNotebook();
+    try {
+      const body = await request("/api/sessions/" + encodeURIComponent(requestSessionId || sessionId) + "/message", {
+        method: "POST",
+        body: JSON.stringify({message: comparisonPrompt(page, phases[phaseIndex])})
+      });
+      if (requestGeneration !== conversationGeneration) return;
+      const targetPage = state.pages[phaseIndex];
+      const assistantAvailable = !(body.data && body.data.ai_used === false);
+      targetPage.comparison = assistantAvailable ? (body.text || "Your notes are saved. Add another detail or library example when you are ready.") : "";
+      targetPage.comparisonSources = assistantAvailable && body.data && Array.isArray(body.data.sources) ? body.data.sources : [];
+      saveState();
+      comparisonPending = false;
+      renderAll();
+      if (!assistantAvailable) elements.statusNote.textContent = "Your notes are saved. The assistant is not available right now.";
+    } catch (error) {
+      if (requestGeneration !== conversationGeneration) return;
+      showConnectionError(error, "comparison");
+    } finally {
+      elements.compareEvidence.focus({preventScroll: true});
+    }
+  }
+  function resizeEvidencePhoto(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type.startsWith("image/")) {
+        reject(new Error("Choose an image file."));
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("The sample photo could not be read."));
+      reader.onload = () => {
+        const image = new Image();
+        image.onerror = () => reject(new Error("The sample photo could not be opened."));
+        image.onload = () => {
+          const maxDimension = 1200;
+          const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          const context = canvas.getContext("2d");
+          if (!context) {
+            reject(new Error("The sample photo could not be prepared."));
+            return;
+          }
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL("image/jpeg", .78));
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  async function addEvidencePhotos(event) {
+    const page = activePage();
+    const available = Math.max(0, 3 - page.evidence.photos.length);
+    const files = Array.from(event.target.files || []).slice(0, available);
+    if (!files.length) {
+      event.target.value = "";
+      return;
+    }
+    try {
+      for (const file of files) {
+        const dataUrl = await resizeEvidencePhoto(file);
+        page.evidence.photos.push({
+          id: "photo-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+          name: file.name,
+          dataUrl
+        });
+      }
+      page.comparison = "";
+      page.comparisonSources = [];
+      saveState();
+      renderAll();
+      elements.statusNote.textContent = "The sample photo is saved locally on this page.";
+    } catch (error) {
+      elements.statusNote.textContent = error.message || "The sample photo could not be saved.";
+    } finally {
+      event.target.value = "";
+    }
+  }
   elements.noteTitle.addEventListener("input", () => {
     state.title = elements.noteTitle.value;
     saveState();
@@ -1536,6 +1957,34 @@ a { color: inherit; }
     }
   });
   elements.composer.addEventListener("submit", saveObservation);
+  elements.compareEvidence.addEventListener("click", compareEvidenceWithAssistant);
+  elements.evidencePhotoInput.addEventListener("change", addEvidencePhotos);
+  elements.evidenceForm.addEventListener("change", () => {
+    activePage().evidence.form = elements.evidenceForm.value;
+    activePage().comparison = "";
+    activePage().comparisonSources = [];
+    saveState();
+    renderNotebook();
+  });
+  elements.evidenceCondition.addEventListener("change", () => {
+    activePage().evidence.condition = elements.evidenceCondition.value;
+    activePage().comparison = "";
+    activePage().comparisonSources = [];
+    saveState();
+    renderNotebook();
+  });
+  elements.evidenceOrigin.addEventListener("input", () => {
+    activePage().evidence.origin = elements.evidenceOrigin.value.slice(0, 140);
+    activePage().comparison = "";
+    activePage().comparisonSources = [];
+    saveState();
+  });
+  elements.evidenceDetails.addEventListener("input", () => {
+    activePage().evidence.details = elements.evidenceDetails.value.slice(0, 220);
+    activePage().comparison = "";
+    activePage().comparisonSources = [];
+    saveState();
+  });
   elements.previousPage.addEventListener("click", () => turnToPhase(state.currentPhase - 1));
   elements.nextPage.addEventListener("click", markPhaseAndAdvance);
   elements.usePrompt.addEventListener("click", () => {

@@ -134,6 +134,13 @@ def test_homepage_has_natural_conversation_surface(tmp_path: Path) -> None:
     assert "New material note" in body
     assert "Describe what is in front of you" in body
     assert "Material library" in body
+    assert "Add a photo" in body
+    assert "What form is the sample?" in body
+    assert "Powder / dust" in body
+    assert "Photos can show colour and texture, but not reliably name the material." in body
+    assert "Unclear from photo" in body
+    assert "Compare with assistant" in body
+    assert "not a test or a final answer" in body
     assert "Nothing is lost when you move between phases." in body
     assert "Shift+Enter for a new line" in body
     assert 'rel="icon" href="/assets/favicon.png"' in body

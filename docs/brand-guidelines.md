@@ -6,6 +6,10 @@ helpme.green is a calm field instrument for turning an uncertain situation into 
 
 The product starts with ordinary language and gradually gives the user a working record. Use short, direct copy: “What do you see?”, “Name the material with care”, and “What could change this?” Keep uncertainty visible. Never imply that an illustrative image, model read, or reference label is a confirmed material identity, test result, permit, yield, or business outcome.
 
+## Plain language rule
+
+User-facing copy should sound like a capable person helping at a workbench. Prefer “your notes”, “library examples”, “first look”, “what fits”, and “next simple check”. Keep words such as evidence, provenance, taxonomy, reference cues, working hypothesis, and discriminates inside implementation or source documentation; do not make the user learn them to use the product.
+
 ## Logo and mark
 
 - Primary mark: [`assets/brand-mark.png`](../assets/brand-mark.png), the contour-leaf emblem used in the header and future avatar/social surfaces.
@@ -74,6 +78,19 @@ Material images are field-guide references, never evidence. Every family and sub
 - Textiles: frayed yarns, worn surfaces, torn seams, cut straps, netting, and believable weave differences.
 
 Keep lighting, scale, and background consistent across the library so the materials feel like one professionally photographed reference collection. Never use an image to certify polymer, alloy, fiber content, contamination, or recyclability; keep the observation, source, and any test result attached to the page.
+
+## AI-assisted comparison
+
+Comparison is a three-part relationship: the user’s real sample and notes, the library’s contextual examples, and the assistant’s first read. The interface must keep those roles visibly separate.
+
+- Let the user add up to three local sample photos, condition, origin, and the question they want compared.
+- Ask what form the sample is: whole piece, flakes/chips, granules/pellets, powder/dust, mixed pieces, or a closed container.
+- Send written notes, sample form, sample context, and selected library example labels to the ordinary-language assistant route.
+- For granules, powder/dust, mixed pieces, and closed containers, show a plain warning that a photo may not be enough and keep the result from forcing one material name.
+- Label the result `Assistant comparison — first read` and keep “what fits” or “what I can see”, “what this photo cannot tell us”, “what might change this”, and “next simple check” visible in the answer.
+- Never imply that the assistant inspected pixels, confirmed a polymer/alloy/fibre, produced a test result, or certified a route unless a separately approved evidence and provider contract supports that claim.
+- Keep unknown dust closed rather than directing the user to spread or handle it for a photo.
+- Clear a comparison whenever the sample, notes, form, or library selection changes, so the page cannot display stale reasoning as if it were current.
 
 ## Taxonomy
 
