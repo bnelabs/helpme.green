@@ -2,15 +2,23 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import secrets
 import threading
+import time
 import uuid
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - the supported deployments are POSIX-based.
+    fcntl = None  # type: ignore[assignment]
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -119,6 +127,10 @@ class SessionStore:
         _mkdir_secure(self.root / "snapshots")
         self.audit_path = self.root / "audit.jsonl"
         self._audit_lock = threading.RLock()
+        self._audit_verification_signature: tuple[int, int, int] | None = None
+        self._audit_verification_result: bool | None = None
+        self._session_locks: dict[str, threading.RLock] = {}
+        self._session_locks_guard = threading.Lock()
         if not self.audit_path.exists():
             self.audit_path.touch(mode=0o600)
         else:
@@ -128,6 +140,15 @@ class SessionStore:
         if not re.fullmatch(r"[0-9a-f-]{36}", session_id):
             raise ValueError("Invalid session identifier.")
         return self.root / "sessions" / f"{session_id}.json"
+
+    @contextmanager
+    def session_lock(self, session_id: str) -> Iterator[None]:
+        """Serialize a complete read-modify-write operation for one session in this process."""
+        self.session_path(session_id)
+        with self._session_locks_guard:
+            lock = self._session_locks.setdefault(session_id, threading.RLock())
+        with lock:
+            yield
 
     def save_session(self, session: SessionState) -> None:
         target = self.session_path(session.session_id)
@@ -151,31 +172,40 @@ class SessionStore:
 
     def append_audit(self, session_id: str, event_type: str, payload: Mapping[str, Any]) -> str:
         with self._audit_lock:
-            previous_hash = ""
-            raw_lines = self.audit_path.read_text(encoding="utf-8").splitlines()
-            if raw_lines:
-                previous = json.loads(raw_lines[-1])
-                previous_hash = str(previous["event_hash"])
-            event = {
-                "schema_version": 1,
-                "session_id": session_id,
-                "event_type": event_type,
-                "payload": self._audit_safe(payload),
-                "previous_hash": previous_hash,
-            }
-            event_hash = hashlib.sha256(canonical_json(event).encode("utf-8")).hexdigest()
-            record = dict(event, event_hash=event_hash)
-            with self.audit_path.open("a", encoding="utf-8") as handle:
-                handle.write(canonical_json(record) + "\n")
+            with self._audit_handle("a+b", exclusive=True) as handle:
+                previous_hash = self._last_audit_hash(handle)
+                event = {
+                    "schema_version": 1,
+                    "session_id": session_id,
+                    "event_type": event_type,
+                    "payload": self._audit_safe(payload),
+                    "previous_hash": previous_hash,
+                }
+                event_hash = hashlib.sha256(canonical_json(event).encode("utf-8")).hexdigest()
+                record = dict(event, event_hash=event_hash)
+                handle.seek(0, os.SEEK_END)
+                handle.write((canonical_json(record) + "\n").encode("utf-8"))
                 handle.flush()
                 os.fsync(handle.fileno())
-            return event_hash
+                self._audit_verification_signature = None
+                self._audit_verification_result = None
+                return event_hash
 
     def verify_audit_chain(self) -> bool:
         with self._audit_lock:
+            signature = self._audit_signature()
+            if (
+                signature is not None
+                and signature == self._audit_verification_signature
+                and self._audit_verification_result is not None
+            ):
+                return self._audit_verification_result
             previous_hash = ""
+            valid = True
             try:
-                for line in self.audit_path.read_text(encoding="utf-8").splitlines():
+                with self._audit_handle("rb", exclusive=False) as handle:
+                    raw_lines = handle.read().decode("utf-8").splitlines()
+                for line in raw_lines:
                     record = json.loads(line)
                     event = {
                         key: record[key]
@@ -192,11 +222,102 @@ class SessionStore:
                         record.get("previous_hash") != previous_hash
                         or record.get("event_hash") != expected
                     ):
-                        return False
+                        valid = False
+                        break
                     previous_hash = expected
-            except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-                return False
-            return True
+            except (OSError, KeyError, TypeError, UnicodeError, ValueError, json.JSONDecodeError):
+                valid = False
+            self._audit_verification_signature = self._audit_signature()
+            self._audit_verification_result = valid
+            return valid
+
+    def _audit_signature(self) -> tuple[int, int, int] | None:
+        try:
+            stat = self.audit_path.stat()
+        except OSError:
+            return None
+        return (stat.st_ino, stat.st_size, stat.st_mtime_ns)
+
+    @contextmanager
+    def _audit_handle(self, mode: str, *, exclusive: bool) -> Iterator[Any]:
+        with self.audit_path.open(mode) as handle:
+            if fcntl is not None:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
+            try:
+                yield handle
+            finally:
+                if fcntl is not None:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+    @staticmethod
+    def _last_audit_hash(handle: Any) -> str:
+        handle.seek(0, os.SEEK_END)
+        position = handle.tell()
+        if position == 0:
+            return ""
+        buffer = b""
+        while position:
+            size = min(8192, position)
+            position -= size
+            handle.seek(position)
+            buffer = handle.read(size) + buffer
+            if b"\n" in buffer:
+                break
+        for line in reversed(buffer.splitlines()):
+            if line.strip():
+                record = json.loads(line.decode("utf-8"))
+                return str(record["event_hash"])
+        return ""
+
+    def prune_empty_sessions(self, *, max_age_seconds: float = 7 * 24 * 60 * 60) -> int:
+        """Remove only old, valid sessions that contain no conversation turns."""
+        if not math.isfinite(max_age_seconds) or max_age_seconds <= 0:
+            raise ValueError("Session retention must be positive.")
+        cutoff = time.time() - max_age_seconds
+        removed = 0
+        for path in self.root.joinpath("sessions").glob("*.json"):
+            try:
+                session_id = path.stem
+                self.session_path(session_id)
+                with self.session_lock(session_id):
+                    if path.stat().st_mtime >= cutoff:
+                        continue
+                    session = SessionState.from_dict(json.loads(path.read_text(encoding="utf-8")))
+                    if session.conversation:
+                        continue
+                    path.unlink()
+                    removed += 1
+            except (FileNotFoundError, OSError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+        return removed
+
+    def prune_snapshots(self, session_id: str | None = None, *, max_per_session: int = 20) -> int:
+        """Keep the newest snapshots while leaving the append-only audit history intact."""
+        if max_per_session <= 0:
+            raise ValueError("Snapshot retention must be positive.")
+        if session_id is not None:
+            self.session_path(session_id)
+            directories: tuple[Path, ...] = (self.root / "snapshots" / session_id,)
+        else:
+            directories = tuple(
+                path for path in (self.root / "snapshots").glob("*") if path.is_dir()
+            )
+        removed = 0
+        for directory in directories:
+            snapshots: list[tuple[float, Path]] = []
+            for path in directory.glob("*.json"):
+                try:
+                    snapshots.append((path.stat().st_mtime, path))
+                except FileNotFoundError:
+                    continue
+            snapshots.sort(key=lambda item: item[0], reverse=True)
+            for _mtime, path in snapshots[max_per_session:]:
+                try:
+                    path.unlink()
+                    removed += 1
+                except FileNotFoundError:
+                    pass
+        return removed
 
     def create_snapshot(self, session: SessionState, *, snapshot_id: str | None = None) -> str:
         self.session_path(session.session_id)
@@ -220,6 +341,7 @@ class SessionStore:
             "snapshot.created",
             {"snapshot_id": snapshot_id, "snapshot_sha256": body_hash},
         )
+        self.prune_snapshots(session.session_id)
         return snapshot_id
 
     def load_snapshot(self, snapshot_id: str, *, session_id: str | None = None) -> SessionState:
@@ -273,6 +395,7 @@ class SecretStore:
     def __init__(self, root: Path, *, master_key: bytes | str | None = None) -> None:
         self.root = root.resolve()
         _mkdir_secure(self.root)
+        self._lock = threading.RLock()
         raw = master_key or os.environ.get("HELPME_MASTER_KEY")
         if raw is None:
             raise ValueError("HELPME_MASTER_KEY or an explicit master_key is required for /key.")
@@ -286,7 +409,38 @@ class SecretStore:
     def set(self, name: str, secret: str) -> None:
         if not secret:
             raise ValueError("Secret cannot be empty.")
-        ciphertext = self._fernet.encrypt(secret.encode("utf-8")).decode("ascii")
+        with self._lock:
+            self._write_secret(name, secret, self._fernet)
+
+    def get(self, name: str) -> str:
+        with self._lock:
+            try:
+                record = json.loads(self._path(name).read_text(encoding="utf-8"))
+                return self._fernet.decrypt(str(record["ciphertext"]).encode("ascii")).decode(
+                    "utf-8"
+                )
+            except (OSError, KeyError, ValueError, InvalidToken) as exc:
+                raise ValueError("Unable to decrypt requested key.") from exc
+
+    def rotate_master_key(self, master_key: bytes | str) -> None:
+        """Re-encrypt all stored provider keys under a new Fernet master key."""
+        new_fernet = Fernet(
+            master_key if isinstance(master_key, bytes) else master_key.encode("ascii")
+        )
+        with self._lock:
+            secrets_to_rotate = [
+                (path.stem, self.get(path.stem)) for path in self.root.glob("*.json")
+            ]
+            for name, secret in secrets_to_rotate:
+                self._write_secret(name, secret, new_fernet)
+            self._fernet = new_fernet
+
+    def names(self) -> tuple[str, ...]:
+        with self._lock:
+            return tuple(sorted(path.stem for path in self.root.glob("*.json")))
+
+    def _write_secret(self, name: str, secret: str, fernet: Fernet) -> None:
+        ciphertext = fernet.encrypt(secret.encode("utf-8")).decode("ascii")
         target = self._path(name)
         temporary = target.with_suffix(f".json.{secrets.token_hex(6)}.tmp")
         temporary.write_text(
@@ -294,13 +448,3 @@ class SecretStore:
         )
         temporary.chmod(0o600)
         os.replace(temporary, target)
-
-    def get(self, name: str) -> str:
-        try:
-            record = json.loads(self._path(name).read_text(encoding="utf-8"))
-            return self._fernet.decrypt(str(record["ciphertext"]).encode("ascii")).decode("utf-8")
-        except (OSError, KeyError, ValueError, InvalidToken) as exc:
-            raise ValueError("Unable to decrypt requested key.") from exc
-
-    def names(self) -> tuple[str, ...]:
-        return tuple(sorted(path.stem for path in self.root.glob("*.json")))

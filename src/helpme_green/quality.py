@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any
 
-from .model_gateway import ModelRouter, ProviderUnavailable
+from .model_gateway import ModelRouter, ModelSelection, ProviderUnavailable
 
 _ABSOLUTE_PATTERNS = (
     r"\bwill destroy\b",
@@ -56,6 +56,7 @@ class AnswerQualityGate:
         skill_id: str,
         focused_context: str,
         next_step: str = "",
+        model_selection: ModelSelection | None = None,
     ) -> QualityReport:
         del skill_id
         text = reply.strip()
@@ -92,6 +93,7 @@ class AnswerQualityGate:
                 user_message=user_message,
                 reply=calibrated,
                 focused_context=focused_context,
+                model_selection=model_selection,
             )
             flags.update(critic_flags)
             score = max(1, min(5, round((score + sum(critic_scores)) / (1 + len(critic_scores)))))
@@ -120,6 +122,7 @@ class AnswerQualityGate:
         user_message: str,
         reply: str,
         focused_context: str,
+        model_selection: ModelSelection | None = None,
     ) -> tuple[tuple[int, ...], set[str]]:
         router = self.router
         if router is None:
@@ -150,6 +153,9 @@ class AnswerQualityGate:
                 + focused_context[:5000]
             )
             try:
+                critic_kwargs: dict[str, Any] = {}
+                if model_selection is not None:
+                    critic_kwargs["selection"] = model_selection
                 result = router.complete_json(
                     [{"role": "user", "content": prompt}],
                     system_contract=(
@@ -157,6 +163,7 @@ class AnswerQualityGate:
                         "include internal application fields."
                     ),
                     max_tokens=300,
+                    **critic_kwargs,
                 )
             except (ProviderUnavailable, ValueError, TypeError):
                 return 0, {f"{role}_unavailable"}

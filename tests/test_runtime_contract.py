@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
+import urllib.error
 import urllib.request
+import uuid
 from pathlib import Path
 
+import pytest
 from cryptography.fernet import Fernet
 
 from helpme_green.application import ApplicationProcessor
@@ -72,6 +76,74 @@ def test_byok_is_encrypted_and_not_present_as_plaintext(tmp_path: Path) -> None:
     assert store.get("provider") == secret
 
 
+def test_audit_chain_detects_tampering(tmp_path: Path) -> None:
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+
+    record = json.loads(store.audit_path.read_text(encoding="utf-8").splitlines()[0])
+    record["event_type"] = "tampered"
+    store.audit_path.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    assert not store.verify_audit_chain()
+
+
+def test_empty_session_retention_keeps_nonempty_sessions(tmp_path: Path) -> None:
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    empty = SessionState.new(topic="", geography="")
+    nonempty = SessionState.new(topic="", geography="")
+    nonempty.conversation.append({"role": "user", "content": "Keep this"})
+    store.save_session(empty)
+    store.save_session(nonempty)
+    old = 1.0
+    os.utime(store.session_path(empty.session_id), (old, old))
+    os.utime(store.session_path(nonempty.session_id), (old, old))
+
+    assert store.prune_empty_sessions(max_age_seconds=60) == 1
+    assert not store.session_path(empty.session_id).exists()
+    assert store.load_session(nonempty.session_id).conversation[0]["content"] == "Keep this"
+
+
+def test_snapshot_retention_keeps_newest_snapshots(tmp_path: Path) -> None:
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    session = SessionState.new(topic="", geography="")
+    session.conversation.append({"role": "user", "content": "Keep snapshots"})
+    store.save_session(session)
+    snapshot_ids = [str(uuid.uuid4()) for _ in range(3)]
+    for index, snapshot_id in enumerate(snapshot_ids):
+        store.create_snapshot(session, snapshot_id=snapshot_id)
+        snapshot_path = store.root / "snapshots" / session.session_id / f"{snapshot_id}.json"
+        os.utime(snapshot_path, (100 + index, 100 + index))
+
+    assert store.prune_snapshots(session.session_id, max_per_session=2) == 1
+    assert not (store.root / "snapshots" / session.session_id / f"{snapshot_ids[0]}.json").exists()
+    assert store.load_snapshot(snapshot_ids[2], session_id=session.session_id).conversation
+
+
+def test_byok_master_key_rotation_reencrypts_existing_keys(tmp_path: Path) -> None:
+    old_key = Fernet.generate_key()
+    new_key = Fernet.generate_key()
+    store = SecretStore(tmp_path / "secrets", master_key=old_key)
+    store.set("provider", "secret-value")
+
+    store.rotate_master_key(new_key)
+
+    assert store.get("provider") == "secret-value"
+    assert SecretStore(tmp_path / "secrets", master_key=new_key).get("provider") == "secret-value"
+    with pytest.raises(ValueError):
+        SecretStore(tmp_path / "secrets", master_key=old_key).get("provider")
+
+
+def test_auto_model_resolution_does_not_mutate_shared_selection(monkeypatch) -> None:
+    router = ModelRouter(ModelSelection("localai", "auto"))
+    monkeypatch.setattr(router, "_discover_localai_models", lambda: ["resolved-model"])
+
+    resolved = router.resolve_selection()
+
+    assert resolved.identity == "localai:resolved-model"
+    assert router.selection.identity == "localai:auto"
+
+
 def test_localai_gateway_omits_output_cap_without_a_model_profile(monkeypatch) -> None:
     monkeypatch.setenv("HELPME_AI_ENABLED", "1")
     monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
@@ -100,6 +172,39 @@ def test_localai_gateway_omits_output_cap_without_a_model_profile(monkeypatch) -
 
     assert router.complete_json([], system_contract="Return JSON.") == {"reply": "Noted."}
     assert "max_tokens" not in captured[0]
+
+
+def test_model_gateway_retries_one_transient_failure(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_MODEL_RETRIES", "1")
+    monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
+    calls = 0
+
+    class FakeResponse:
+        def __enter__(self) -> FakeResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            del args
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {"choices": [{"message": {"content": '{"reply":"Recovered."}'}}], "usage": {}}
+            ).encode("utf-8")
+
+    def fake_urlopen(request, timeout, context=None):
+        nonlocal calls
+        del request, timeout, context
+        calls += 1
+        if calls == 1:
+            raise urllib.error.URLError("temporary")
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter(ModelSelection("localai", "retry-model"))
+
+    assert router.complete_json([], system_contract="Return JSON.") == {"reply": "Recovered."}
+    assert calls == 2
 
 
 def test_model_profile_is_scoped_to_the_selected_model(monkeypatch) -> None:

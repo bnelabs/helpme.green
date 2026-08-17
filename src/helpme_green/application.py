@@ -120,13 +120,17 @@ class ApplicationProcessor:
     def respond_to_message(self, session: SessionState, message: str) -> ApplicationResponse:
         self.store.knowledge_digest = self._runtime_knowledge_digest()
         try:
-            if self.model_router.selection.identity != session.model_identity:
-                self.model_router.select(session.model_identity)
-            result = self.conversation.respond(session, message)
+            session_selection = self.model_router.selection_for(session.model_identity)
+            model_selection = (
+                session_selection
+                if session_selection.identity != self.model_router.selection.identity
+                else None
+            )
+            result = self.conversation.respond(session, message, model_selection=model_selection)
         except (ProviderUnavailable, ValueError) as exc:
             return ApplicationResponse(
                 text="I couldn’t answer that right now. Please try again when the local assistant is available.",
-                data={"model": self.model_router.selection.identity, "ai_used": False},
+                data={"model": session.model_identity, "ai_used": False},
                 error=str(exc),
             )
         return ApplicationResponse(result.text, result.to_data())
