@@ -7,6 +7,7 @@ from typing import Any
 
 from .conversation import ConversationAgent
 from .expert_skills import SkillRegistry
+from .kb_service import KbService, kb_config_from_environment
 from .knowledge import KnowledgeBase
 from .knowledge_store import KnowledgeDatabase, SourceSpec
 from .machinery import MachineCatalog
@@ -66,6 +67,14 @@ class ApplicationProcessor:
             else None
         )
         self.reranker = reranker_from_environment()
+        self.kb_service = KbService(
+            self.knowledge_db,
+            store,
+            config=kb_config_from_environment(store.root),
+            embedding_provider=self.query_embedding_provider,
+            digest_router=self.model_router,
+            digest_skills=self.skill_registry,
+        )
         self.conversation = ConversationAgent(
             self.model_router,
             store,

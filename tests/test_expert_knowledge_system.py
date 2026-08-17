@@ -113,7 +113,7 @@ def test_legacy_decision_tables_are_removed_when_database_is_opened(tmp_path: Pa
     assert "claims" not in tables
     assert "claim_reviews" not in tables
     assert "schema_version" not in metadata
-    assert metadata["database_version"] == "3"
+    assert metadata["database_version"] == "4"
 
 
 def test_read_only_graphql_exposes_expert_catalog_without_mutation(tmp_path: Path) -> None:

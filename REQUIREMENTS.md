@@ -61,7 +61,7 @@ The live request path is:
 
 ```text
 user message
-  → session history and working understanding
+  → append-only session events and derived working context
   → relevant internal skill lens
   → relevant source/machine context
   → provider/model request
@@ -78,6 +78,9 @@ application is provider- and model-agnostic:
   deployments supported by the gateway.
 - Model-specific sampling, context, reasoning, timeout, and output settings live in an external
   profile keyed by provider/model identity.
+- An explicit combined provider `context_window` may be supplied in that profile. When present,
+  the runtime keeps the derived working request at or below 80% of that window through repeatable
+  safe compaction; it does not invent a provider limit when the value is absent.
 - If a profile does not define an output limit, the gateway omits the limit and lets the provider
   choose. The application does not truncate the completed user reply.
 - A profile may set Muse Glimmer’s `reasoning_strength` to `xhigh`, but that setting is not sent to
@@ -132,9 +135,11 @@ The application exposes:
 - `GET /api/knowledge/sources` for source metadata and retrieval health;
 - `POST /graphql` for read-only source, machine, skill, search, graph, and digest queries.
 
-Sessions retain conversation history, a small working understanding, model identity, and optional
-geography. Snapshots and the append-only audit chain protect local continuity without turning the
-conversation into a case file or exposing internal record formats.
+Sessions retain full conversation history in a hash-linked per-session event ledger, a derived
+working context, a small working understanding, model identity, and optional geography. Snapshots
+and the append-only audit chain protect local continuity without turning the conversation into a
+case file or exposing internal record formats. Compaction changes only the derived working context;
+it never silently deletes source history.
 
 The read-only import boundary may read explicitly allowed JSON, CSV, XLSX, and HTTPS resources. It
 cannot execute code, write files, mutate configuration, or send imported content to an unconfigured

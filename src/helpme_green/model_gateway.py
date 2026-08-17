@@ -8,13 +8,20 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
 
 class ProviderUnavailable(RuntimeError):
     """The configured model is unavailable or returned an unusable response."""
+
+    code = "provider_unavailable"
+
+    def __init__(self, message: str, *, code: str | None = None) -> None:
+        super().__init__(message)
+        if code is not None:
+            self.code = code
 
 
 @dataclass(frozen=True)
@@ -40,6 +47,21 @@ def _json_object(value: Any, *, label: str) -> dict[str, Any]:
     except (TypeError, ValueError) as exc:
         raise ProviderUnavailable(f"{label} must contain JSON values only.") from exc
     return value
+
+
+def _looks_like_context_overflow(value: str) -> bool:
+    text = value.casefold()
+    return any(
+        marker in text
+        for marker in (
+            "context length",
+            "context window",
+            "maximum context",
+            "too many tokens",
+            "prompt is too long",
+            "max input",
+        )
+    )
 
 
 class ModelRouter:
@@ -101,9 +123,22 @@ class ModelRouter:
             "tokens_out": self._tokens_out,
         }
 
+    def context_window(self, selection: ModelSelection | None = None) -> int | None:
+        """Return an explicitly configured combined provider context window, if known."""
+        selected = self._resolve_selection(selection or self.selection)
+        profile = self._model_profile(selected.identity)
+        raw = profile.get("context_window")
+        if raw is None:
+            return None
+        if isinstance(raw, bool) or not isinstance(raw, int) or raw <= 0:
+            raise ProviderUnavailable(
+                f"Model profile {selected.identity} context_window must be a positive integer."
+            )
+        return raw
+
     def complete_json(
         self,
-        messages: list[Mapping[str, str]],
+        messages: Sequence[Mapping[str, str]],
         *,
         system_contract: str,
         max_tokens: int | None = None,
@@ -124,6 +159,7 @@ class ModelRouter:
         profile = self._model_profile(selected.identity)
         timeout_seconds = self._timeout_seconds(profile)
         profile.pop("timeout_seconds", None)
+        profile.pop("context_window", None)
         profile_max_tokens = profile.pop("max_tokens", None)
         payload = {
             "model": selected.model,
@@ -171,32 +207,54 @@ class ModelRouter:
                     raw = json.loads(response.read().decode("utf-8"))
                 break
             except urllib.error.HTTPError as exc:
+                error_body = ""
+                try:
+                    error_body = exc.read().decode("utf-8", errors="replace")
+                except OSError:
+                    pass
+                if _looks_like_context_overflow(error_body):
+                    raise ProviderUnavailable(
+                        f"{selected.provider} rejected the request because it exceeds the context window.",
+                        code="context_window_exceeded",
+                    ) from exc
                 if exc.code not in _RETRYABLE_HTTP_STATUS_CODES or attempt >= retries:
                     raise ProviderUnavailable(
-                        f"{selected.provider} request failed safely."
+                        f"{selected.provider} request failed safely.",
+                        code="rate_limit" if exc.code == 429 else "server_error",
                     ) from exc
                 time.sleep(min(1.0, 0.25 * (2**attempt)))
             except (OSError, urllib.error.URLError) as exc:
                 if attempt >= retries:
                     raise ProviderUnavailable(
-                        f"{selected.provider} request failed safely."
+                        f"{selected.provider} request failed safely.",
+                        code="transport_error",
                     ) from exc
                 time.sleep(min(1.0, 0.25 * (2**attempt)))
             except json.JSONDecodeError as exc:
-                raise ProviderUnavailable(f"{selected.provider} returned invalid JSON.") from exc
+                raise ProviderUnavailable(
+                    f"{selected.provider} returned invalid JSON.", code="malformed_response"
+                ) from exc
         if raw is None:
-            raise ProviderUnavailable(f"{selected.provider} request failed safely.")
+            raise ProviderUnavailable(
+                f"{selected.provider} request failed safely.", code="provider_unavailable"
+            )
         if not isinstance(raw, Mapping):
-            raise ProviderUnavailable("Model response was not a JSON object.")
+            raise ProviderUnavailable(
+                "Model response was not a JSON object.", code="malformed_response"
+            )
         with self._counter_lock:
             self._calls += 1
         message = self._message_text(raw)
         try:
             decoded = json.loads(self._strip_json_fence(message))
         except json.JSONDecodeError as exc:
-            raise ProviderUnavailable("Model returned non-JSON output.") from exc
+            raise ProviderUnavailable(
+                "Model returned non-JSON output.", code="malformed_response"
+            ) from exc
         if not isinstance(decoded, Mapping):
-            raise ProviderUnavailable("Model returned an invalid JSON object.")
+            raise ProviderUnavailable(
+                "Model returned an invalid JSON object.", code="malformed_response"
+            )
         usage = raw.get("usage", {})
         with self._counter_lock:
             self._tokens_in += int(usage.get("prompt_tokens", 0) or 0)
@@ -342,7 +400,7 @@ class ModelRouter:
             endpoint = f"{base_url}/models"
         else:
             endpoint = f"{base_url}/v1/models"
-        headers = {"User-Agent": "helpme.green/0.2"}
+        headers = {"User-Agent": "helpme.green/0.1"}
         api_key = self._api_key("localai", env_name)
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"

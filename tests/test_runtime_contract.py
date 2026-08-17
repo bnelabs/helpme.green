@@ -5,18 +5,24 @@ import os
 import urllib.error
 import urllib.request
 import uuid
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
 from cryptography.fernet import Fernet
 
 from helpme_green.application import ApplicationProcessor
+from helpme_green.compaction import (
+    ContextCompactionError,
+    compact_until_fit,
+    estimate_request_tokens,
+)
 from helpme_green.conversation import ConversationAgent
 from helpme_green.expert_skills import SkillRegistry
 from helpme_green.knowledge import KnowledgeBase
 from helpme_green.mcp import ReadOnlyMCP, ReadOnlyViolation
 from helpme_green.model_gateway import ModelRouter, ModelSelection, ProviderUnavailable
-from helpme_green.persistence import SecretStore, SessionState, SessionStore
+from helpme_green.persistence import SecretStore, SessionEventError, SessionState, SessionStore
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -45,6 +51,241 @@ def test_session_persistence_and_snapshots_store_conversation_not_internal_recor
     assert restored.to_dict() == session.to_dict()
     assert "material" not in resumed.to_dict()
     assert store.verify_audit_chain()
+
+
+def test_session_events_retain_full_history_and_rebuild_projection(tmp_path: Path) -> None:
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    session = SessionState.new(topic="rubber", geography="EU")
+    store.save_session(session)
+
+    for index in range(30):
+        user = f"Observation {index}"
+        assistant = f"Response {index}"
+        session.event_seq = store.append_session_event(
+            session.session_id,
+            "conversation.turn",
+            {"user": user, "assistant": assistant, "understanding": {}},
+        )
+        session.conversation.extend(
+            [{"role": "user", "content": user}, {"role": "assistant", "content": assistant}]
+        )
+        session.working_context.extend(
+            [{"role": "user", "content": user}, {"role": "assistant", "content": assistant}]
+        )
+    store.save_session(session)
+
+    resumed = store.load_session(session.session_id)
+
+    assert len(resumed.conversation) == 60
+    assert len(resumed.working_context) == 60
+    assert resumed.event_seq == 31
+    assert len(store.load_session_events(session.session_id)) == 31
+
+
+def test_session_event_log_rejects_unknown_events_and_torn_tails(tmp_path: Path) -> None:
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+
+    with pytest.raises(SessionEventError):
+        store.append_session_event(session.session_id, "unknown.required", {})
+
+    events_path = store.session_events_path(session.session_id)
+    with events_path.open("ab") as handle:
+        handle.write(b'{"incomplete":')
+    with pytest.raises(SessionEventError):
+        store.load_session_events(session.session_id)
+
+
+def test_compaction_repeats_to_ceiling_without_mutating_source_messages() -> None:
+    messages = [
+        {
+            "role": "user" if index % 2 == 0 else "assistant",
+            "content": f"Turn {index}: " + ("detail " * 35),
+        }
+        for index in range(20)
+    ]
+
+    def staged_measure(_system: str, messages: Sequence[Mapping[str, str]]) -> int:
+        summary_count = sum(
+            item.get("content", "").count("Earlier conversation") for item in messages
+        )
+        return 900 if summary_count == 0 else 800 if summary_count == 1 else 600
+
+    compacted, passes = compact_until_fit(
+        messages,
+        "What should I check next?",
+        system_contract="Answer clearly.",
+        ceiling=700,
+        minimum_tail_messages=2,
+        measure=staged_measure,
+    )
+
+    assert len(passes) >= 2
+    assert (
+        staged_measure(
+            "Answer clearly.",
+            [*compacted, {"role": "user", "content": "What should I check next?"}],
+        )
+        <= 700
+    )
+    assert len(messages) == 20
+    assert any("Earlier conversation" in item["content"] for item in compacted)
+
+    with pytest.raises(ContextCompactionError):
+        compact_until_fit(
+            [],
+            "x" * 5000,
+            system_contract="Answer clearly.",
+            ceiling=700,
+        )
+
+
+def test_conversation_keeps_full_history_and_hides_internal_result_metadata(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.delenv("HELPME_MODEL_PROFILES", raising=False)
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    router = ModelRouter(ModelSelection("localai", "test-model"))
+    router.complete_json = lambda messages, **kwargs: {
+        "reply": "A careful next step is to inspect the sample.",
+        "hearing": {"subject": "sample", "situation": "", "aim": ""},
+    }
+    agent = ConversationAgent(
+        router,
+        store,
+        skill_registry=SkillRegistry.from_repository(ROOT),
+    )
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+
+    for index in range(15):
+        result = agent.respond(session, f"I have observation {index}")
+
+    resumed = store.load_session(session.session_id)
+    event_types = [
+        str(item["event_type"]) for item in store.load_session_events(session.session_id)
+    ]
+
+    assert len(resumed.conversation) == 30
+    assert event_types.count("model.attempt") == 15
+    assert event_types.count("conversation.turn") == 15
+    assert result.to_data().keys() == {"hearing", "sources", "model", "ai_used"}
+
+
+def test_conversation_compacts_working_context_at_profile_ceiling(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv(
+        "HELPME_MODEL_PROFILES",
+        json.dumps({"localai:test-model": {"context_window": 1800}}),
+    )
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    router = ModelRouter(ModelSelection("localai", "test-model"))
+    captured_messages: list[dict[str, str]] = []
+    captured_system: list[str] = []
+
+    def fake_complete_json(messages, **kwargs):
+        captured_messages.extend(dict(item) for item in messages)
+        captured_system.append(str(kwargs["system_contract"]))
+        return {"reply": "A short answer.", "hearing": {}}
+
+    router.complete_json = fake_complete_json
+    agent = ConversationAgent(
+        router,
+        store,
+        skill_registry=SkillRegistry.from_repository(ROOT),
+    )
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+    for index in range(12):
+        user = f"Old user turn {index} " + ("detail " * 50)
+        assistant = f"Old assistant turn {index} " + ("answer " * 50)
+        session.event_seq = store.append_session_event(
+            session.session_id,
+            "conversation.turn",
+            {"user": user, "assistant": assistant, "understanding": {}},
+        )
+        session.conversation.extend(
+            [{"role": "user", "content": user}, {"role": "assistant", "content": assistant}]
+        )
+        session.working_context.extend(
+            [
+                {"role": "user", "content": user},
+                {"role": "assistant", "content": assistant},
+            ]
+        )
+    store.save_session(session)
+
+    agent.respond(session, "What should I inspect next?")
+
+    events = store.load_session_events(session.session_id)
+    resumed = store.load_session(session.session_id)
+    assert any(item["event_type"] == "context.compacted" for item in events)
+    assert estimate_request_tokens(captured_system[0], captured_messages) <= 1440
+    assert len(resumed.conversation) == 26
+    assert len(resumed.working_context) < len(resumed.conversation)
+
+
+def test_context_overflow_retries_after_an_additional_safe_compaction(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv(
+        "HELPME_MODEL_PROFILES",
+        json.dumps({"localai:test-model": {"context_window": 2200}}),
+    )
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    router = ModelRouter(ModelSelection("localai", "test-model"))
+    calls = 0
+    captured: list[list[dict[str, str]]] = []
+
+    def fake_complete_json(messages, **kwargs):
+        nonlocal calls
+        del kwargs
+        calls += 1
+        captured.append([dict(item) for item in messages])
+        if calls == 1:
+            raise ProviderUnavailable("context overflow", code="context_window_exceeded")
+        return {"reply": "A shorter context now fits.", "hearing": {}}
+
+    router.complete_json = fake_complete_json
+    agent = ConversationAgent(
+        router,
+        store,
+        skill_registry=SkillRegistry.from_repository(ROOT),
+    )
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+    for index in range(12):
+        user = f"Old user turn {index} " + ("detail " * 50)
+        assistant = f"Old assistant turn {index} " + ("answer " * 50)
+        session.event_seq = store.append_session_event(
+            session.session_id,
+            "conversation.turn",
+            {"user": user, "assistant": assistant, "understanding": {}},
+        )
+        session.conversation.extend(
+            [{"role": "user", "content": user}, {"role": "assistant", "content": assistant}]
+        )
+        session.working_context.extend(
+            [
+                {"role": "user", "content": user},
+                {"role": "assistant", "content": assistant},
+            ]
+        )
+    store.save_session(session)
+
+    result = agent.respond(session, "What should I inspect next?")
+
+    events = store.load_session_events(session.session_id)
+    assert result.text == "A shorter context now fits."
+    assert calls == 2
+    assert sum(item["event_type"] == "model.attempt" for item in events) == 2
+    assert sum(item["event_type"] == "context.compacted" for item in events) >= 2
+    assert len(captured[-1]) < len(captured[0])
 
 
 def test_read_only_import_returns_untrusted_records_without_execution(tmp_path: Path) -> None:
@@ -219,6 +460,7 @@ def test_model_profile_is_scoped_to_the_selected_model(monkeypatch) -> None:
                     "top_p": 0.95,
                     "top_k": 64,
                     "max_tokens": 16384,
+                    "context_window": 32768,
                     "chat_template_kwargs": {"reasoning_strength": "xhigh"},
                 }
             }
@@ -245,11 +487,13 @@ def test_model_profile_is_scoped_to_the_selected_model(monkeypatch) -> None:
 
     monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
     router = ModelRouter(ModelSelection("localai", "profiled-model"))
+    assert router.context_window() == 32768
     router.complete_json([], system_contract="Return JSON.")
     router.select("localai:other-model")
     router.complete_json([], system_contract="Return JSON.")
 
     assert captured[0]["max_tokens"] == 16384
+    assert "context_window" not in captured[0]
     assert captured[0]["chat_template_kwargs"] == {"reasoning_strength": "xhigh"}
     assert "max_tokens" not in captured[1]
     assert "chat_template_kwargs" not in captured[1]

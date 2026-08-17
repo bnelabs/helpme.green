@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from helpme_green.knowledge_store import KnowledgeDatabase, SourceSpec
+
 ROOT = Path(__file__).resolve().parents[1]
 BOOTSTRAP = ROOT / "scripts" / "bootstrap_knowledge.py"
 PACKAGE = ROOT / "scripts" / "package_knowledge_artifact.py"
@@ -127,3 +129,87 @@ def test_bootstrap_rejects_unpublished_manifest(tmp_path: Path) -> None:
     )
     assert result.returncode == 2
     assert "No public knowledge artifact" in result.stderr
+
+
+def test_package_scrubs_user_uploads_from_snapshot(tmp_path: Path) -> None:
+    source_db = tmp_path / "source.db"
+    artifact = tmp_path / "artifact.sqlite.gz"
+    database = KnowledgeDatabase(source_db)
+    try:
+        database.ingest_document(
+            SourceSpec(
+                source_id="manifest-kept",
+                title="Manifest kept",
+                url="https://example.gov/manifest-kept",
+                publisher="Example body",
+                source_type="OFFICIAL_GUIDANCE",
+                material_families=("plastics",),
+            ),
+            "Manifest passage that must survive packaging.",
+            content_type="text/plain",
+        )
+        database.register_user_upload_source(
+            source_id="upload-scrubbed",
+            title="Scrubbed upload",
+            publisher="not provided",
+            source_type="USER_UPLOAD",
+            material_families=("plastics",),
+        )
+        database.ingest_upload_document(
+            source_id="upload-scrubbed",
+            title="Scrubbed upload",
+            material_families=("plastics",),
+            content="User upload passage that must be removed.",
+            content_type="text/plain",
+        )
+        database.create_upload(
+            "upload-1",
+            original_filename="scrub.txt",
+            storage_key="0123456789abcdef0123456789abcdef.bin",
+            raw_sha256="scrub",
+            size_bytes=10,
+            declared_content_type="text/plain",
+            detected_content_type=".txt",
+            extension=".txt",
+            status="ingested",
+        )
+        database.create_job("extract", "upload-1")
+    finally:
+        database.close()
+
+    packaged = subprocess.run(
+        [
+            sys.executable,
+            str(PACKAGE),
+            "--db",
+            str(source_db),
+            "--output",
+            str(artifact),
+            "--allow-unreviewed",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    metadata = json.loads(packaged.stdout)
+    assert metadata["userUploadsScrubbed"]["userUploadSources"] == 1
+
+    extracted = tmp_path / "extracted.db"
+    with gzip.open(artifact, "rb") as compressed:
+        extracted.write_bytes(compressed.read())
+    connection = sqlite3.connect(extracted)
+    try:
+        assert (
+            connection.execute(
+                "SELECT COUNT(*) FROM sources WHERE origin = 'user-upload'"
+            ).fetchone()[0]
+            == 0
+        )
+        assert connection.execute("SELECT COUNT(*) FROM uploads").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 0
+        kept = connection.execute(
+            "SELECT COUNT(*) FROM sources WHERE source_id = 'manifest-kept'"
+        ).fetchone()[0]
+        assert kept == 1
+    finally:
+        connection.close()

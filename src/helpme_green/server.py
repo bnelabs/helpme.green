@@ -8,11 +8,13 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from .application import ApplicationProcessor
 from .knowledge_graphql import execute_graphql
+from .knowledge_store import KnowledgeStoreError
 from .persistence import SessionState, SessionStore
+from .upload_ingest import UploadError, parse_multipart
 from .web import get_index_html, get_static_root
 
 _ASSET_ROOT = Path(os.environ.get("HELPME_ROOT", str(Path.cwd()))) / "assets"
@@ -65,6 +67,11 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if not self._authorized():
             return
+        if path.startswith("/api/kb/"):
+            if not self._kb_authorized():
+                return
+            self._handle_kb_get(path)
+            return
         if path == "/api/expert/capabilities":
             self._send_json(
                 {
@@ -99,6 +106,19 @@ class _Handler(BaseHTTPRequestHandler):
         if not self._authorized():
             return
         path = urlparse(self.path).path
+        if path == "/api/kb/uploads":
+            if not self._kb_authorized():
+                return
+            self._handle_kb_upload()
+            return
+        if path.startswith("/api/kb/"):
+            if not self._kb_authorized():
+                return
+            body = self._read_json()
+            if body is None:
+                return
+            self._handle_kb_post(path, body)
+            return
         body = self._read_json()
         if body is None:
             return
@@ -163,6 +183,274 @@ class _Handler(BaseHTTPRequestHandler):
             )
             return
         self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+
+    def do_DELETE(self) -> None:  # noqa: N802
+        if not self._authorized():
+            return
+        path = urlparse(self.path).path
+        if path.startswith("/api/kb/"):
+            if not self._kb_authorized():
+                return
+            self._handle_kb_delete(path)
+            return
+        self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+
+    # ------------------------------------------------------------------ KB console
+
+    def _kb_authorized(self) -> bool:
+        kb = self.server.processor.kb_service
+        if not kb.config.enabled:
+            self._kb_error(
+                "kb_disabled", "The knowledge-base console is disabled.", HTTPStatus.FORBIDDEN
+            )
+            return False
+        operator_token = os.environ.get("HELPME_KB_ACCESS_TOKEN", "")
+        if operator_token:
+            supplied = self.headers.get("Authorization", "").removeprefix("Bearer ")
+            if not secrets.compare_digest(supplied, operator_token):
+                self._kb_error(
+                    "unauthorized", "Operator authorization required.", HTTPStatus.UNAUTHORIZED
+                )
+                return False
+            return True
+        if self._kb_loopback_dev():
+            return True
+        self._kb_error(
+            "kb_operator_unconfigured",
+            "No KB operator token is configured; access is refused.",
+            HTTPStatus.FORBIDDEN,
+        )
+        return False
+
+    def _kb_loopback_dev(self) -> bool:
+        if os.environ.get("HELPME_KB_ALLOW_LOOPBACK_DEV", "").casefold() not in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }:
+            return False
+        return str(self.server.server_address[0]) in {"127.0.0.1", "::1", "localhost"}
+
+    def _kb_error(self, code: str, message: str, status: HTTPStatus) -> None:
+        self._send_json({"error": {"code": code, "message": message}}, status)
+
+    def _handle_kb_get(self, path: str) -> None:
+        parts = [unquote(item) for item in path.split("/") if item]
+        query = parse_qs(urlparse(self.path).query)
+        kb = self.server.processor.kb_service
+        if len(parts) == 3 and parts[2] == "capabilities":
+            self._send_json(kb.capabilities())
+            return
+        if len(parts) == 3 and parts[2] == "overview":
+            self._send_json(kb.overview())
+            return
+        if len(parts) == 3 and parts[2] == "documents":
+            self._send_json(kb.list_documents(**self._kb_document_params(query)))
+            return
+        if len(parts) == 4 and parts[2] == "documents":
+            detail = kb.document_detail(parts[3])
+            if detail is None:
+                self._kb_error("not_found", "Document not found.", HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(detail)
+            return
+        if len(parts) == 5 and parts[2] == "documents" and parts[4] == "related":
+            related = kb.related(parts[3], include_derived=self._kb_bool(query, "include_derived"))
+            self._send_json({"related": related})
+            return
+        if len(parts) == 3 and parts[2] == "graph":
+            self._send_json(
+                kb.graph(
+                    include_derived=self._kb_bool(query, "include_derived"),
+                    max_nodes=self._kb_int(query, "max_nodes", 200),
+                    selected_document_id=self._kb_str(query, "selected"),
+                )
+            )
+            return
+        if len(parts) == 3 and parts[2] == "jobs":
+            self._send_json(
+                {
+                    "jobs": kb.list_jobs(
+                        status=self._kb_str(query, "status"),
+                        limit=self._kb_int(query, "limit", 50),
+                        offset=self._kb_int(query, "offset", 0),
+                    )
+                }
+            )
+            return
+        if len(parts) == 4 and parts[2] == "jobs":
+            job = kb.job_detail(parts[3])
+            if job is None:
+                self._kb_error("not_found", "Job not found.", HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(job)
+            return
+        if len(parts) == 3 and parts[2] == "uploads":
+            self._send_json(
+                {
+                    "uploads": self.server.processor.knowledge_db.list_uploads(
+                        status=self._kb_str(query, "status"),
+                        limit=self._kb_int(query, "limit", 50),
+                        offset=self._kb_int(query, "offset", 0),
+                    )
+                }
+            )
+            return
+        self._kb_error("not_found", "Unknown knowledge-base route.", HTTPStatus.NOT_FOUND)
+
+    def _handle_kb_upload(self) -> None:
+        content_type = self.headers.get("Content-Type", "")
+        length = self._content_length()
+        if length is None or length <= 0:
+            self._kb_error(
+                "invalid_request", "A content length is required.", HTTPStatus.BAD_REQUEST
+            )
+            return
+        kb = self.server.processor.kb_service
+        if length > kb.config.max_request_bytes:
+            self._kb_error(
+                "request_too_large",
+                "Upload request exceeds the aggregate limit.",
+                HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            )
+            return
+        body = self.rfile.read(length)
+        if len(body) > kb.config.max_request_bytes:
+            self._kb_error(
+                "request_too_large",
+                "Upload request exceeds the aggregate limit.",
+                HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+            )
+            return
+        try:
+            parts, fields = parse_multipart(content_type, body)
+        except UploadError as exc:
+            self._kb_error(exc.code, str(exc), self._upload_error_status(exc))
+            return
+        try:
+            results = kb.create_uploads(parts, fields)
+        except UploadError as exc:
+            self._kb_error(exc.code, str(exc), self._upload_error_status(exc))
+            return
+        self._send_json({"uploads": [result.to_dict() for result in results]}, HTTPStatus.ACCEPTED)
+
+    def _handle_kb_post(self, path: str, body: dict[str, Any]) -> None:
+        parts = [unquote(item) for item in path.split("/") if item]
+        kb = self.server.processor.kb_service
+        reviewed_by = str(body.get("reviewedBy", ""))[:200]
+        review_note = str(body.get("reviewNote", ""))[:1000]
+        try:
+            if len(parts) == 5 and parts[2] == "uploads" and parts[3]:
+                action = parts[4]
+                upload_id = parts[3]
+                if action == "approve":
+                    kb.approve(upload_id, reviewed_by=reviewed_by, review_note=review_note)
+                    self._send_json({"uploadId": upload_id, "status": "approved"})
+                    return
+                if action == "quarantine":
+                    kb.quarantine(upload_id, reviewed_by=reviewed_by, review_note=review_note)
+                    self._send_json({"uploadId": upload_id, "status": "quarantined"})
+                    return
+                if action == "retry":
+                    job_id = kb.retry(upload_id)
+                    self._send_json({"uploadId": upload_id, "jobId": job_id}, HTTPStatus.ACCEPTED)
+                    return
+            if (
+                len(parts) == 5
+                and parts[2] == "documents"
+                and parts[3]
+                and parts[4] in {"digest", "embed"}
+            ):
+                if parts[4] == "digest":
+                    job_id = kb.queue_digest(parts[3])
+                else:
+                    job_id = kb.queue_embed(parts[3])
+                self._send_json({"documentId": parts[3], "jobId": job_id}, HTTPStatus.ACCEPTED)
+                return
+        except (UploadError, KnowledgeStoreError) as exc:
+            self._kb_error(
+                getattr(exc, "code", "invalid_transition"),
+                str(exc),
+                self._kb_post_error_status(exc),
+            )
+            return
+        self._kb_error("not_found", "Unknown knowledge-base route.", HTTPStatus.NOT_FOUND)
+
+    def _handle_kb_delete(self, path: str) -> None:
+        parts = [unquote(item) for item in path.split("/") if item]
+        if len(parts) == 4 and parts[2] == "uploads" and parts[3]:
+            try:
+                result = self.server.processor.kb_service.delete(parts[3])
+            except UploadError as exc:
+                self._kb_error(exc.code, str(exc), HTTPStatus.NOT_FOUND)
+                return
+            if result is None:
+                self._kb_error("not_found", "Upload not found.", HTTPStatus.NOT_FOUND)
+                return
+            self._send_json(result)
+            return
+        self._kb_error("not_found", "Unknown knowledge-base route.", HTTPStatus.NOT_FOUND)
+
+    def _kb_document_params(self, query: dict[str, list[str]]) -> dict[str, Any]:
+        return {
+            "status": self._kb_str(query, "status"),
+            "origin": self._kb_str(query, "origin"),
+            "family": self._kb_str(query, "family"),
+            "q": self._kb_str(query, "q"),
+            "limit": self._kb_int(query, "limit", 50),
+            "offset": self._kb_int(query, "offset", 0),
+            "sort": self._kb_str(query, "sort", "updated"),
+        }
+
+    @staticmethod
+    def _kb_str(query: dict[str, list[str]], key: str, default: str | None = None) -> str | None:
+        values = query.get(key)
+        if not values:
+            return default
+        return str(values[0])[:200]
+
+    @staticmethod
+    def _kb_int(query: dict[str, list[str]], key: str, default: int) -> int:
+        values = query.get(key)
+        if not values:
+            return default
+        try:
+            return int(values[0])
+        except ValueError:
+            return default
+
+    @staticmethod
+    def _kb_bool(query: dict[str, list[str]], key: str) -> bool:
+        values = query.get(key)
+        if not values:
+            return False
+        return str(values[0]).casefold() in {"1", "true", "yes", "on"}
+
+    @staticmethod
+    def _upload_error_status(exc: UploadError) -> HTTPStatus:
+        if exc.code == "invalid_content_type":
+            return HTTPStatus.UNSUPPORTED_MEDIA_TYPE
+        if exc.code in {"no_files", "too_many_files"}:
+            return HTTPStatus.UNPROCESSABLE_ENTITY
+        return HTTPStatus.BAD_REQUEST
+
+    @staticmethod
+    def _kb_post_error_status(exc: Exception) -> HTTPStatus:
+        code = getattr(exc, "code", "")
+        if code == "not_found":
+            return HTTPStatus.NOT_FOUND
+        if code == "not_retryable":
+            return HTTPStatus.CONFLICT
+        if code in {"processing_disabled", "processing_unavailable"}:
+            return HTTPStatus.FORBIDDEN
+        return HTTPStatus.UNPROCESSABLE_ENTITY
+
+    def _content_length(self) -> int | None:
+        try:
+            return int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            return None
 
     def _stream_message(self, session_id: str, body: dict[str, Any]) -> None:
         message = body.get("message")

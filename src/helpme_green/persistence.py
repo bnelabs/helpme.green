@@ -9,7 +9,7 @@ import secrets
 import threading
 import time
 import uuid
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,6 +21,26 @@ except ImportError:  # pragma: no cover - the supported deployments are POSIX-ba
     fcntl = None  # type: ignore[assignment]
 
 from cryptography.fernet import Fernet, InvalidToken
+
+
+class SessionEventError(RuntimeError):
+    """A session event log is invalid or cannot be durably updated."""
+
+
+_SESSION_EVENT_TYPES = frozenset(
+    {
+        "session.created",
+        "projection.imported",
+        "conversation.turn",
+        "message.user",
+        "message.assistant",
+        "understanding.updated",
+        "context.compacted",
+        "model.attempt",
+        "model.completed",
+        "model.failed",
+    }
+)
 
 
 def canonical_json(value: Any) -> str:
@@ -70,7 +90,13 @@ class SessionState:
     geography: str
     model_identity: str = field(default_factory=_default_model_identity)
     conversation: list[dict[str, str]] = field(default_factory=list)
+    working_context: list[dict[str, str]] = field(default_factory=list)
     understanding: dict[str, str] = field(default_factory=dict)
+    event_seq: int = 0
+
+    def __post_init__(self) -> None:
+        if not self.working_context and self.conversation:
+            self.working_context = [dict(item) for item in self.conversation]
 
     @classmethod
     def new(cls, *, topic: str, geography: str) -> SessionState:
@@ -83,7 +109,9 @@ class SessionState:
             "geography": self.geography,
             "model_identity": self.model_identity,
             "conversation": self.conversation,
+            "working_context": self.working_context,
             "understanding": self.understanding,
+            "event_seq": self.event_seq,
         }
 
     @classmethod
@@ -91,15 +119,9 @@ class SessionState:
         raw_conversation = data.get("conversation", [])
         if not isinstance(raw_conversation, list):
             raise ValueError("Session conversation must be a list.")
-        conversation: list[dict[str, str]] = []
-        for item in raw_conversation:
-            if not isinstance(item, Mapping):
-                raise ValueError("Session conversation entries must be objects.")
-            role = str(item.get("role", ""))
-            content = item.get("content")
-            if role not in {"user", "assistant"} or not isinstance(content, str):
-                raise ValueError("Session conversation entries must contain a role and content.")
-            conversation.append({"role": role, "content": content})
+        conversation = _parse_messages(raw_conversation, label="Session conversation")
+        raw_working_context = data.get("working_context", conversation)
+        working_context = _parse_messages(raw_working_context, label="Session working context")
         raw_understanding = data.get("understanding", {})
         if not isinstance(raw_understanding, Mapping):
             raise ValueError("Session understanding must be an object.")
@@ -114,8 +136,31 @@ class SessionState:
             geography=str(data.get("geography", "")),
             model_identity=str(data.get("model_identity", _default_model_identity())),
             conversation=conversation,
+            working_context=working_context,
             understanding=understanding,
+            event_seq=_event_seq(data.get("event_seq", 0)),
         )
+
+
+def _parse_messages(value: Any, *, label: str) -> list[dict[str, str]]:
+    if not isinstance(value, list):
+        raise ValueError(f"{label} must be a list.")
+    messages: list[dict[str, str]] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            raise ValueError(f"{label} entries must be objects.")
+        role = str(item.get("role", ""))
+        content = item.get("content")
+        if role not in {"user", "assistant"} or not isinstance(content, str):
+            raise ValueError(f"{label} entries must contain a role and content.")
+        messages.append({"role": role, "content": content})
+    return messages
+
+
+def _event_seq(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError("Session event_seq must be a non-negative integer.")
+    return value
 
 
 class SessionStore:
@@ -141,6 +186,10 @@ class SessionStore:
             raise ValueError("Invalid session identifier.")
         return self.root / "sessions" / f"{session_id}.json"
 
+    def session_events_path(self, session_id: str) -> Path:
+        self.session_path(session_id)
+        return self.root / "sessions" / f"{session_id}.events.jsonl"
+
     @contextmanager
     def session_lock(self, session_id: str) -> Iterator[None]:
         """Serialize a complete read-modify-write operation for one session in this process."""
@@ -150,16 +199,175 @@ class SessionStore:
         with lock:
             yield
 
+    @contextmanager
+    def _session_events_handle(self, session_id: str, *, exclusive: bool) -> Iterator[Any]:
+        path = self.session_events_path(session_id)
+        with path.open("a+b") as handle:
+            try:
+                path.chmod(0o600)
+            except OSError:
+                pass
+            if fcntl is not None:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
+            try:
+                yield handle
+            finally:
+                if fcntl is not None:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+    def append_session_event(
+        self, session_id: str, event_type: str, payload: Mapping[str, Any]
+    ) -> int:
+        """Append one durable, hash-linked semantic session event and return its sequence."""
+        if event_type not in _SESSION_EVENT_TYPES:
+            raise SessionEventError(f"Unknown session event type: {event_type!r}.")
+        if not isinstance(payload, Mapping):
+            raise SessionEventError("Session event payload must be an object.")
+        try:
+            canonical_json(payload)
+        except (TypeError, ValueError) as exc:
+            raise SessionEventError("Session event payload must contain JSON values.") from exc
+        with self._session_events_handle(session_id, exclusive=True) as handle:
+            records = self._read_session_event_records(handle, session_id)
+            previous_hash = str(records[-1]["event_hash"]) if records else ""
+            sequence = len(records) + 1
+            event = {
+                "schema_version": 1,
+                "session_id": session_id,
+                "seq": sequence,
+                "event_type": event_type,
+                "payload": dict(payload),
+                "previous_hash": previous_hash,
+            }
+            event_hash = hashlib.sha256(canonical_json(event).encode("utf-8")).hexdigest()
+            record = dict(event, event_hash=event_hash)
+            handle.seek(0, os.SEEK_END)
+            handle.write((canonical_json(record) + "\n").encode("utf-8"))
+            handle.flush()
+            os.fsync(handle.fileno())
+            return sequence
+
+    def load_session_events(self, session_id: str) -> list[dict[str, Any]]:
+        path = self.session_events_path(session_id)
+        if not path.exists():
+            return []
+        with self._session_events_handle(session_id, exclusive=False) as handle:
+            return self._read_session_event_records(handle, session_id)
+
+    @staticmethod
+    def _read_session_event_records(handle: Any, session_id: str) -> list[dict[str, Any]]:
+        handle.seek(0)
+        raw = handle.read()
+        if not raw:
+            return []
+        if not raw.endswith(b"\n"):
+            raise SessionEventError("Session event log has an incomplete tail.")
+        records: list[dict[str, Any]] = []
+        previous_hash = ""
+        try:
+            lines = raw.decode("utf-8").splitlines()
+            for expected_seq, line in enumerate(lines, start=1):
+                record = json.loads(line)
+                if not isinstance(record, Mapping):
+                    raise SessionEventError("Session event record must be an object.")
+                event = {
+                    key: record[key]
+                    for key in (
+                        "schema_version",
+                        "session_id",
+                        "seq",
+                        "event_type",
+                        "payload",
+                        "previous_hash",
+                    )
+                }
+                if (
+                    event["schema_version"] != 1
+                    or event["session_id"] != session_id
+                    or event["seq"] != expected_seq
+                    or not isinstance(event["event_type"], str)
+                    or event["event_type"] not in _SESSION_EVENT_TYPES
+                    or not isinstance(event["payload"], Mapping)
+                    or event["previous_hash"] != previous_hash
+                ):
+                    raise SessionEventError("Session event sequence or chain is invalid.")
+                expected_hash = hashlib.sha256(canonical_json(event).encode("utf-8")).hexdigest()
+                if record.get("event_hash") != expected_hash:
+                    raise SessionEventError("Session event digest verification failed.")
+                records.append(dict(record))
+                previous_hash = expected_hash
+        except (UnicodeError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            raise SessionEventError("Session event log is not valid JSONL.") from exc
+        return records
+
+    def ensure_session_events(self, session: SessionState) -> None:
+        """Create the initial event projection for a new or legacy session."""
+        if self.load_session_events(session.session_id):
+            return
+        sequence = self.append_session_event(
+            session.session_id,
+            "session.created",
+            {
+                "topic": session.topic,
+                "geography": session.geography,
+                "model_identity": session.model_identity,
+            },
+        )
+        session.event_seq = sequence
+        if session.conversation or session.understanding:
+            sequence = self.append_session_event(
+                session.session_id,
+                "projection.imported",
+                {
+                    "conversation": session.conversation,
+                    "working_context": session.working_context,
+                    "understanding": session.understanding,
+                },
+            )
+            session.event_seq = sequence
+
     def save_session(self, session: SessionState) -> None:
+        if not session.working_context and session.conversation:
+            session.working_context = [dict(item) for item in session.conversation]
+        self.ensure_session_events(session)
+        records = self.load_session_events(session.session_id)
+        projected = self._project_session(session, records)
+        if not self._same_projection(projected, session):
+            sequence = self.append_session_event(
+                session.session_id,
+                "projection.imported",
+                {
+                    "conversation": session.conversation,
+                    "working_context": session.working_context,
+                    "understanding": session.understanding,
+                },
+            )
+            session.event_seq = sequence
+        else:
+            session.event_seq = len(records)
         target = self.session_path(session.session_id)
         temporary = target.with_suffix(f".json.{secrets.token_hex(6)}.tmp")
-        temporary.write_text(canonical_json(session.to_dict()), encoding="utf-8")
-        temporary.chmod(0o600)
-        os.replace(temporary, target)
+        try:
+            with temporary.open("w", encoding="utf-8") as handle:
+                handle.write(canonical_json(session.to_dict()))
+                handle.flush()
+                os.fsync(handle.fileno())
+            temporary.chmod(0o600)
+            os.replace(temporary, target)
+        except BaseException:
+            try:
+                temporary.unlink()
+            except OSError:
+                pass
+            raise
         self.append_audit(
             session.session_id,
             "session.saved",
-            {"conversation_turns": len(session.conversation)},
+            {
+                "conversation_turns": len(session.conversation),
+                "working_context_messages": len(session.working_context),
+                "event_seq": session.event_seq,
+            },
         )
 
     def load_session(self, session_id: str) -> SessionState:
@@ -168,7 +376,108 @@ class SessionStore:
         )
         if session.session_id != session_id:
             raise ValueError("Session identifier does not match its storage path.")
-        return session
+        records = self.load_session_events(session_id)
+        return self._project_session(session, records) if records else session
+
+    @staticmethod
+    def _project_session(base: SessionState, records: Sequence[Mapping[str, Any]]) -> SessionState:
+        conversation: list[dict[str, str]] = []
+        working_context: list[dict[str, str]] = []
+        understanding: dict[str, str] = {}
+        topic = base.topic
+        geography = base.geography
+        model_identity = base.model_identity
+        for record in records:
+            event_type = str(record.get("event_type", ""))
+            payload = record.get("payload", {})
+            if not isinstance(payload, Mapping):
+                raise SessionEventError("Session event payload must be an object.")
+            if event_type == "session.created":
+                topic = str(payload.get("topic", topic))
+                geography = str(payload.get("geography", geography))
+                model_identity = str(payload.get("model_identity", model_identity))
+            elif event_type == "projection.imported":
+                conversation = _parse_messages(
+                    payload.get("conversation", []), label="Imported conversation"
+                )
+                working_context = _parse_messages(
+                    payload.get("working_context", conversation), label="Imported working context"
+                )
+                raw_understanding = payload.get("understanding", {})
+                if not isinstance(raw_understanding, Mapping):
+                    raise SessionEventError("Imported understanding must be an object.")
+                understanding = {
+                    str(key): str(value)
+                    for key, value in raw_understanding.items()
+                    if isinstance(value, str)
+                }
+            elif event_type == "conversation.turn":
+                user = payload.get("user")
+                assistant = payload.get("assistant")
+                if not isinstance(user, str) or not isinstance(assistant, str):
+                    raise SessionEventError("Conversation turn messages must be strings.")
+                turn = [
+                    {"role": "user", "content": user},
+                    {"role": "assistant", "content": assistant},
+                ]
+                conversation.extend(turn)
+                working_context.extend(dict(item) for item in turn)
+                values = payload.get("understanding", {})
+                if not isinstance(values, Mapping):
+                    raise SessionEventError("Conversation understanding must be an object.")
+                understanding.update(
+                    {
+                        str(key): str(value)
+                        for key, value in values.items()
+                        if isinstance(value, str) and value
+                    }
+                )
+            elif event_type in {"message.user", "message.assistant"}:
+                role = "user" if event_type == "message.user" else "assistant"
+                content = payload.get("content")
+                if not isinstance(content, str):
+                    raise SessionEventError("Message event content must be a string.")
+                message = {"role": role, "content": content}
+                conversation.append(message)
+                working_context.append(dict(message))
+            elif event_type == "understanding.updated":
+                values = payload.get("values", {})
+                if not isinstance(values, Mapping):
+                    raise SessionEventError("Understanding event values must be an object.")
+                understanding.update(
+                    {
+                        str(key): str(value)
+                        for key, value in values.items()
+                        if isinstance(value, str) and value
+                    }
+                )
+            elif event_type == "context.compacted":
+                working_context = _parse_messages(
+                    payload.get("working_context", []), label="Compacted working context"
+                )
+            elif event_type not in _SESSION_EVENT_TYPES:
+                raise SessionEventError(f"Unknown session event type: {event_type!r}.")
+        return SessionState(
+            session_id=base.session_id,
+            topic=topic,
+            geography=geography,
+            model_identity=model_identity,
+            conversation=conversation,
+            working_context=working_context or [dict(item) for item in conversation],
+            understanding=understanding,
+            event_seq=len(records),
+        )
+
+    @staticmethod
+    def _same_projection(left: SessionState, right: SessionState) -> bool:
+        return (
+            left.topic == right.topic
+            and left.geography == right.geography
+            and left.model_identity == right.model_identity
+            and left.conversation == right.conversation
+            and left.working_context == right.working_context
+            and left.understanding == right.understanding
+        )
 
     def append_audit(self, session_id: str, event_type: str, payload: Mapping[str, Any]) -> str:
         with self._audit_lock:
@@ -286,6 +595,10 @@ class SessionStore:
                     if session.conversation:
                         continue
                     path.unlink()
+                    try:
+                        self.session_events_path(session_id).unlink()
+                    except FileNotFoundError:
+                        pass
                     removed += 1
             except (FileNotFoundError, OSError, TypeError, ValueError, json.JSONDecodeError):
                 continue

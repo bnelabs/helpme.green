@@ -20,6 +20,7 @@
     <nav class="primary-nav" aria-label="Primary navigation">
       <a class="nav-link active" href="#notebook">Lab Notebook</a>
       <a class="nav-link" href="#library">Library</a>
+      <a class="nav-link" href="#kb">Knowledge base</a>
     </nav>
     <div class="topbar-tools">
       <label class="global-search">
@@ -217,6 +218,74 @@
       <div class="library-note">These are used or worked-on materials, not a way to name a plastic or metal with certainty. Keep your notes, where it came from, and any test with the page.</div>
     </aside>
     <div class="library-backdrop" id="libraryBackdrop" data-open="false" aria-hidden="true"></div>
+  </main>
+
+  <main id="kbView" class="kb-console" hidden>
+    <header class="kb-header">
+      <div>
+        <h1>Knowledge base</h1>
+        <p id="kbSubtitle">Operator console — not part of the public conversation.</p>
+      </div>
+      <button id="kbUploadToggle" type="button">Upload reference</button>
+    </header>
+    <section id="kbAuth" aria-label="Operator authorization" hidden>
+      <p>Enter the operator key to manage the knowledge base.</p>
+      <form id="kbAuthForm">
+        <label for="kbToken">Operator key</label>
+        <input id="kbToken" type="password" autocomplete="off">
+        <button type="submit">Authorize</button>
+      </form>
+      <p id="kbAuthError" role="alert" hidden></p>
+    </section>
+    <div class="kb-toolbar">
+      <label class="sr-only" for="kbSearch">Search documents</label>
+      <input id="kbSearch" type="search" placeholder="Search documents...">
+      <label class="sr-only" for="kbFilter">Filter documents</label>
+      <select id="kbFilter">
+        <option value="">All documents</option>
+        <option value="review">Review queue</option>
+        <option value="manifest">Manifest sources</option>
+        <option value="user-upload">User uploads</option>
+      </select>
+      <button id="kbRefresh" type="button">Refresh</button>
+    </div>
+    <p class="kb-status" id="kbStatus" aria-live="polite"></p>
+    <div class="kb-tabs" role="tablist" aria-label="Knowledge base views">
+      <button role="tab" id="kbTabDocs" aria-selected="true" aria-controls="kbDocs" type="button">Documents</button>
+      <button role="tab" id="kbTabJobs" aria-selected="false" aria-controls="kbJobs" type="button">Jobs</button>
+    </div>
+    <section id="kbDocs" role="tabpanel" aria-labelledby="kbTabDocs">
+      <div class="kb-table-wrap">
+        <table class="kb-table">
+          <thead>
+            <tr><th scope="col">Title</th><th scope="col">Origin</th><th scope="col">Status</th><th scope="col">Extraction</th><th scope="col">Family</th><th scope="col">Chunks</th><th scope="col">Updated</th></tr>
+          </thead>
+          <tbody id="kbTableBody"></tbody>
+        </table>
+      </div>
+      <section id="kbUploadPanel" aria-label="Upload reference files" hidden>
+        <h2>Upload reference files for review</h2>
+        <form id="kbUploadForm">
+          <label for="kbFileInput">Reference files (PDF, HTML/XML, TXT, CSV, JSON, XLSX; up to 10)</label>
+          <input id="kbFileInput" type="file" multiple accept=".pdf,.html,.htm,.xml,.txt,.csv,.json,.xlsx">
+          <label for="kbUploadTitle">Title (optional)</label>
+          <input id="kbUploadTitle" type="text" maxlength="300" placeholder="Reference title">
+          <label for="kbUploadFamilies">Material families (comma separated, optional)</label>
+          <input id="kbUploadFamilies" type="text" maxlength="200" placeholder="plastics, metals">
+          <button type="submit">Upload for review</button>
+        </form>
+        <p id="kbUploadStatus" aria-live="polite"></p>
+      </section>
+      <section id="kbDetail" aria-label="Document detail" hidden></section>
+    </section>
+    <section id="kbJobs" role="tabpanel" aria-labelledby="kbTabJobs" hidden>
+      <div class="kb-table-wrap">
+        <table class="kb-table">
+          <thead><tr><th scope="col">Job</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Attempts</th><th scope="col">Updated</th></tr></thead>
+          <tbody id="kbJobsBody"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 </div>
 

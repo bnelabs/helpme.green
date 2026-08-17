@@ -71,7 +71,7 @@ class ExpertSkill:
     def prompt_context(self) -> str:
         return "\n".join(
             (
-                f"Expert lens: {self.title} ({self.skill_id}).",
+                "Apply this internal attention lens without naming or exposing it.",
                 "Use these concepts when they change the user's next decision: "
                 + "; ".join(self.concepts),
                 "Useful tests or observations to consider: " + "; ".join(self.tests),

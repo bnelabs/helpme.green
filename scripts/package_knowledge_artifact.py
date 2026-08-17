@@ -49,6 +49,107 @@ def _gzip(source_path: Path, destination_path: Path) -> None:
             shutil.copyfileobj(source, target, length=_CHUNK_SIZE)
 
 
+def _scrub_user_uploads(path: Path) -> dict[str, int]:
+    """Remove user-uploaded sources and all derived rows from a distributable snapshot."""
+    connection = sqlite3.connect(path)
+    try:
+        connection.execute("PRAGMA foreign_keys = OFF")
+        table_row = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'sources'"
+        ).fetchone()
+        if table_row is None:
+            return {
+                "userUploadSources": 0,
+                "userUploadDocuments": 0,
+                "userUploadChunks": 0,
+                "userUploadNotes": 0,
+                "uploads": 0,
+                "jobs": 0,
+            }
+        source_ids = [
+            str(row[0])
+            for row in connection.execute(
+                "SELECT source_id FROM sources WHERE origin = 'user-upload'"
+            ).fetchall()
+        ]
+        counts: dict[str, int] = {
+            "userUploadSources": len(source_ids),
+            "userUploadDocuments": 0,
+            "userUploadChunks": 0,
+            "userUploadNotes": 0,
+            "uploads": 0,
+            "jobs": 0,
+        }
+        document_ids: list[str] = []
+        chunk_ids: list[str] = []
+        if source_ids:
+            placeholders = ",".join("?" for _ in source_ids)
+            document_ids = [
+                str(row[0])
+                for row in connection.execute(
+                    f"SELECT document_id FROM documents WHERE source_id IN ({placeholders})",
+                    source_ids,
+                ).fetchall()
+            ]
+            counts["userUploadDocuments"] = len(document_ids)
+            if document_ids:
+                document_placeholders = ",".join("?" for _ in document_ids)
+                chunk_ids = [
+                    str(row[0])
+                    for row in connection.execute(
+                        f"SELECT chunk_id FROM chunks WHERE document_id IN ({document_placeholders})",
+                        document_ids,
+                    ).fetchall()
+                ]
+                counts["userUploadChunks"] = len(chunk_ids)
+                if chunk_ids:
+                    chunk_placeholders = ",".join("?" for _ in chunk_ids)
+                    connection.execute(
+                        f"DELETE FROM chunk_fts WHERE chunk_id IN ({chunk_placeholders})", chunk_ids
+                    )
+                    connection.execute(
+                        f"DELETE FROM chunks WHERE chunk_id IN ({chunk_placeholders})", chunk_ids
+                    )
+                node_ids = [f"source:{item}" for item in source_ids] + document_ids + chunk_ids
+                node_placeholders = ",".join("?" for _ in node_ids)
+                connection.execute(
+                    f"DELETE FROM graph_edges WHERE from_node IN ({node_placeholders}) "
+                    f"OR to_node IN ({node_placeholders})",
+                    (*node_ids, *node_ids),
+                )
+                connection.execute(
+                    f"DELETE FROM graph_nodes WHERE node_id IN ({node_placeholders})", node_ids
+                )
+                connection.execute(
+                    f"DELETE FROM documents WHERE document_id IN ({document_placeholders})",
+                    document_ids,
+                )
+            counts["userUploadNotes"] = connection.execute(
+                f"DELETE FROM source_notes WHERE source_id IN ({placeholders})", source_ids
+            ).rowcount
+        counts["uploads"] = connection.execute("DELETE FROM uploads").rowcount
+        counts["jobs"] = connection.execute("DELETE FROM jobs").rowcount
+        connection.execute("DELETE FROM sources WHERE origin = 'user-upload'")
+        connection.commit()
+        remaining_sources = connection.execute(
+            "SELECT COUNT(*) FROM sources WHERE origin = 'user-upload'"
+        ).fetchone()[0]
+        remaining_uploads = connection.execute("SELECT COUNT(*) FROM uploads").fetchone()[0]
+        if source_ids:
+            remaining_fts = connection.execute(
+                f"SELECT COUNT(*) FROM chunk_fts WHERE source_id IN "
+                f"({','.join('?' for _ in source_ids)})",
+                source_ids,
+            ).fetchone()[0]
+        else:
+            remaining_fts = 0
+        if remaining_sources or remaining_uploads or remaining_fts:
+            raise RuntimeError("user-upload content survived artifact scrubbing")
+        return counts
+    finally:
+        connection.close()
+
+
 def package(source_path: Path, output_path: Path, *, allow_unreviewed: bool) -> dict[str, Any]:
     if not allow_unreviewed:
         raise RuntimeError(
@@ -67,6 +168,7 @@ def package(source_path: Path, output_path: Path, *, allow_unreviewed: bool) -> 
         ) as temporary:
             stable_path = Path(temporary.name)
         _stable_copy(source_path, stable_path)
+        scrubbed = _scrub_user_uploads(stable_path)
         _gzip(stable_path, output_path)
         return {
             "artifact": str(output_path),
@@ -75,6 +177,7 @@ def package(source_path: Path, output_path: Path, *, allow_unreviewed: bool) -> 
             "databaseSha256": _sha256(stable_path),
             "databaseSizeBytes": stable_path.stat().st_size,
             "compression": "gzip",
+            "userUploadsScrubbed": scrubbed,
         }
     finally:
         if stable_path is not None:

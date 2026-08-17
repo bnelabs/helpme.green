@@ -88,6 +88,7 @@ The committed baseline currently provides useful primitives, but the implementat
 - `SourceSpec` currently validates HTTPS URLs. Local user uploads need an explicit nullable/local-reference model; do not weaken HTTPS validation for manifest sources.
 - The current HTTP surface is JSON-oriented and has a small request-body limit. Multipart upload requires a separate bounded streaming path.
 - The current source digest is a bulk, source-linked note generator. A per-document job API and progress callback must be added rather than pretending the existing bulk method is already a per-document service.
+- Retrieval currently gates only on `documents.extraction_status = 'extracted'`. `sources.source_status` has no retrieval filter and the `include_catalogued` flag includes `catalogued` and `blocked` alike, so excluding a source by status (manifest `blocked`, user-upload `review`) is new behaviour that must be added and tested, not assumed to exist.
 - The existing artifact packager snapshots the SQLite database. Merely omitting user rows from a JSON catalog does not remove them from a distributable database.
 
 Implementation should revalidate these facts against the target commit before editing because the worktree may contain unrelated user changes.
@@ -126,6 +127,8 @@ review → deleted
 
 Manifest sources retain their existing catalogued/active/blocked semantics. User-uploaded sources must not silently become manifest sources.
 
+`register_source` currently validates exactly `{catalogued, active, blocked}`; the migration must extend that validation set for user-upload sources without weakening manifest validation. The `deleted` status and the `deleted_at` tombstone are one event: the status flip and the tombstone stamp happen in the same transaction.
+
 `documents.extraction_status`:
 
 ```text
@@ -151,6 +154,8 @@ The UI must show both source review status and document extraction status when t
 | user-upload | blocked/deleted | excluded |
 
 Do not change the existing manifest behaviour by globally excluding every `catalogued` source. The predicate must distinguish manifest origin from user-upload origin.
+
+Because source-status exclusion is new behaviour (see §3), add a regression test proving that a manifest `blocked` source is excluded by the same predicate that excludes user-upload `review` sources.
 
 ## 5. Architecture
 
@@ -205,7 +210,7 @@ Rules:
 
 ### 7.1 Migration discipline
 
-- Bump the knowledge-store schema version from the current version.
+- Bump `store_meta.database_version` from its current value (`3`) and treat it as the single canonical schema key; stop relying on ad-hoc `ALTER TABLE` statements during open and drop any use of the legacy `schema_version` key.
 - Add an explicit, idempotent migration runner; do not rely on a collection of untracked `ALTER TABLE` statements.
 - Make a verified backup before migration when a local database exists.
 - Test migration from an existing populated database, including old documents, blocked documents, embeddings, notes, FTS rows, graph rows, and ingestion history.
@@ -312,6 +317,8 @@ kb.artifact.filtered
 ```
 
 Audit payloads may include IDs, hashes, status transitions, counts, and error codes. They must not include raw file content, prompt text, provider keys, or full user metadata when it could contain sensitive material.
+
+The existing chain lives in the session store (`audit.jsonl`, hash-chained, keyed by session). KB events have no session, so the console must either inject the session store's appender into KB routes (with an empty session key) or run a KB-scoped chain with the identical format and verification. Pick one option, and verify chain integrity after KB mutations and after upload deletion.
 
 ## 8. Upload and ingestion pipeline
 
@@ -455,7 +462,7 @@ Return bounded progress and last error. Do not expose prompt text, raw content, 
 
 `POST /api/kb/uploads/{upload_id}/approve`
 
-Atomically transitions `review → active` after validating that the upload and latest document are usable. Append an audit event.
+Atomically transitions the upload's registered source `review → active` after validating that the upload and latest document are usable, then appends an audit event. `uploads.status` remains `ingested` and never becomes `active`; the status change, retrieval-eligibility flip, and audit append happen in one transaction.
 
 `POST /api/kb/uploads/{upload_id}/quarantine`
 
@@ -610,6 +617,8 @@ Generate the projection deterministically and support a full rebuild. Do not mak
 
 ### 13.1 Worker rules
 
+Worker execution model: v1 workers run as threads inside the server process and share the existing single-connection `KnowledgeDatabase` lock, so queue durability is the only new persistence requirement and the current concurrency model is preserved. If a separate worker process is ever introduced, enable WAL mode and a busy timeout first and re-run the concurrent upload/conversation tests under that mode.
+
 - The HTTP request only validates, stores, and queues.
 - Workers claim jobs with a lease and update progress transactionally.
 - Extraction, embedding, digest, and cleanup jobs are idempotent.
@@ -654,7 +663,7 @@ Source notes remain compact navigation aids linked to exact chunks. The digest c
 
 - All KB routes return `401` when the operator gate is required and `403` when the feature is disabled or the action is not permitted.
 - Manifest sources cannot be approved, deleted, or overwritten by upload routes.
-- Review/blocked/deleted uploads do not reach search or conversation context.
+- Review/blocked/deleted uploads do not reach search or conversation context, and a manifest `blocked` source is excluded by the same status predicate.
 - Approved user material appears only in the untrusted reference-data channel.
 - Prompt-injection text cannot change application instructions.
 - Raw user content is absent from audit payloads, logs, catalog exports, and release snapshots.
@@ -722,6 +731,7 @@ Deliver:
 - Streaming upload parser and storage.
 - Format validation and extractors, including reviewed XLSX support.
 - Upload/source/document/job records.
+- Durable job records with startup recovery of interrupted `running` jobs and idempotent retry; lease expiry and concurrency tuning are P4.
 - Review-only list/detail API.
 - Audit events.
 
@@ -737,7 +747,7 @@ Deliver:
 - Tombstone/cleanup behavior.
 - Filtered artifact packaging and assertions.
 
-Exit gate: review→active changes retrieval eligibility only after explicit approval; quarantine/delete removes eligibility and preserves audit integrity.
+Exit gate: review→active changes retrieval eligibility only after explicit approval; quarantine/delete removes eligibility and preserves audit integrity; a manifest `blocked` source is excluded by the same status predicate (regression-tested).
 
 ### P3 — Documents-first operator UI
 
@@ -757,7 +767,7 @@ Deliver:
 - Targeted source-note jobs.
 - Optional embedding jobs.
 - Provider policy checks and disclosure.
-- Worker leases, retries, restart recovery, and progress.
+- Worker lease expiry, concurrency bounds, progress reporting, and cancellation polish (durability, startup recovery, and idempotent retry already landed in P1).
 
 Exit gate: local/external provider behavior is tested separately; disabled policy prevents egress; jobs are idempotent.
 
