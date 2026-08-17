@@ -9,6 +9,7 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 COPY src ./src
+COPY static ./static
 COPY assets ./assets
 COPY knowledge ./knowledge
 COPY skills ./skills

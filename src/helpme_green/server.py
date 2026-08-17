@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import secrets
 from http import HTTPStatus
@@ -12,7 +13,7 @@ from urllib.parse import unquote, urlparse
 from .application import ApplicationProcessor
 from .knowledge_graphql import execute_graphql
 from .persistence import SessionState, SessionStore
-from .web import INDEX_HTML as _CONVERSATION_HTML
+from .web import get_index_html, get_static_root
 
 _ASSET_ROOT = Path(os.environ.get("HELPME_ROOT", str(Path.cwd()))) / "assets"
 _ASSET_CONTENT_TYPES = {
@@ -20,6 +21,21 @@ _ASSET_CONTENT_TYPES = {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".webp": "image/webp",
+}
+_STATIC_CONTENT_TYPES = {
+    ".css": "text/css; charset=utf-8",
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+}
+LOGGER = logging.getLogger(__name__)
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy": (
+        "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; "
+        "connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; "
+        "form-action 'self'"
+    ),
 }
 
 
@@ -29,15 +45,23 @@ class _Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
         if path == "/healthz":
+            audit_chain_valid = self.server.store.verify_audit_chain()
             self._send_json(
-                {"status": "ok", "audit_chain_valid": self.server.store.verify_audit_chain()}
+                {
+                    "status": "ok" if audit_chain_valid else "degraded",
+                    "audit_chain_valid": audit_chain_valid,
+                },
+                HTTPStatus.OK if audit_chain_valid else HTTPStatus.SERVICE_UNAVAILABLE,
             )
             return
         if path == "/":
-            self._send(HTTPStatus.OK, _CONVERSATION_HTML, "text/html; charset=utf-8")
+            self._send(HTTPStatus.OK, get_index_html(), "text/html; charset=utf-8")
             return
         if path.startswith("/assets/"):
             self._send_asset(path)
+            return
+        if path.startswith("/static/"):
+            self._send_static(path)
             return
         if not self._authorized():
             return
@@ -112,13 +136,21 @@ class _Handler(BaseHTTPRequestHandler):
             )
             return
         parts = [unquote(item) for item in path.split("/") if item]
+        if (
+            len(parts) == 5
+            and parts[:2] == ["api", "sessions"]
+            and parts[3:] == ["message", "stream"]
+        ):
+            self._stream_message(parts[2], body)
+            return
         if len(parts) == 4 and parts[:2] == ["api", "sessions"] and parts[3] == "message":
             try:
-                session = self.server.store.load_session(parts[2])
                 message = body.get("message")
                 if not isinstance(message, str) or len(message) > 4000:
                     raise ValueError("message must be a short string")
-                response = self.server.processor.respond_to_message(session, message)
+                with self.server.store.session_lock(parts[2]):
+                    session = self.server.store.load_session(parts[2])
+                    response = self.server.processor.respond_to_message(session, message)
             except (FileNotFoundError, ValueError) as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -131,6 +163,43 @@ class _Handler(BaseHTTPRequestHandler):
             )
             return
         self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+
+    def _stream_message(self, session_id: str, body: dict[str, Any]) -> None:
+        message = body.get("message")
+        if not isinstance(message, str) or len(message) > 4000:
+            self._send_json({"error": "message must be a short string"}, HTTPStatus.BAD_REQUEST)
+            return
+        stream_started = False
+        try:
+            with self.server.store.session_lock(session_id):
+                session = self.server.store.load_session(session_id)
+                self._send_sse_headers()
+                stream_started = True
+                self._send_sse_event("status", {"stage": "reading"})
+                response = self.server.processor.respond_to_message(session, message)
+                for chunk in _text_chunks(response.text):
+                    self._send_sse_event("delta", {"text": chunk})
+                self._send_sse_event(
+                    "complete",
+                    {"text": response.text, "data": response.data, "error": response.error},
+                )
+        except (FileNotFoundError, ValueError) as exc:
+            if stream_started:
+                self._send_sse_event("error", {"error": str(exc)})
+            else:
+                self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+        except (BrokenPipeError, ConnectionResetError):
+            return
+        except Exception:  # pragma: no cover - defensive network boundary
+            try:
+                if stream_started:
+                    self._send_sse_event("error", {"error": "assistant_unavailable"})
+                else:
+                    self._send_json(
+                        {"error": "assistant_unavailable"}, HTTPStatus.SERVICE_UNAVAILABLE
+                    )
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                return
 
     def _authorized(self) -> bool:
         expected = os.environ.get("HELPME_ACCESS_TOKEN")
@@ -163,17 +232,8 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _send_asset(self, path: str) -> None:
         relative = path.removeprefix("/assets/")
-        if not relative or "/" in relative or "\\" in relative:
-            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
-            return
-        asset = (_ASSET_ROOT / relative).resolve()
-        asset_root = _ASSET_ROOT.resolve()
-        try:
-            asset.relative_to(asset_root)
-        except ValueError:
-            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
-            return
-        if not asset.is_file():
+        asset = self._safe_file(_ASSET_ROOT, relative)
+        if asset is None:
             self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
             return
         self._send_bytes(
@@ -181,6 +241,33 @@ class _Handler(BaseHTTPRequestHandler):
             asset.read_bytes(),
             _ASSET_CONTENT_TYPES.get(asset.suffix.casefold(), "application/octet-stream"),
         )
+
+    def _send_static(self, path: str) -> None:
+        static_root = get_static_root()
+        if static_root is None:
+            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+            return
+        relative = path.removeprefix("/static/")
+        asset = self._safe_file(static_root, relative)
+        if asset is None:
+            self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+            return
+        self._send_bytes(
+            HTTPStatus.OK,
+            asset.read_bytes(),
+            _STATIC_CONTENT_TYPES.get(asset.suffix.casefold(), "application/octet-stream"),
+        )
+
+    @staticmethod
+    def _safe_file(root: Path, relative: str) -> Path | None:
+        if not relative or "/" in relative or "\\" in relative:
+            return None
+        candidate = (root / relative).resolve()
+        try:
+            candidate.relative_to(root.resolve())
+        except ValueError:
+            return None
+        return candidate if candidate.is_file() else None
 
     def _send(self, status: HTTPStatus, body: str, content_type: str) -> None:
         encoded = body.encode("utf-8")
@@ -191,20 +278,44 @@ class _Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        for name, value in _SECURITY_HEADERS.items():
+            self.send_header(name, value)
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_sse_headers(self) -> None:
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache, no-store")
+        self.send_header("Connection", "close")
+        for name, value in _SECURITY_HEADERS.items():
+            self.send_header(name, value)
+        self.end_headers()
+
+    def _send_sse_event(self, event: str, payload: dict[str, Any]) -> None:
+        encoded = json.dumps(payload, ensure_ascii=False)
+        self.wfile.write(f"event: {event}\ndata: {encoded}\n\n".encode())
+        self.wfile.flush()
+
     def log_message(self, format: str, *args: Any) -> None:
-        del format, args
+        message = (format % args).replace("\r", "\\r").replace("\n", "\\n")
+        LOGGER.info("http_request remote=%s %s", self.client_address[0], message)
 
 
 class _HelpmeServer(ThreadingHTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
     def __init__(
         self, address: tuple[str, int], processor: ApplicationProcessor, store: SessionStore
     ) -> None:
         super().__init__(address, _Handler)
         self.processor = processor
         self.store = store
+
+
+def _text_chunks(text: str, size: int = 160) -> list[str]:
+    return [text[index : index + size] for index in range(0, len(text), size)] or [""]
 
 
 def serve(processor: ApplicationProcessor, store: SessionStore, *, host: str, port: int) -> None:

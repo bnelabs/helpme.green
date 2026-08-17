@@ -71,6 +71,7 @@ class ReadOnlyMCP:
         """Return a non-secret expert capability description; no paths are exposed."""
         return {
             "read_only": True,
+            "web_exposed": False,
             "tools": ["read_json", "read_csv", "read_xlsx", "fetch_whitelisted_https"],
             "execution": False,
             "writes": False,

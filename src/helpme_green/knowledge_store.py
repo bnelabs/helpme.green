@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import math
 import re
 import sqlite3
@@ -21,6 +22,7 @@ class KnowledgeStoreError(ValueError):
 
 _AUTHORITY_TIERS = {"primary", "secondary", "industry", "low-tech", "community"}
 _ACCESS_MODES = {"web", "pdf", "api", "local-reference"}
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -198,10 +200,13 @@ class KnowledgeDatabase:
         except OSError:
             pass
         self._lock = threading.RLock()
-        self._connection = sqlite3.connect(str(self.path), check_same_thread=False)
+        self._connection = sqlite3.connect(str(self.path), timeout=5.0, check_same_thread=False)
         self._connection.row_factory = sqlite3.Row
         self._connection.execute("PRAGMA foreign_keys = ON")
+        self._connection.execute("PRAGMA busy_timeout = 5000")
         self._connection.execute("PRAGMA journal_mode = WAL")
+        self._digest_cache: str | None = None
+        self._digest_cache_signature: tuple[int, int] | None = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -327,7 +332,12 @@ class KnowledgeDatabase:
 
     def close(self) -> None:
         with self._lock:
-            self._connection.close()
+            try:
+                self._connection.execute("PRAGMA wal_checkpoint(PASSIVE)")
+            except sqlite3.OperationalError:
+                pass
+            finally:
+                self._connection.close()
 
     def register_source(self, source: SourceSpec, *, status: str = "catalogued") -> None:
         """Register source metadata without downloading or treating it as a conclusion."""
@@ -748,7 +758,8 @@ class KnowledgeDatabase:
                     """,
                     (safe_query, max(1, min(limit * 4, 50))),
                 ).fetchall()
-            except sqlite3.OperationalError:
+            except sqlite3.OperationalError as exc:
+                LOGGER.warning("FTS search failed; using the bounded LIKE fallback: %s", exc)
                 rows = self._connection.execute(
                     """
                     SELECT c.chunk_id, s.source_id, c.text, c.document_id,
@@ -1333,6 +1344,10 @@ class KnowledgeDatabase:
 
     def digest(self) -> str:
         with self._lock:
+            signature_row = self._connection.execute("PRAGMA data_version").fetchone()
+            signature = (int(signature_row[0]), self._connection.total_changes)
+            if self._digest_cache is not None and self._digest_cache_signature == signature:
+                return self._digest_cache
             rows = self._connection.execute(
                 """
                 SELECT source_id, content_sha256, source_status FROM sources ORDER BY source_id;
@@ -1341,8 +1356,11 @@ class KnowledgeDatabase:
             notes = self._connection.execute(
                 "SELECT note_id, skill_id, summary FROM source_notes ORDER BY note_id"
             ).fetchall()
-        body = [dict(row) for row in rows] + [dict(row) for row in notes]
-        return hashlib.sha256(_canonical(body).encode("utf-8")).hexdigest()
+            body = [dict(row) for row in rows] + [dict(row) for row in notes]
+            digest = hashlib.sha256(_canonical(body).encode("utf-8")).hexdigest()
+            self._digest_cache = digest
+            self._digest_cache_signature = signature
+            return digest
 
     def _graph_node(self, node_id: str, node_type: str, label: str) -> None:
         self._connection.execute(

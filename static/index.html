@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f0e7">
+<meta name="description" content="A calm, source-aware material investigation notebook.">
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/assets/favicon.png" type="image/png">
+<link rel="apple-touch-icon" href="/assets/brand-mark.png">
+<title>helpme.green — Lab Notebook</title>
+</head>
+<body data-theme="light">
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand-lockup" href="/" aria-label="helpme.green home">
+      <img class="brand-mark" src="/assets/brand-mark.png" alt="" width="33" height="33">
+      <span class="wordmark">helpme<span>.green</span></span>
+    </a>
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a class="nav-link active" href="#notebook">Lab Notebook</a>
+      <a class="nav-link" href="#library">Library</a>
+    </nav>
+    <div class="topbar-tools">
+      <label class="global-search">
+        <span class="sr-only">Search notes and materials</span>
+        <input id="globalSearch" type="search" autocomplete="off" placeholder="Search notes, materials...">
+      </label>
+      <button class="new-note" id="newNote" type="button">New note</button>
+      <button class="theme-toggle" id="themeToggle" type="button">Dark mode</button>
+    </div>
+  </header>
+
+  <main class="notebook-workspace" id="notebook">
+    <aside class="phase-rail" aria-label="Investigation phases">
+      <span class="rail-kicker">Investigation</span>
+      <ol class="phase-list" id="phaseList"></ol>
+      <div class="rail-footer">
+        <div class="rail-page-count" id="railPageCount">Phase 1 of 5</div>
+        <div class="rail-progress" aria-label="Overall progress"><span id="railProgress"></span></div>
+      </div>
+    </aside>
+
+    <section class="notebook-column" aria-label="Material investigation notebook">
+      <div class="mobile-toolbar">
+        <span class="rail-kicker">Working notebook</span>
+        <div>
+          <span class="page-state" id="pageState">Phase 1 of 5</span>
+          <button class="library-toggle" id="libraryToggle" type="button" aria-controls="library" aria-expanded="false">Material library</button>
+        </div>
+      </div>
+
+      <section class="auth-card" id="authGate" hidden>
+        <p>This notebook can connect to a local assistant when you want a second read. Enter the connection key to enable it.</p>
+        <form class="auth-form" id="authForm">
+          <label class="sr-only" for="token">Connection key</label>
+          <input id="token" type="password" autocomplete="off" placeholder="Connection key">
+          <button class="primary-button" type="submit">Connect</button>
+        </form>
+        <div class="auth-error" id="authError" hidden></div>
+      </section>
+
+      <div class="notebook-stage">
+        <div class="notebook-spread" id="notebookSpread">
+          <article class="page page-left" aria-label="Investigation notes">
+            <header class="page-header">
+              <span class="note-date" id="noteDate">NOTE</span>
+              <span class="note-tag" id="leftPageTag">OBSERVE</span>
+            </header>
+            <label class="sr-only" for="noteTitle">Investigation title</label>
+            <input class="note-title" id="noteTitle" maxlength="90" value="New material note" aria-label="Investigation title">
+            <p class="page-lede" id="pageLede">Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.</p>
+
+            <div class="evidence-board" aria-label="Material examples">
+              <figure class="board-card">
+                <img id="boardImagePrimary" src="/assets/material-plastics.webp" alt="Plastic material example">
+              </figure>
+              <figure class="board-card">
+                <img id="boardImageSecondary" src="/assets/material-paper.webp" alt="Paper and board example">
+              </figure>
+              <figure class="board-card">
+                <img id="boardImageTertiary" src="/assets/material-metals.webp" alt="Metal material example">
+              </figure>
+            </div>
+            <div class="board-caption">Library examples — real scrap looks, not proof of what this is</div>
+
+            <section aria-labelledby="observationsTitle">
+              <h2 class="section-title" id="observationsTitle"><span>Observations</span><span id="observationCount">0 saved</span></h2>
+              <ol class="observation-list" id="observationList"></ol>
+            </section>
+
+            <section class="evidence-capture" aria-labelledby="sampleEvidenceTitle">
+              <h2 class="section-title" id="sampleEvidenceTitle"><span>Your material</span><span id="evidenceCount">0 photos</span></h2>
+              <p class="evidence-intro">Add a photo of the real scrap if you have one. Photos can show colour and texture, but not reliably name the material. The assistant compares your notes with the library examples. “Unclear from photo” is a valid result. Your photos stay here for now.</p>
+              <div class="evidence-photo-row" id="evidencePhotos"></div>
+              <label class="evidence-upload" for="evidencePhotoInput">Add a photo</label>
+              <input class="evidence-upload-input" id="evidencePhotoInput" type="file" accept="image/*" capture="environment" multiple>
+              <p class="sr-only" id="evidenceFieldsHint">Choose the sample form and condition when known. A guidance note appears after selecting a form.</p>
+              <div class="evidence-fields">
+                <label class="evidence-field" for="evidenceForm">What form is the sample?
+                  <select id="evidenceForm" aria-describedby="evidenceFieldsHint evidenceGuidance">
+                    <option value="">Choose sample form</option>
+                    <option value="whole">Whole piece</option>
+                    <option value="flakes">Flakes / chips</option>
+                    <option value="granules">Granules / pellets</option>
+                    <option value="powder">Powder / dust</option>
+                    <option value="mixed">Mixed pieces</option>
+                    <option value="closed">Closed container (do not open)</option>
+                  </select>
+                </label>
+                <label class="evidence-field" for="evidenceCondition">What is it like?
+                  <select id="evidenceCondition" aria-describedby="evidenceFieldsHint evidenceGuidance">
+                    <option value="">Choose condition</option>
+                    <option value="clean">Clean / intact</option>
+                    <option value="worn">Worn / weathered</option>
+                    <option value="dirty">Dirty / contaminated</option>
+                    <option value="mixed">Mixed / attached</option>
+                    <option value="damaged">Cut / damaged</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                </label>
+                <label class="evidence-field" for="evidenceOrigin">Where did it come from? (optional)
+                  <input id="evidenceOrigin" type="text" maxlength="140" placeholder="Where did it come from?">
+                </label>
+              </div>
+              <div class="evidence-guidance" id="evidenceGuidance" role="note" hidden>
+                <strong id="evidenceGuidanceTitle"></strong>
+                <p id="evidenceGuidanceText"></p>
+              </div>
+              <label class="evidence-field evidence-detail" for="evidenceDetails">What should the assistant look at? (optional)
+                <input id="evidenceDetails" type="text" maxlength="220" placeholder="For example: surface, stiffness, colour, or attached parts">
+              </label>
+              <div class="evidence-note" id="evidenceNote">No photo yet. Your notes are enough to start.</div>
+            </section>
+
+            <section class="reference-section" aria-labelledby="referencesTitle">
+              <h2 class="section-title" id="referencesTitle"><span>Library examples</span><span>Library</span></h2>
+              <div class="reference-chips" id="referenceChips"></div>
+              <div class="comparison-actions">
+                <button class="text-button" id="compareEvidence" type="button">Compare with assistant</button>
+                <span class="comparison-hint" id="comparisonHint">Your notes + library examples</span>
+              </div>
+            </section>
+
+            <form class="observation-composer" id="composer" aria-busy="false">
+              <label class="sr-only" for="message">Add an observation</label>
+              <textarea id="message" rows="3" placeholder="Add an observation..."></textarea>
+              <div class="composer-footer">
+                <span class="composer-hint">Enter to save · Shift+Enter for a new line</span>
+                <button class="save-observation" id="send" type="submit">Save observation</button>
+              </div>
+            </form>
+            <div class="status-line">
+              <div class="status-note" id="statusNote" aria-live="polite" aria-atomic="true">Autosaved in this browser. Nothing is lost when you move between phases.</div>
+              <button class="retry-button" id="retryRequest" type="button" hidden>Try again</button>
+            </div>
+          </article>
+
+          <article class="page page-right" aria-label="Assistant's first look">
+            <section class="working-read">
+              <span class="page-kicker">Assistant's first look</span>
+              <h2 id="workingTitle">Start with the first look</h2>
+              <p id="workingRead">No answer is assumed. Add a note and keep the first look, the open question, and the library examples together.</p>
+            </section>
+            <section class="read-section" aria-labelledby="evidenceTitle">
+              <h2 class="section-title" id="evidenceTitle">What we have so far</h2>
+              <ul class="read-list" id="readEvidence"></ul>
+            </section>
+            <section class="read-section change" aria-labelledby="changeTitle">
+              <h2 class="section-title" id="changeTitle">What could change this</h2>
+              <ul class="change-list" id="changeList"></ul>
+            </section>
+            <section class="next-question" aria-labelledby="nextQuestionTitle">
+              <h2 class="section-title" id="nextQuestionTitle">Next question</h2>
+              <p id="nextQuestion">What do you see, and what would you like to understand?</p>
+              <button class="text-button" id="usePrompt" type="button">Use as observation prompt</button>
+            </section>
+            <section class="assistant-read" id="assistantRead" aria-live="polite" aria-atomic="true" hidden>
+              <span class="page-kicker">Assistant's note — saved here</span>
+              <p id="assistantText"></p>
+              <p class="source-note" id="sourceNote"></p>
+            </section>
+            <section class="comparison-read" id="comparisonRead" aria-live="polite" aria-atomic="true" hidden>
+              <span class="page-kicker">Assistant comparison — first read</span>
+              <p id="comparisonText"></p>
+              <p class="source-note" id="comparisonSourceNote"></p>
+              <p class="comparison-disclaimer">This uses your notes and the library examples. It is not a test or a final answer.</p>
+            </section>
+          </article>
+        </div>
+
+        <nav class="page-nav" aria-label="Notebook page navigation">
+          <button class="quiet-button" id="previousPage" type="button">Previous phase</button>
+          <div class="page-progress" id="pageProgress" aria-label="Phase progress"></div>
+          <button class="primary-button" id="nextPage" type="button">Continue to identification</button>
+        </nav>
+        <details class="note-history" id="noteHistory" hidden>
+          <summary>Previous notes kept on this device</summary>
+          <div class="history-list" id="historyList"></div>
+        </details>
+      </div>
+    </section>
+
+    <aside class="library-drawer" id="library" data-open="true" role="dialog" aria-modal="false" aria-labelledby="libraryTitle" aria-hidden="false" tabindex="-1">
+      <header class="library-header">
+        <div>
+      <span class="library-kicker">Examples only</span>
+          <h2 id="libraryTitle">Material library</h2>
+        </div>
+        <button class="library-close" id="libraryClose" type="button">Close</button>
+      </header>
+      <label class="material-search">
+        <span class="sr-only">Search materials</span>
+        <input id="materialSearch" type="search" autocomplete="off" placeholder="Search materials...">
+      </label>
+      <div class="category-list" id="categoryList"></div>
+      <div class="library-note">These are used or worked-on materials, not a way to name a plastic or metal with certainty. Keep your notes, where it came from, and any test with the page.</div>
+    </aside>
+    <div class="library-backdrop" id="libraryBackdrop" data-open="false" aria-hidden="true"></div>
+  </main>
+</div>
+
+
+<script src="/static/app.js" defer></script>
+</body>
+</html>

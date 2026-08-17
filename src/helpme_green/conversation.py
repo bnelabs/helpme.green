@@ -8,7 +8,7 @@ from typing import Any
 from .expert_skills import SkillRegistry, SkillSelection
 from .knowledge_store import KnowledgeDatabase
 from .machinery import MachineCatalog
-from .model_gateway import ModelRouter, ProviderUnavailable
+from .model_gateway import ModelRouter, ModelSelection, ProviderUnavailable
 from .persistence import SessionState, SessionStore
 from .quality import AnswerQualityGate
 from .source_ingest import EmbeddingProvider, Reranker
@@ -94,14 +94,21 @@ class ConversationAgent:
         self.embedding_provider = embedding_provider
         self.reranker = reranker
 
-    def respond(self, session: SessionState, user_text: str) -> ConversationResult:
+    def respond(
+        self,
+        session: SessionState,
+        user_text: str,
+        *,
+        model_selection: ModelSelection | None = None,
+    ) -> ConversationResult:
         message = user_text.strip()
+        requested_model = model_selection or self.model_router.selection
         if not message:
             return ConversationResult(
                 text="Tell me what you have, what you are trying to do, or what you are unsure about.",
                 hearing=dict(session.understanding),
                 sources=[],
-                model=self.model_router.selection.identity,
+                model=requested_model.identity,
                 ai_used=False,
             )
 
@@ -122,11 +129,19 @@ class ConversationAgent:
                 "content": f"<user_message>\n{message}\n</user_message>",
             }
         )
+        ai_enabled = self.model_router.ai_enabled()
+        request_model = requested_model
         try:
+            if ai_enabled:
+                request_model = self.model_router.resolve_selection(requested_model)
+            request_kwargs: dict[str, Any] = {}
+            if ai_enabled and request_model != self.model_router.selection:
+                request_kwargs["selection"] = request_model
             response = self.model_router.complete_json(
                 history,
                 system_contract=f"{_CONVERSATION_CONTRACT}\n\n{prompt}",
                 max_tokens=None,
+                **request_kwargs,
             )
             reply = self._reply(response)
             hearing = self._hearing(response.get("hearing"))
@@ -136,6 +151,11 @@ class ConversationAgent:
                 skill_id=selection.primary.skill_id,
                 focused_context=focused_context,
                 next_step=selection.primary.next_step,
+                model_selection=(
+                    request_model
+                    if ai_enabled and request_model != self.model_router.selection
+                    else None
+                ),
             )
             reply = quality.calibrated_reply
         except (ProviderUnavailable, ValueError, TypeError, json.JSONDecodeError):
@@ -143,7 +163,7 @@ class ConversationAgent:
                 text="I couldn’t get a response from the local model just now. Please try again.",
                 hearing=dict(session.understanding),
                 sources=[],
-                model=self.model_router.selection.identity,
+                model=request_model.identity,
                 ai_used=False,
                 skills=selection.ids,
             )
@@ -164,7 +184,7 @@ class ConversationAgent:
             "conversation.message",
             {
                 "characters": len(message),
-                "model": self.model_router.selection.identity,
+                "model": request_model.identity,
                 "skills": list(selection.ids),
                 "quality_score": quality.score,
                 "quality_flags": list(quality.flags),
@@ -174,7 +194,7 @@ class ConversationAgent:
             text=reply,
             hearing=dict(session.understanding),
             sources=source_cards,
-            model=self.model_router.selection.identity,
+            model=request_model.identity,
             ai_used=True,
             skills=selection.ids,
             quality=quality.to_dict(),

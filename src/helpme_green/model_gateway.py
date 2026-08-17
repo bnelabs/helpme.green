@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import ssl
 import threading
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Mapping
@@ -27,6 +29,7 @@ class ModelSelection:
 
 _PROFILE_RESERVED_KEYS = {"model", "messages", "response_format", "stream"}
 _AUTO_MODEL_NAMES = {"", "auto", "*"}
+_RETRYABLE_HTTP_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 def _json_object(value: Any, *, label: str) -> dict[str, Any]:
@@ -77,6 +80,10 @@ class ModelRouter:
         return ModelSelection(provider.casefold(), model)
 
     def select(self, identity: str) -> ModelSelection:
+        self.selection = self.selection_for(identity)
+        return self.selection
+
+    def selection_for(self, identity: str) -> ModelSelection:
         try:
             provider, model = identity.split(":", 1)
         except ValueError as exc:
@@ -84,8 +91,7 @@ class ModelRouter:
         provider = provider.casefold()
         if provider not in self.allowed or not model.strip():
             raise ValueError("Supported model providers are localai, deepseek, and openrouter.")
-        self.selection = ModelSelection(provider, model)
-        return self.selection
+        return ModelSelection(provider, model)
 
     def budget(self) -> dict[str, int | str]:
         return {
@@ -101,25 +107,26 @@ class ModelRouter:
         *,
         system_contract: str,
         max_tokens: int | None = None,
+        selection: ModelSelection | None = None,
     ) -> Mapping[str, Any]:
         """Call an OpenAI-compatible provider using the selected model profile."""
-        if not self._env_flag("HELPME_AI_ENABLED", default=False):
+        if not self.ai_enabled():
             raise ProviderUnavailable(
                 "AI interaction is disabled; set HELPME_AI_ENABLED=1 to enable the configured provider."
             )
-        selection = self._resolve_selection()
-        endpoint, env_name = self._endpoint_and_key_env(selection.provider)
-        api_key = self._api_key(selection.provider, env_name)
-        if not api_key and selection.provider != "localai":
+        selected = self._resolve_selection(selection or self.selection)
+        endpoint, env_name = self._endpoint_and_key_env(selected.provider)
+        api_key = self._api_key(selected.provider, env_name)
+        if not api_key and selected.provider != "localai":
             raise ProviderUnavailable(
-                f"{selection.provider} key is not configured; local reference services remain available."
+                f"{selected.provider} key is not configured; local reference services remain available."
             )
-        profile = self._model_profile(selection.identity)
+        profile = self._model_profile(selected.identity)
         timeout_seconds = self._timeout_seconds(profile)
         profile.pop("timeout_seconds", None)
         profile_max_tokens = profile.pop("max_tokens", None)
         payload = {
-            "model": selection.model,
+            "model": selected.model,
             "messages": [
                 {"role": "system", "content": system_contract},
                 *messages,
@@ -149,18 +156,36 @@ class ModelRouter:
             headers=headers,
             method="POST",
         )
-        try:
-            context = self._tls_context(endpoint, selection.provider)
-            if context is None:
-                response_context = urllib.request.urlopen(request, timeout=timeout_seconds)
-            else:
-                response_context = urllib.request.urlopen(
-                    request, timeout=timeout_seconds, context=context
-                )
-            with response_context as response:
-                raw = json.loads(response.read().decode("utf-8"))
-        except (OSError, urllib.error.URLError, json.JSONDecodeError) as exc:
-            raise ProviderUnavailable(f"{selection.provider} request failed safely.") from exc
+        raw: Any = None
+        retries = self._retry_count()
+        for attempt in range(retries + 1):
+            try:
+                context = self._tls_context(endpoint, selected.provider)
+                if context is None:
+                    response_context = urllib.request.urlopen(request, timeout=timeout_seconds)
+                else:
+                    response_context = urllib.request.urlopen(
+                        request, timeout=timeout_seconds, context=context
+                    )
+                with response_context as response:
+                    raw = json.loads(response.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code not in _RETRYABLE_HTTP_STATUS_CODES or attempt >= retries:
+                    raise ProviderUnavailable(
+                        f"{selected.provider} request failed safely."
+                    ) from exc
+                time.sleep(min(1.0, 0.25 * (2**attempt)))
+            except (OSError, urllib.error.URLError) as exc:
+                if attempt >= retries:
+                    raise ProviderUnavailable(
+                        f"{selected.provider} request failed safely."
+                    ) from exc
+                time.sleep(min(1.0, 0.25 * (2**attempt)))
+            except json.JSONDecodeError as exc:
+                raise ProviderUnavailable(f"{selected.provider} returned invalid JSON.") from exc
+        if raw is None:
+            raise ProviderUnavailable(f"{selected.provider} request failed safely.")
         if not isinstance(raw, Mapping):
             raise ProviderUnavailable("Model response was not a JSON object.")
         with self._counter_lock:
@@ -187,9 +212,33 @@ class ModelRouter:
             timeout = float(raw)
         except (TypeError, ValueError) as exc:
             raise ProviderUnavailable("Model profile timeout_seconds must be positive.") from exc
-        if timeout <= 0:
+        if not math.isfinite(timeout) or timeout <= 0:
             raise ProviderUnavailable("Model profile timeout_seconds must be positive.")
+        maximum_raw = os.environ.get("HELPME_MAX_MODEL_TIMEOUT_SECONDS", "240")
+        try:
+            maximum = float(maximum_raw)
+        except (TypeError, ValueError) as exc:
+            raise ProviderUnavailable("HELPME_MAX_MODEL_TIMEOUT_SECONDS must be positive.") from exc
+        if not math.isfinite(maximum) or maximum <= 0:
+            raise ProviderUnavailable("HELPME_MAX_MODEL_TIMEOUT_SECONDS must be positive.")
+        if timeout > maximum:
+            raise ProviderUnavailable(
+                "Model profile timeout_seconds exceeds HELPME_MAX_MODEL_TIMEOUT_SECONDS."
+            )
         return timeout
+
+    @staticmethod
+    def _retry_count() -> int:
+        raw = os.environ.get("HELPME_MODEL_RETRIES", "1")
+        try:
+            retries = int(raw)
+        except (TypeError, ValueError) as exc:
+            raise ProviderUnavailable(
+                "HELPME_MODEL_RETRIES must be an integer from 0 to 3."
+            ) from exc
+        if retries < 0 or retries > 3:
+            raise ProviderUnavailable("HELPME_MODEL_RETRIES must be an integer from 0 to 3.")
+        return retries
 
     def _model_profile(self, identity: str | None = None) -> dict[str, Any]:
         """Return request options for the selected model, without changing other models."""
@@ -211,7 +260,7 @@ class ModelRouter:
                 break
         if selected is None:
             return {}
-        options = _json_object(selected, label=f"Model profile {self.selection.identity}")
+        options = _json_object(selected, label=f"Model profile {selected_identity}")
         forbidden = sorted(_PROFILE_RESERVED_KEYS.intersection(options))
         if forbidden:
             raise ProviderUnavailable(
@@ -225,11 +274,14 @@ class ModelRouter:
         self._timeout_seconds(options)
         return options
 
-    def _resolve_selection(self) -> ModelSelection:
-        selection = self.selection
-        if selection.model.casefold() not in _AUTO_MODEL_NAMES:
-            return selection
-        if selection.provider != "localai":
+    def resolve_selection(self, selection: ModelSelection | None = None) -> ModelSelection:
+        return self._resolve_selection(selection or self.selection)
+
+    def _resolve_selection(self, selection: ModelSelection | None = None) -> ModelSelection:
+        selected = selection or self.selection
+        if selected.model.casefold() not in _AUTO_MODEL_NAMES:
+            return selected
+        if selected.provider != "localai":
             raise ProviderUnavailable(
                 "Automatic model discovery is supported for localai; set HELPME_MODEL to provider:model."
             )
@@ -243,9 +295,10 @@ class ModelRouter:
                 "The configured local model endpoint advertises multiple models; "
                 "set HELPME_MODEL to localai:<model-id>."
             )
-        resolved = ModelSelection(selection.provider, models[0])
-        self.selection = resolved
-        return resolved
+        return ModelSelection(selected.provider, models[0])
+
+    def ai_enabled(self) -> bool:
+        return self._env_flag("HELPME_AI_ENABLED", default=False)
 
     def _api_key(self, provider: str, env_name: str) -> str | None:
         api_key = os.environ.get(env_name)
@@ -330,7 +383,7 @@ class ModelRouter:
             timeout = float(raw)
         except (TypeError, ValueError) as exc:
             raise ProviderUnavailable("HELPME_MODEL_DISCOVERY_TIMEOUT must be positive.") from exc
-        if timeout <= 0:
+        if not math.isfinite(timeout) or timeout <= 0:
             raise ProviderUnavailable("HELPME_MODEL_DISCOVERY_TIMEOUT must be positive.")
         return timeout
 

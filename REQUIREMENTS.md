@@ -123,9 +123,10 @@ to understand the internals.
 
 The application exposes:
 
-- `GET /healthz` for process and local audit-chain health;
+- `GET /healthz` for process and local audit-chain health (`503` when the chain is invalid);
 - `POST /api/sessions` to create a conversation;
 - `POST /api/sessions/{id}/message` to send ordinary language;
+- `POST /api/sessions/{id}/message/stream` for progressive SSE replies;
 - `GET /api/sessions/{id}` to read a persisted conversation;
 - `GET /api/expert/capabilities` for read-only runtime capability metadata;
 - `GET /api/knowledge/sources` for source metadata and retrieval health;
@@ -137,7 +138,8 @@ conversation into a case file or exposing internal record formats.
 
 The read-only import boundary may read explicitly allowed JSON, CSV, XLSX, and HTTPS resources. It
 cannot execute code, write files, mutate configuration, or send imported content to an unconfigured
-destination.
+destination. It is an internal/CLI boundary today; the browser API does not expose arbitrary file or
+URL import. Imported data is not sent to the model unless a future, explicit product flow selects it.
 
 ## Repository and deployment rules
 

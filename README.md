@@ -82,6 +82,15 @@ they never replace or shorten the main answer. Local quality checks are on by de
 critic calls are opt-in with `HELPME_QUALITY_JUDGES=1` because they add extra model requests and
 latency on smaller local deployments.
 
+The gateway retries one transient provider failure by default. Set `HELPME_MODEL_RETRIES=0` to
+disable retries, or choose a value from 0 to 3. `HELPME_MAX_MODEL_TIMEOUT_SECONDS` caps the
+per-provider wait at 240 seconds by default, even when a profile requests a longer timeout.
+
+Empty sessions are removed at startup after seven days by default; change that window with
+`HELPME_EMPTY_SESSION_TTL_DAYS`. Saved snapshots are capped at the newest 20 per session. The
+read-only import boundary supports explicitly allowed JSON, CSV, XLSX, and HTTPS reads for internal
+or CLI integrations, but the browser API does not expose arbitrary import.
+
 ## Knowledge digest
 
 The checked-in [source manifest](knowledge/source-manifest.yml) is a broad, expandable queue covering
@@ -144,9 +153,10 @@ not a replacement for retrieval or a truth authority.
 
 ## HTTP surfaces
 
-- `GET /healthz` — process and audit-chain health.
+- `GET /healthz` — process and audit-chain health; returns `503` when the local audit chain is invalid.
 - `POST /api/sessions` — create a conversation session.
 - `POST /api/sessions/{id}/message` — send ordinary language.
+- `POST /api/sessions/{id}/message/stream` — stream progress and reply deltas as SSE.
 - `GET /api/sessions/{id}` — read a persisted session.
 - `GET /api/expert/capabilities` — skills, machinery, reference health, and read-only capabilities.
 - `GET /api/knowledge/sources` — source metadata, hashes, status, and limitations.

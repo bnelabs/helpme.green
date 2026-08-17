@@ -100,6 +100,7 @@ Important endpoints:
 - `/` — conversation-first browser surface.
 - `/healthz` — health and audit-chain validity.
 - `/api/sessions` and `/api/sessions/{id}/message` — natural-language session flow.
+- `/api/sessions/{id}/message/stream` — SSE progress and reply-delta flow used by the browser.
 - `/api/expert/capabilities` — machine/skill/knowledge health metadata.
 - `/api/knowledge/sources` — source provenance metadata.
 - `/graphql` — read-only knowledge and retrieval projection.
