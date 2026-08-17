@@ -35,6 +35,19 @@ The phase rail, page dots, page count, and notebook copy make progress legible w
 
 Material images are deliberately post-use or process scrap: scuffed, cut, torn, bent, crumpled, frayed, punched, worn, or otherwise plausibly handled. Metal subtypes have dedicated images so steel, aluminium, copper, brass, stainless, and mixed metal can be visually discriminated without looking like a dirty industrial catalog. The library remains illustrative; it is not a substitute for testing or source-backed identification.
 
+## AI-assisted comparison flow
+
+The next interaction keeps the same distinction between a real sample, library examples, and the assistant's first read:
+
+1. The user adds a real sample photo and chooses its form: whole piece, flakes/chips, granules/pellets, powder/dust, mixed pieces, or a closed container. The resized photo stays in browser-local notebook state; it is not silently sent to the assistant.
+2. Granules, powder/dust, mixed pieces, and closed containers show a clear limit before comparison. Unknown dust is not opened or spread just to make a better photo.
+3. The user adds optional condition, origin, and comparison detail, then selects one or more library examples.
+4. “Compare carefully” sends the written observations, sample form, sample context, and selected example labels through the existing ordinary-language assistant route. The prompt requires a description of visible or supplied details and an explicit limit instead of a forced material name.
+5. The result is shown with plain headings: what fits or what can be seen, what the photo cannot tell us, what might change this, and the next simple check.
+6. Any new observation, changed sample detail, changed sample form, or changed example selection clears the old comparison so stale reasoning is not presented as current.
+
+This slice is still text-and-context assisted. It does not claim to inspect photo pixels or identify a material from an image. A future vision-capable comparison can be added only when the provider contract, consent, retention, and source boundaries are explicit. The next asset pass should add separate real scrap examples for whole pieces, flakes, granules, and powder/dust rather than reusing one image for every form.
+
 ## Remaining boundaries
 
-This audit covers the UI, assets, interaction model, and local browser behavior. It does not certify material identity, environmental claims, provider-backed answer quality, production deployment, screen-reader output, native safe-area rendering, or full WCAG conformance.
+This audit covers the UI, assets, interaction model, local evidence capture, and comparison request path. It does not certify material identity, environmental claims, provider-backed answer quality, photo-pixel analysis, server-backed phase sync, production deployment, screen-reader output, native safe-area rendering, or full WCAG conformance.
