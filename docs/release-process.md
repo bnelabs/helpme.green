@@ -1,0 +1,114 @@
+# Release process
+
+Status: the release contract, maintainer-run scripts, and checked-in GitHub Actions workflows are
+present; as of 2026-08-18 there is no published Git tag or GitHub Release. The delivery matrix below
+describes the intended release surface. The first stable release remains gated on signed/notarized
+macOS and Windows credentials and target verification.
+
+This document is the release contract for helpme.green. A release is a reproducible, tested,
+versioned point in Git history with a reviewed release note, checksums, and provenance. It is not a
+permission to authorize physical, legal, financial, purchasing, shipment, production, or permit
+actions.
+
+## Version contract
+
+- The canonical application version is `src/helpme_green/__init__.py:__version__`.
+- `pyproject.toml` reads that value dynamically; do not maintain a second version literal.
+- Stable Git tags are `vMAJOR.MINOR.PATCH`, for example `v0.1.0`.
+- Pre-releases use `vMAJOR.MINOR.PATCH-rc.N` and must not be marked latest.
+- `PATCH` is for compatible fixes, `MINOR` for compatible features, and `MAJOR` for incompatible
+  public changes. While the project remains below `1.0.0`, the public API is still developmental.
+- A published tag, release, image tag, and release asset are immutable. Fix a release with a new
+  version; never replace an asset under an existing version.
+
+The release checker verifies the tag against the source version before building anything.
+
+## Delivery matrix
+
+| Target | Native release asset | Hosted build target | Required validation |
+| --- | --- | --- | --- |
+| Linux amd64 | `helpme-green-VERSION-linux-amd64.tar.gz` | `ubuntu-24.04` | bundle start, `/healthz`, session route |
+| macOS arm64 | `helpme-green-VERSION-macos-arm64.zip` | `macos-15` | bundle start, `/healthz`, codesign, notarization |
+| macOS amd64 | `helpme-green-VERSION-macos-amd64.zip` | `macos-15-intel` | bundle start, `/healthz`, codesign, notarization |
+| Windows amd64 | `helpme-green-VERSION-windows-amd64.zip` | `windows-2025` | bundle start, `/healthz`, Authenticode |
+| Windows arm64 | `helpme-green-VERSION-windows-arm64.zip` | `windows-11-arm` | bundle start, `/healthz`, Authenticode |
+
+The container release is a separate Linux image published for `linux/amd64` and `linux/arm64`.
+macOS and Windows users who choose Docker use that Linux image through Docker Desktop; they are not
+native macOS or Windows container images.
+
+Native bundles are PyInstaller one-directory distributions. They include application code and the
+checked-in static, asset, skill, and source-manifest metadata required by the local runtime. They do
+not include `.data`, provider keys, encryption keys, raw source downloads, or a model.
+
+## Release sequence
+
+1. Make the change on a branch and update the relevant changelog section.
+2. Run the complete local gate:
+
+   ```bash
+   .venv/bin/pytest -q
+   .venv/bin/ruff check .
+   .venv/bin/ruff format --check .
+   .venv/bin/python -m mypy src
+   .venv/bin/python -m compileall -q src tests
+   bash scripts/verify_container.sh
+   ```
+
+3. Merge the reviewed change to `main` and confirm the exact merge commit.
+4. Create and push an annotated tag only after the version checker passes:
+
+   ```bash
+   git tag -a v0.1.0 -m "helpme.green v0.1.0"
+   git push origin v0.1.0
+   ```
+
+5. The checked-in release workflow rebuilds the exact tag, runs the test and container gates, creates
+   all five native bundles, writes `SHA256SUMS`, and creates a draft GitHub Release with the assets.
+6. Review the generated notes and the asset matrix. A stable release must have signed/notarized
+   macOS and Windows assets. If signing credentials are absent, the workflow must stop before a
+   stable release is published.
+7. Publish the draft release manually. The container job publishes the matching GHCR image with
+   the tag and immutable digest, and records build provenance.
+8. Verify a clean download and install for at least one native target and both container platforms;
+   verify `/healthz`, restart recovery, and an ordinary-language session route. Record any target
+   that could not be exercised as unverified rather than treating the build as proof.
+
+## Signing and provenance
+
+The release workflow uses GitHub Actions artifact attestations for native files and the container
+image. It also publishes SHA-256 checksums. Stable native publication requires these repository or
+organization secrets:
+
+- `MACOS_CERTIFICATE_BASE64`, `MACOS_CERTIFICATE_PASSWORD`, `MACOS_SIGNING_IDENTITY`;
+- `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID`;
+- `WINDOWS_CERTIFICATE_BASE64`, `WINDOWS_CERTIFICATE_PASSWORD`.
+
+The signing workflow imports certificates into temporary runner-local stores, signs only the staged
+release bundle, timestamps the signature, and removes temporary credential files. Secrets must never
+be placed in the repository, release notes, artifacts, logs, or application settings.
+
+## Knowledge artifact boundary
+
+The current `.data/knowledge.db` and `knowledge/source-downloads/` remain outside normal releases.
+The checked-in artifact manifest may be changed to `ready` only after source-by-source redistribution
+and privacy review, scrubbed packaging, checksum verification, and a clean-directory bootstrap test.
+An uncleared database must never be copied into a native bundle, container image, or GitHub Release.
+
+The repository is currently private and does not yet declare a project-level distribution licence.
+Before changing repository visibility or distributing the source/binaries outside the controlled
+GitHub audience, select and record the applicable code, asset, and reference-content licences. Do
+not infer a licence from the presence of a Git repository or from third-party dependency licences.
+
+## Release-note checklist
+
+Every release note must state:
+
+- version, date, exact commit, and stable/pre-release status;
+- highlights, fixes, security changes, and breaking/compatibility changes;
+- the native asset table with platform, architecture, filename, and SHA-256;
+- container image reference and digest;
+- installation, configuration, upgrade, and rollback instructions;
+- model/provider prerequisites and the fact that no credentials or model are bundled;
+- knowledge-corpus publication status, attribution, and reuse limitations;
+- known target-specific verification gaps.

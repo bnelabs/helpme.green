@@ -25,6 +25,8 @@ actual material can change the answer.
 - A separate digest pipeline for scientific, engineering, chemical, HSE, regulatory, industry, and
   low-tech resources.
 - Read-only source, capability, health, and GraphQL endpoints for inspection and integration.
+- A separate operator-only knowledge-base console for bounded uploads, review, provenance, jobs, and
+  retrieval eligibility; it is disabled by default and is not part of the public notebook.
 
 The assistant may explain uncertainty, limitations, and what would make an answer more specific. It
 does not pretend that a source passage proves a particular batch, machine, site, product, or business
@@ -97,10 +99,10 @@ request fails honestly instead of silently falling back to text-only analysis.
 These settings are deployment configuration, not hardcoded model behavior. If a profile does not
 specify `max_tokens`, the application omits it and lets the provider/model choose. The application
 does not truncate the completed user-facing answer. Auxiliary quality checks may use smaller
-requests; they never replace or shorten the main answer. Local quality checks are on by default,
-and configured AI critic calls are also on by default for factuality and usefulness checks. Set
-`HELPME_QUALITY_JUDGES=0` when latency or provider budget is more important than the extra review
-pass.
+requests; they never replace or shorten the main answer. Local quality checks run in every runtime;
+configured AI critic calls default on in direct local settings, while the Docker Compose example
+defaults to `HELPME_QUALITY_JUDGES=0`. Set it to `1` when the extra provider-backed review pass is
+desired.
 
 The gateway retries one transient provider failure by default. Set `HELPME_MODEL_RETRIES=0` to
 disable retries, or choose a value from 0 to 3. `HELPME_MAX_MODEL_TIMEOUT_SECONDS` caps the
@@ -130,8 +132,9 @@ PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
 ```
 
 Configure embeddings with either an OpenRouter endpoint or a local OpenAI-compatible LocalAI
-endpoint. When configured, query-time semantic/hybrid retrieval is used automatically; set
-`HELPME_EMBEDDING_QUERY_ENABLED=0` to disable it:
+endpoint. When configured and enabled, query-time semantic/hybrid retrieval is used automatically.
+Direct local runtime configuration defaults to enabled; the Docker Compose example defaults to
+disabled until `HELPME_EMBEDDING_QUERY_ENABLED=1` is supplied:
 
 ```bash
 export HELPME_EMBEDDING_BASE_URL='https://openrouter.ai/api/v1'
@@ -149,7 +152,9 @@ PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
 
 Reranking is an optional adapter. It is useful when the corpus grows or several sources use similar
 language, but it is not required for lexical search and is never treated as a source-authority
-judge. A configured reranker is used automatically; set `HELPME_RERANK_ENABLED=0` to disable it.
+judge. A configured reranker is used automatically when enabled. Direct local runtime configuration
+defaults to enabled; the Docker Compose example defaults to disabled until
+`HELPME_RERANK_ENABLED=1` is supplied.
 
 The full SQLite digest and raw downloads remain outside the normal Git tree because they contain
 extracted text and sources with mixed reuse terms. [knowledge/artifact-manifest.json](knowledge/artifact-manifest.json)
@@ -169,10 +174,10 @@ user message → relevant context selection → lexical/semantic retrieval
              → optional reranking → model answer → quality pass → natural reply
 ```
 
-The model receives a small relevant context, not the entire database. When configured, semantic
-embeddings, hybrid ranking, reranking, machine references, and independent quality critics are used
-automatically to improve the answer; each remains bounded and relevance-filtered. Registered source
-metadata and retrieval determine what is relevant; there is no special prompt path for a particular
+The model receives a small relevant context, not the entire database. When configured and enabled,
+semantic embeddings, hybrid ranking, reranking, machine references, and independent quality critics
+are used automatically to improve the answer; each remains bounded and relevance-filtered. Registered
+source metadata and retrieval determine what is relevant; there is no special prompt path for a particular
 download.
 Graph relationships are useful for provenance and navigation; GraphQL is a read-only access surface,
 not a replacement for retrieval or a truth authority.
@@ -190,6 +195,8 @@ not a replacement for retrieval or a truth authority.
 - `GET /api/expert/capabilities` — skills, machinery, reference health, and read-only capabilities.
 - `GET /api/knowledge/sources` — source metadata, hashes, status, and limitations.
 - `POST /graphql` — read-only source, machine, skill, search, graph, and digest queries.
+- `/api/kb/*` — capability-gated operator routes for knowledge-base uploads, review, jobs, and
+  provenance; see [the operator runbook](docs/kb-operator-runbook.md).
 
 The browser conversation is the application’s primary user surface; its retrieval and digest
 services remain available through read-only integration endpoints.
@@ -218,7 +225,10 @@ PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
 - `src/helpme_green/application.py` — runtime assembly and conversation service.
 - `src/helpme_green/conversation.py` — natural-language orchestration.
 - `src/helpme_green/model_gateway.py` — provider/model routing and profiles.
+- `src/helpme_green/settings.py` — validated runtime settings and encrypted BYOK integration.
 - `src/helpme_green/knowledge_store.py` — SQLite source, chunk, vector, and graph projection.
+- `src/helpme_green/kb_service.py` and `src/helpme_green/upload_ingest.py` — operator KB lifecycle,
+  bounded uploads, review transitions, and jobs.
 - `src/helpme_green/source_ingest.py` — bounded downloads, extraction, embeddings, and reranking.
 - `src/helpme_green/knowledge.py` — source-catalog identity and digest.
 - `src/helpme_green/machinery.py` — machine-reference catalog.
@@ -228,3 +238,13 @@ PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
 
 The project is advisory and educational. It helps people think, research, compare, and ask better
 questions; it does not authorize physical, legal, financial, or operational action.
+
+## Releases
+
+Release policy, supported delivery targets, native bundle instructions, checksums, signing, and the
+knowledge-artifact boundary are documented in [docs/release-process.md](docs/release-process.md).
+The intended container release is a multi-platform Linux image; macOS and Windows hosts use the
+Linux container through Docker Desktop. Native bundles are target-specific and require the release
+verification and signing gates described there. The repository currently contains maintainer-run
+release scripts but no checked-in GitHub Actions release workflow, Git tag, or published GitHub
+Release; treat the delivery matrix as a release contract until that automation is added.

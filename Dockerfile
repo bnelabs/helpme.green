@@ -7,6 +7,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+ARG APP_VERSION=unknown
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.title="helpme.green" \
+      org.opencontainers.image.description="Circular-economy AI-backed R&D assistant" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.source="https://github.com/bnelabs/helpme.green"
+
 COPY pyproject.toml ./
 COPY src ./src
 COPY static ./static

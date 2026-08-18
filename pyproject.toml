@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "helpme-green"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Circular-economy AI-backed R&D assistant with source-aware reference retrieval"
 requires-python = ">=3.11"
 dependencies = [
@@ -20,6 +20,10 @@ dev = [
   "pytest>=8.3",
   "ruff>=0.6",
 ]
+release = [
+  "build>=1.2",
+  "pyinstaller>=6.0",
+]
 
 [project.scripts]
 helpme-green = "helpme_green.cli:main"
@@ -31,6 +35,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "helpme_green.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

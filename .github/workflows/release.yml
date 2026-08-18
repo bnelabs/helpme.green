@@ -1,0 +1,280 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  validate:
+    name: Validate exact release commit
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install project and release tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,release]"
+      - name: Validate tag and source version
+        id: version
+        shell: bash
+        run: |
+          version="$(python scripts/check_release.py "$GITHUB_REF_NAME")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Run the complete release test gate
+        run: |
+          python -m pytest -q
+          python -m ruff check .
+          python -m ruff format --check .
+          python -m mypy src
+          python -m compileall -q src tests scripts
+          git diff --check
+      - name: Build Python distributions
+        run: python -m build --sdist --wheel
+      - name: Upload Python distributions
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: python-distributions
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  native:
+    name: Native ${{ matrix.target }}
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            runner: ubuntu-24.04
+            signing: none
+          - target: macos-arm64
+            runner: macos-15
+            signing: required
+          - target: macos-amd64
+            runner: macos-15-intel
+            signing: required
+          - target: windows-amd64
+            runner: windows-2025
+            signing: required
+          - target: windows-arm64
+            runner: windows-11-arm
+            signing: required
+    runs-on: ${{ matrix.runner }}
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.ref }}
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install release tooling
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[release]"
+      - name: Build unsigned native bundle
+        shell: bash
+        run: python scripts/package_native.py --version "$VERSION" --target "${{ matrix.target }}" --output dist/unsigned
+      - name: Sign stable macOS and Windows bundle
+        if: ${{ matrix.signing == 'required' && !contains(github.ref_name, '-') }}
+        shell: bash
+        env:
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          archive=$(python -c 'from pathlib import Path; paths=sorted([*Path("dist/unsigned").glob("*.zip"), *Path("dist/unsigned").glob("*.tar.gz")]); print(paths[0])')
+          mkdir -p dist/final
+          python scripts/sign_native.py \
+            --archive "$archive" \
+            --platform "${{ matrix.target }}" \
+            --output "dist/final/$(basename "$archive")"
+      - name: Select unsigned preview or Linux bundle
+        if: ${{ matrix.signing == 'none' || contains(github.ref_name, '-') }}
+        shell: bash
+        run: |
+          mkdir -p dist/final
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          paths = sorted([*Path("dist/unsigned").glob("*.zip"), *Path("dist/unsigned").glob("*.tar.gz")])
+          source = paths[0]
+          target = Path("dist/final") / source.name
+          shutil.copy2(source, target)
+          shutil.copy2(Path(f"{source}.sha256"), Path(f"{target}.sha256"))
+          PY
+      - name: Smoke-test final native bundle
+        shell: bash
+        run: |
+          archive=$(python -c 'from pathlib import Path; paths=sorted([*Path("dist/final").glob("*.zip"), *Path("dist/final").glob("*.tar.gz")]); print(paths[0])')
+          python scripts/verify_native_bundle.py "$archive" --version "$VERSION" --target "${{ matrix.target }}"
+      - name: Attest native assets
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: dist/final/*
+          show-summary: true
+      - name: Upload native assets
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: native-${{ matrix.target }}
+          path: dist/final/*
+          if-no-files-found: error
+          retention-days: 7
+
+  container:
+    name: Publish multi-platform container
+    needs:
+      - validate
+      - native
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.ref }}
+      - name: Rehearse the tagged container route before publication
+        run: bash scripts/verify_container.sh
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ github.ref_name }}
+            type=raw,value=${{ needs.validate.outputs.version }}
+      - name: Build and push Linux multi-platform image
+        id: push
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ needs.validate.outputs.version }}
+            VCS_REF=${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+      - name: Attest container provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-name: ${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  draft-release:
+    name: Create draft GitHub Release
+    needs:
+      - validate
+      - native
+      - container
+    runs-on: ubuntu-24.04
+    env:
+      VERSION: ${{ needs.validate.outputs.version }}
+      IMAGE: ghcr.io/${{ github.repository }}
+      IMAGE_DIGEST: ${{ needs.container.outputs.digest }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.ref }}
+      - name: Download native assets
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          pattern: native-*
+          path: dist/assets
+          merge-multiple: true
+      - name: Download Python distributions
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: python-distributions
+          path: dist/assets
+      - name: Write aggregate checksums
+        shell: bash
+        run: |
+          (
+            cd dist/assets
+            find . -maxdepth 1 -type f \
+              \( -name '*.tar.gz' -o -name '*.zip' -o -name '*.whl' \) \
+              -print0 | sort -z | xargs -0 sha256sum | sed 's#  \./#  #'
+          ) > dist/SHA256SUMS
+      - name: Write release notes and manifest
+        shell: bash
+        run: |
+          python scripts/generate_release_notes.py "$VERSION" \
+            --tag "$GITHUB_REF_NAME" \
+            --commit "$GITHUB_SHA" \
+            --container-image "$IMAGE" \
+            --container-digest "$IMAGE_DIGEST" \
+            --output dist/RELEASE_NOTES.md
+          python scripts/create_release_manifest.py \
+            --version "$VERSION" \
+            --tag "$GITHUB_REF_NAME" \
+            --commit "$GITHUB_SHA" \
+            --container-image "$IMAGE" \
+            --container-digest "$IMAGE_DIGEST" \
+            --asset-dir dist/assets \
+            --output dist/release-manifest.json
+      - name: Create draft release with assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          release_args=(
+            --draft
+            --verify-tag
+            --title "helpme.green $GITHUB_REF_NAME"
+            --notes-file dist/RELEASE_NOTES.md
+          )
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            release_args+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" "${release_args[@]}" \
+            dist/assets/* dist/SHA256SUMS dist/release-manifest.json
