@@ -143,6 +143,7 @@ jobs:
           archive=$(python -c 'from pathlib import Path; paths=sorted([*Path("dist/final").glob("*.zip"), *Path("dist/final").glob("*.tar.gz")]); print(paths[0])')
           python scripts/verify_native_bundle.py "$archive" --version "$VERSION" --target "${{ matrix.target }}"
       - name: Attest native assets
+        if: ${{ github.event.repository.visibility == 'public' }}
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-path: dist/final/*
@@ -203,6 +204,7 @@ jobs:
           provenance: mode=max
           sbom: true
       - name: Attest container provenance
+        if: ${{ github.event.repository.visibility == 'public' }}
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-name: ${{ env.IMAGE_NAME }}

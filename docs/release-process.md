@@ -59,8 +59,8 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
    and push an annotated pre-release tag only after the version checker passes:
 
    ```bash
-   git tag -a v0.1.0-rc.1 -m "helpme.green v0.1.0-rc.1"
-   git push origin v0.1.0-rc.1
+   git tag -a v0.1.0-rc.2 -m "helpme.green v0.1.0-rc.2"
+   git push origin v0.1.0-rc.2
    ```
 
    The workflow builds and attaches all five native bundles as unsigned pre-release assets, so they
@@ -87,8 +87,10 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
 ## Signing and provenance
 
 The release workflow uses GitHub Actions artifact attestations for native files and the container
-image. It also publishes SHA-256 checksums. Stable native publication requires these repository or
-organization secrets:
+image when the repository supports that GitHub feature. This user-owned private repository does not
+support persisted GitHub attestations, so its release evidence is SHA-256 checksums for every asset
+plus BuildKit provenance/SBOM metadata on the container image. Stable native publication requires
+these repository or organization secrets:
 
 - `MACOS_CERTIFICATE_BASE64`, `MACOS_CERTIFICATE_PASSWORD`, `MACOS_SIGNING_IDENTITY`;
 - `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID`;

@@ -69,7 +69,7 @@ def render(
         f"# helpme.green v{version}\n\n"
         f"- Tag: `{tag}`\n"
         f"- Exact commit: `{exact_commit}`\n"
-        "- Native assets: inspect `SHA256SUMS` and the attached provenance attestations.\n"
+        "- Native assets: inspect `SHA256SUMS`; attached provenance attestations are included when the repository supports them.\n"
         + container_line
         + "\n"
         f"{changelog_section(version)}\n"

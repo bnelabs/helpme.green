@@ -12,6 +12,13 @@ format and are immutable after publication.
 - Release validation, release-note generation, native-bundle packaging, bundle verification, and
   target-runner automation are now part of the repository.
 
+## [0.1.0-rc.2] - 2026-08-18
+
+### Fixed
+
+- Private-repository release runs now retain native assets using checksums when GitHub persisted
+  artifact attestations are unavailable.
+
 ## [0.1.0-rc.1] - 2026-08-18
 
 ### Added
