@@ -24,6 +24,13 @@ format and are immutable after publication.
   artifact action's deprecated internal `Buffer()` warning while retaining pinned Node 24 upload
   actions.
 
+### Release status
+
+- This is a release candidate for controlled testing. The automated checks have passed, but
+  occasional breakage, rough edges, and behavior changes remain possible before a stable release.
+- macOS and Windows assets remain unsigned in the candidate; stable signing/notarization is still a
+  publication gate.
+
 ## [0.1.0-rc.5] - 2026-08-18
 
 ### Fixed

@@ -72,9 +72,10 @@ present. The UI identifies that processing may leave the machine before it is co
 
 ## Jobs and recovery
 
-Jobs are durable rows with leases. On startup, expired `running` jobs are requeued within a bounded
-retry budget (3 attempts) or marked failed. Completed jobs are safe to retry without duplicating
-chunks, embeddings, notes, graph edges, or audit events.
+Jobs are durable rows with leases. The KB service recovers expired `running` jobs on startup within
+a bounded retry budget (3 attempts) or marks them failed. The worker claim path also handles an
+expired lease if a job becomes stale after startup. Completed jobs are safe to retry without
+duplicating chunks, embeddings, notes, graph edges, or audit events.
 
 ## Database migration
 

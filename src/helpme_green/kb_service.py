@@ -57,6 +57,9 @@ class KbService:
         self.digest_router = digest_router
         self.digest_skills = digest_skills
         self._worker_lock = threading.Lock()
+        recovered = self.database.recover_jobs()
+        if recovered:
+            self._audit("kb.jobs.recovered", {"count": recovered})
 
     # ------------------------------------------------------------------ audit
 

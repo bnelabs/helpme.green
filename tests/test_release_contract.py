@@ -154,8 +154,12 @@ def test_bundle_metadata_is_explicit_about_data_boundaries(tmp_path: Path) -> No
     metadata = json.loads((bundle / "RELEASE-METADATA.json").read_text(encoding="utf-8"))
     assert metadata["version"] == "0.1.0-rc.6"
     assert metadata["target"] == "linux-amd64"
+    assert metadata["releaseStatus"] == "release-candidate"
     assert "not bundled" in metadata["knowledge"]
-    assert "provider key" in (bundle / "RUN.md").read_text(encoding="utf-8")
+    run_instructions = (bundle / "RUN.md").read_text(encoding="utf-8")
+    assert "provider key" in run_instructions
+    assert "occasional breakage" in run_instructions
+    assert "archive checksum" in run_instructions
 
 
 def test_tar_extraction_rejects_links(tmp_path: Path) -> None:

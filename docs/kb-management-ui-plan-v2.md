@@ -1,6 +1,12 @@
 # helpme.green Knowledge Base Management UI — Implementation Plan v2
 
-Status: implementation proposal
+Status: implementation baseline and roadmap
+
+Verified against `main` at `95e137e` on 2026-08-18. The core operator console, upload lifecycle,
+approved-only retrieval policy, durable jobs, graph provenance fields, and filtered artifact path
+now exist in the repository. The phase plan below remains useful for separating what is implemented
+from remaining polish and future multi-user or distribution work; it is not a claim that every
+future phase is complete.
 
 This document replaces the original “Obsidian-grade” plan as the execution baseline. It keeps the useful ideas—an operator-facing knowledge library, safe user-reference uploads, provenance visibility, and optional graph navigation—but makes the trust, persistence, and delivery boundaries explicit.
 
@@ -78,20 +84,31 @@ The existing product requirements and agent instructions remain authoritative.
 - The application does not authorize or execute physical, legal, financial, purchasing, shipment, production, permit, or release actions.
 - Optional external processing is disabled by policy unless the operator explicitly enables it and the UI identifies the destination provider.
 
-## 3. Current-baseline facts to verify at implementation start
+## 3. Current-baseline facts
 
-The committed baseline currently provides useful primitives, but the implementation must not assume that all proposed pieces already exist:
+The following facts were revalidated against the committed baseline rather than carried forward from
+the original proposal:
 
 - `KnowledgeDatabase` already owns sources, documents, chunks, FTS, embeddings, source notes, ingestion runs, and a graph projection.
-- The current graph schema does not yet carry edge reasons or the proposed cross-document relations.
-- The source extractor covers PDF, HTML/XML, TXT, CSV, and JSON. XLSX ingestion must be added as a reviewed extractor; the presence of `openpyxl` elsewhere in the repository is not proof that the source extractor supports XLSX.
-- `SourceSpec` currently validates HTTPS URLs. Local user uploads need an explicit nullable/local-reference model; do not weaken HTTPS validation for manifest sources.
-- The current HTTP surface is JSON-oriented and has a small request-body limit. Multipart upload requires a separate bounded streaming path.
-- The current source digest is a bulk, source-linked note generator. A per-document job API and progress callback must be added rather than pretending the existing bulk method is already a per-document service.
-- Retrieval currently gates only on `documents.extraction_status = 'extracted'`. `sources.source_status` has no retrieval filter and the `include_catalogued` flag includes `catalogued` and `blocked` alike, so excluding a source by status (manifest `blocked`, user-upload `review`) is new behaviour that must be added and tested, not assumed to exist.
-- The existing artifact packager snapshots the SQLite database. Merely omitting user rows from a JSON catalog does not remove them from a distributable database.
+- The graph schema carries directed/origin/reason fields, and the rebuild path derives bounded
+  provenance relationships deterministically. A richer operator graph UI and performance work remain
+  roadmap items.
+- The upload extractor covers PDF, HTML/XML, TXT, CSV, JSON, and bounded XLSX content. XLSX safety
+  checks and the `openpyxl` dependency are part of the upload path; manifest URL validation remains
+  separate from local user-upload metadata.
+- `SourceSpec` keeps HTTPS validation for manifest sources while user-upload sources use an explicit
+  local-reference/nullable-URL model.
+- The HTTP surface includes a separate bounded multipart upload path alongside the JSON routes.
+- `KbService` exposes targeted per-document digest and embedding jobs, with policy checks, durable
+  leases, and bounded startup recovery. This is distinct from the bulk source digest pipeline.
+- Retrieval applies the shared source-origin/status predicate: manifest `blocked` and user-upload
+  `review`, `blocked`, or `deleted` content are excluded; approved user uploads remain labelled as
+  unverified reference material.
+- The artifact packager creates a filtered SQLite snapshot and asserts that user-upload rows and
+  derived content do not survive into a distributable artifact.
 
-Implementation should revalidate these facts against the target commit before editing because the worktree may contain unrelated user changes.
+Any future change should revalidate these facts against the target commit because the worktree may
+contain unrelated user changes.
 
 ## 4. Product model and terminology
 
@@ -709,7 +726,7 @@ Extend `scripts/verify_container.sh` only after the focused tests are stable. Th
 
 ## 15. Delivery phases and exit gates
 
-### P0 — Contract and migration design
+### P0 — Contract and migration design — complete
 
 Deliver:
 
@@ -722,14 +739,14 @@ Deliver:
 
 Exit gate: requirements review, migration fixture, and captured model-request contract approved.
 
-### P1 — Safe upload to review queue
+### P1 — Safe upload to review queue — implemented baseline
 
 Deliver:
 
-- Schema migration.
+- Schema migration to the current database version.
 - Operator authentication/feature gate.
 - Streaming upload parser and storage.
-- Format validation and extractors, including reviewed XLSX support.
+- Format validation and extractors, including bounded XLSX support.
 - Upload/source/document/job records.
 - Durable job records with startup recovery of interrupted `running` jobs and idempotent retry; lease expiry and concurrency tuning are P4.
 - Review-only list/detail API.
@@ -737,7 +754,7 @@ Deliver:
 
 Exit gate: a valid upload reaches `review`; malformed, oversized, unsupported, and prompt-injection fixtures fail safely; no uploaded content reaches retrieval.
 
-### P2 — Review and lifecycle controls
+### P2 — Review and lifecycle controls — implemented baseline
 
 Deliver:
 
@@ -749,7 +766,7 @@ Deliver:
 
 Exit gate: review→active changes retrieval eligibility only after explicit approval; quarantine/delete removes eligibility and preserves audit integrity; a manifest `blocked` source is excluded by the same status predicate (regression-tested).
 
-### P3 — Documents-first operator UI
+### P3 — Documents-first operator UI — implemented baseline
 
 Deliver:
 
@@ -760,18 +777,19 @@ Deliver:
 
 Exit gate: keyboard and browser flow passes on the live server; no public notebook regression.
 
-### P4 — Optional processing jobs
+### P4 — Optional processing jobs — implemented baseline; polish remains
 
 Deliver:
 
 - Targeted source-note jobs.
 - Optional embedding jobs.
 - Provider policy checks and disclosure.
-- Worker lease expiry, concurrency bounds, progress reporting, and cancellation polish (durability, startup recovery, and idempotent retry already landed in P1).
+- Worker lease expiry, concurrency bounds, progress reporting, and cancellation polish remain
+  follow-up work; durability, startup recovery, and idempotent retry are implemented.
 
 Exit gate: local/external provider behavior is tested separately; disabled policy prevents egress; jobs are idempotent.
 
-### P5 — Graph navigation
+### P5 — Graph navigation — implemented baseline; UI/performance polish remains
 
 Deliver:
 
@@ -782,9 +800,9 @@ Deliver:
 
 Exit gate: graph is useful for navigation on the current corpus and a dense synthetic fixture without being presented as evidence or truth.
 
-### P6 — Documentation and release hygiene
+### P6 — Documentation and release hygiene — in progress
 
-Deliver:
+Remaining roadmap items:
 
 - `docs/knowledge-pipeline.md` update.
 - Operator runbook for approval, quarantine, deletion, backup, migration, and provider policy.

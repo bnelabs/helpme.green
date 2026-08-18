@@ -97,10 +97,11 @@ docker compose run --rm helpme-green \
 ```
 
 To use embeddings, provide the variables transiently from a shell or a Git-ignored env file, then
-add `--embed`. OpenRouter and loopback LocalAI embedding endpoints are supported. When a query
-embedding or reranker endpoint is configured, query-time use is automatic; set the corresponding
-`HELPME_EMBEDDING_QUERY_ENABLED=0` or `HELPME_RERANK_ENABLED=0` opt-out when needed. Never place
-the key in Compose YAML, source manifests, documentation examples, or Git history. See
+add `--embed`. OpenRouter and loopback LocalAI embedding endpoints are supported. Query-time use is
+automatic only when the corresponding feature is enabled: the Compose defaults deliberately set
+`HELPME_EMBEDDING_QUERY_ENABLED=0` and `HELPME_RERANK_ENABLED=0`, so opt in explicitly when the
+endpoint, model, and provider-disclosure decision are ready. Never place the key in Compose YAML,
+source manifests, documentation examples, or Git history. See
 [`docs/knowledge-retrieval.md`](knowledge-retrieval.md).
 
 The host `.data/knowledge.db` and `.data/source-downloads/` remain local by default. The tracked
@@ -126,6 +127,19 @@ Important endpoints:
 - `/api/expert/capabilities` — machine/skill/knowledge health metadata.
 - `/api/knowledge/sources` — source provenance metadata.
 - `/graphql` — read-only knowledge and retrieval projection.
+- `/api/kb/*` — disabled-by-default, operator-authenticated knowledge-base management routes; see
+  [`kb-operator-runbook.md`](kb-operator-runbook.md).
+
+The release workflow is checked in and has produced the draft `v0.1.0-rc.6` candidate from tagged
+commit `955d8ed9779c36d660fe86f5ca3241313a426b7f`. It passed the six native bundle smoke checks and
+the multi-platform container rehearsal. `main` is now at `95e137ee675625b0fdbe3127071187eb97fab1a4`,
+so changes after the tag are not represented by the existing binary; create a new candidate rather
+than moving the immutable tag. The candidate remains a draft pre-release: macOS and Windows bundles
+are unsigned until the stable signing/notarization secrets are configured. Use the [GitHub Releases
+page](https://github.com/bnelabs/helpme.green/releases) for the current candidate and checksums
+rather than copying binary assets into the repository. Treat the candidate as controlled-test
+software: automated checks are evidence of the build path, not a promise of stability; occasional
+breakage, rough edges, and behavior changes are still possible.
 
 ## Dedicated VPS (optional)
 

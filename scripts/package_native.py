@@ -64,24 +64,34 @@ def _git_commit() -> str:
 
 
 def _write_bundle_metadata(bundle: Path, *, version: str, target: str) -> None:
+    release_status = "release-candidate" if "-rc." in version else "stable"
     metadata = {
         "name": "helpme.green",
         "version": version,
         "target": target,
         "commit": _git_commit(),
         "bundleType": "pyinstaller-onedir",
+        "releaseStatus": release_status,
         "knowledge": "checked-in metadata only; local runtime database is not bundled",
     }
     (bundle / "RELEASE-METADATA.json").write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     executable = "helpme-green.exe" if target.startswith("windows-") else "./helpme-green"
+    release_notice = (
+        "This is a release candidate. Automated target smoke checks have passed, but occasional "
+        "breakage, rough edges, and behavior changes remain possible before stable publication.\n\n"
+        if release_status == "release-candidate"
+        else ""
+    )
     run_instructions = (
         f"# helpme.green {version}\n\n"
         f"Target: `{target}`\n\n"
+        f"{release_notice}"
         "This is a target-native one-directory bundle. It contains the application and checked-in\n"
         "reference metadata, but no model, provider key, encryption key, local database, or raw\n"
         "source download.\n\n"
+        "Verify the archive checksum published with the GitHub release before extracting.\n\n"
         "Start the local browser service from this directory:\n\n"
         f"```text\n{executable} --serve --host 127.0.0.1 --port 8080\n```\n\n"
         "Set `HELPME_DATA_DIR` to a writable persistent directory when the bundle is installed in a\n"

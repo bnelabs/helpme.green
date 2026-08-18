@@ -4,6 +4,16 @@ Status: the release contract, maintainer-run scripts, and checked-in GitHub Acti
 present. The delivery matrix below describes the release surface. Stable publication remains gated
 on signed/notarized macOS and Windows credentials and target verification.
 
+Current evidence: `v0.1.0-rc.6` is a draft pre-release built from tagged release commit
+`955d8ed9779c36d660fe86f5ca3241313a426b7f`. Its release workflow passed the Python 3.11/3.12,
+package, container, and six native-target jobs on 2026-08-18. The draft contains native archives,
+Python distributions, `SHA256SUMS`, and `release-manifest.json`; it is not a stable signed release.
+User-facing wording should describe this honestly and professionally: automated checks are present,
+but an RC may still occasionally break, change behavior, or expose unfinished edges.
+The current `main` branch is `95e137ee675625b0fdbe3127071187eb97fab1a4`, so changes after the RC
+tag are not represented by the existing binary. Do not move the immutable RC tag; advance the source
+version and create the next candidate when a new build is intended.
+
 This document is the release contract for helpme.green. A release is a reproducible, tested,
 versioned point in Git history with a reviewed release note, checksums, and provenance. It is not a
 permission to authorize physical, legal, financial, purchasing, shipment, production, or permit
