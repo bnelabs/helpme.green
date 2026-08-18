@@ -81,7 +81,13 @@ def compact_until_fit(
         options: list[tuple[int, int, list[Message], str]] = []
         for end in range(2, max_end + 1, 2):
             source = working[:end]
-            summary = _summarize(source, understanding or {}, max_chars=max(120, min(720, ceiling)))
+            # Reserve room for the trusted contract and the preserved recent tail on small
+            # context windows; large models still receive the fuller summary.
+            summary = _summarize(
+                source,
+                understanding or {},
+                max_chars=max(240, min(720, ceiling // 3)),
+            )
             candidate = [{"role": "assistant", "content": summary}, *working[end:]]
             after = measure(system_contract, [*candidate, current])
             if after < before:

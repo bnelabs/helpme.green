@@ -4,8 +4,9 @@
   const PHOTO_DB_NAME = "helpme.green.photos.v1";
   const PHOTO_STORE_NAME = "photos";
   const MAX_PHOTOS_PER_PAGE = 3;
-  const MAX_PHOTO_DIMENSION = 640;
-  const PHOTO_QUALITY = .7;
+  const MAX_LIBRARY_REFERENCE_IMAGES = 3;
+  const SUPPORTED_VISION_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+  const ASSISTANT_VERIFICATION_NOTICE = "AI note: Models can make mistakes. Please check important details against reliable sources and, where relevant, measurements or qualified professional advice before acting.";
   const phases = [
     {id: "observe", label: "Observe", detail: "What is in front of you?", heading: "Start with the first look", lede: "Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.", question: "What do you see, and what would you like to understand?", change: ["A clearer view of surface, form, or condition.", "A note about what is known, suspected, or still open."]},
     {id: "identify", label: "Identify", detail: "Name with care", heading: "Name the material with care", lede: "Use the library to keep a helpful example nearby. A visual match is a starting point, not a confirmed answer.", question: "Which material type is worth checking next?", change: ["A label, document, or test result that supports the name.", "A mixed, coated, or layered piece that changes the first read."]},
@@ -83,6 +84,8 @@
     evidenceOrigin: document.getElementById("evidenceOrigin"),
     evidenceDetails: document.getElementById("evidenceDetails"),
     evidenceNote: document.getElementById("evidenceNote"),
+    modelDisclosure: document.getElementById("modelDisclosure"),
+    clearDetachedPhotos: document.getElementById("clearDetachedPhotos"),
     evidenceGuidance: document.getElementById("evidenceGuidance"),
     evidenceGuidanceTitle: document.getElementById("evidenceGuidanceTitle"),
     evidenceGuidanceText: document.getElementById("evidenceGuidanceText"),
@@ -124,7 +127,35 @@
     authGate: document.getElementById("authGate"),
     authForm: document.getElementById("authForm"),
     authInput: document.getElementById("token"),
-    authError: document.getElementById("authError")
+    authError: document.getElementById("authError"),
+    settingsForm: document.getElementById("settingsForm"),
+    settingsProvider: document.getElementById("settingsProvider"),
+    settingsModel: document.getElementById("settingsModel"),
+    settingsIdentity: document.getElementById("settingsIdentity"),
+    settingsLocalaiBaseUrl: document.getElementById("settingsLocalaiBaseUrl"),
+    settingsApiKey: document.getElementById("settingsApiKey"),
+    settingsClearApiKey: document.getElementById("settingsClearApiKey"),
+    settingsKeyStatus: document.getElementById("settingsKeyStatus"),
+    settingsAiEnabled: document.getElementById("settingsAiEnabled"),
+    settingsLocalaiTls: document.getElementById("settingsLocalaiTls"),
+    settingsVision: document.getElementById("settingsVision"),
+    settingsIncludeReasoning: document.getElementById("settingsIncludeReasoning"),
+    settingsTemperature: document.getElementById("settingsTemperature"),
+    settingsTopP: document.getElementById("settingsTopP"),
+    settingsTopK: document.getElementById("settingsTopK"),
+    settingsMinP: document.getElementById("settingsMinP"),
+    settingsMaxTokens: document.getElementById("settingsMaxTokens"),
+    settingsContextWindow: document.getElementById("settingsContextWindow"),
+    settingsTimeout: document.getElementById("settingsTimeout"),
+    settingsReasoningStrength: document.getElementById("settingsReasoningStrength"),
+    settingsAdvancedOptions: document.getElementById("settingsAdvancedOptions"),
+    settingsQualityJudges: document.getElementById("settingsQualityJudges"),
+    settingsRetries: document.getElementById("settingsRetries"),
+    settingsDiscoveryTimeout: document.getElementById("settingsDiscoveryTimeout"),
+    settingsMaxTimeout: document.getElementById("settingsMaxTimeout"),
+    settingsTheme: document.getElementById("settingsTheme"),
+    saveSettings: document.getElementById("saveSettings"),
+    settingsStatus: document.getElementById("settingsStatus")
   };
   const libraryBackground = [
     document.querySelector(".topbar"),
@@ -133,6 +164,8 @@
   ].filter(Boolean);
 
   let sessionId = null;
+  let configuredModelIdentity = "";
+  let detachedPhotoCount = 0;
   let conversationGeneration = 0;
   let token = "";
   let starting = false;
@@ -147,6 +180,7 @@
   let photoRenderVersion = 0;
   let libraryTrigger = null;
   let turnTimer = null;
+  let loadedSettings = null;
 
   function blankEvidence() {
     return {photos: [], form: "", condition: "", origin: "", details: ""};
@@ -171,6 +205,14 @@
   }
   function isAssistantFailureText(value) {
     return typeof value === "string" && /^(I couldn.?t get a response from the local model just now|I couldn.?t answer that right now)/i.test(value.trim());
+  }
+  function withAssistantVerificationNotice(value) {
+    const text = typeof value === "string" ? value.trim() : "";
+    if (!text || text.toLowerCase().includes(ASSISTANT_VERIFICATION_NOTICE.toLowerCase())) return text;
+    return text + "\n\n" + ASSISTANT_VERIFICATION_NOTICE;
+  }
+  function modelTargetLabel() {
+    return configuredModelIdentity || "the configured vision model";
   }
   function validTimestamp(value) {
     return typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : "";
@@ -222,7 +264,7 @@
   }
   function validHistory(value) {
     if (!Array.isArray(value)) return [];
-    return value.slice(0, 5).map((snapshot) => {
+    return value.map((snapshot) => {
       if (!snapshot || typeof snapshot !== "object" || !Array.isArray(snapshot.pages)) return null;
       return {
         title: typeof snapshot.title === "string" ? snapshot.title.slice(0, 90) : "Untitled material note",
@@ -272,7 +314,7 @@
       currentPhase: state.currentPhase,
       selectedCategory: state.selectedCategory,
       pages: state.pages.map((page) => persistablePage(page)),
-      history: (state.history || []).slice(0, 5).map((snapshot) => Object.assign({}, snapshot, {
+      history: (state.history || []).map((snapshot) => Object.assign({}, snapshot, {
         pages: Array.isArray(snapshot.pages) ? snapshot.pages.map((page) => persistablePage(page)) : []
       }))
     };
@@ -314,17 +356,109 @@
       transaction.onerror = () => reject(transaction.error || new Error("Local photo storage failed."));
     }));
   }
-  function putPhoto(photo, blob) {
+  function putPhoto(photo, blob, detachedAt = null) {
     return photoRequest("readwrite", (store) => store.put({
       id: photo.id,
       name: photo.name,
       type: photo.type,
       size: blob.size,
+      detachedAt,
       blob
     }));
   }
   function getPhoto(id) {
     return photoRequest("readonly", (store) => store.get(id));
+  }
+  function getAllPhotos() {
+    return photoRequest("readonly", (store) => store.getAll());
+  }
+  async function detachPhoto(id) {
+    const record = await getPhoto(id);
+    if (!record || !record.blob) return;
+    await putPhoto(record, record.blob, new Date().toISOString());
+  }
+  function referencedPhotoIds() {
+    const pages = state.pages.concat((state.history || []).flatMap((snapshot) => snapshot.pages || []));
+    return new Set(pages.flatMap((page) => ((page.evidence && page.evidence.photos) || []).map((photo) => photo.id)));
+  }
+  async function refreshDetachedPhotoStatus() {
+    try {
+      const referenced = referencedPhotoIds();
+      const records = await getAllPhotos();
+      detachedPhotoCount = records.filter((record) => record && record.detachedAt && !referenced.has(record.id)).length;
+      updateDetachedPhotoControl();
+    } catch (_) {
+      detachedPhotoCount = 0;
+      updateDetachedPhotoControl();
+    }
+  }
+  function updateDetachedPhotoControl() {
+    if (!elements.clearDetachedPhotos) return;
+    elements.clearDetachedPhotos.hidden = detachedPhotoCount === 0;
+    elements.clearDetachedPhotos.textContent = detachedPhotoCount === 1
+      ? "Clear 1 removed original"
+      : "Clear " + detachedPhotoCount + " removed originals";
+  }
+  async function clearDetachedPhotos() {
+    const referenced = referencedPhotoIds();
+    const records = await getAllPhotos();
+    const removable = records.filter((record) => record && record.detachedAt && !referenced.has(record.id));
+    if (!removable.length) {
+      detachedPhotoCount = 0;
+      updateDetachedPhotoControl();
+      return;
+    }
+    const label = removable.length === 1 ? "1 removed original" : removable.length + " removed originals";
+    if (!window.confirm("Permanently clear " + label + " from this browser?")) return;
+    for (const record of removable) {
+      await photoRequest("readwrite", (store) => store.delete(record.id));
+    }
+    await refreshDetachedPhotoStatus();
+  }
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("The sample photo could not be prepared for the assistant."));
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.readAsDataURL(blob);
+    });
+  }
+  async function modelImagesForPage(page) {
+    const images = [];
+    for (const photo of (page.evidence && page.evidence.photos) || []) {
+      let dataUrl = photo.legacyDataUrl || "";
+      let mimeType = photo.type || "";
+      if (!dataUrl) {
+        const record = await getPhoto(photo.id);
+        if (!record || !record.blob) {
+          throw new Error("The sample photo could not be loaded for the assistant.");
+        }
+        mimeType = record.blob.type || mimeType;
+        dataUrl = await blobToDataUrl(record.blob);
+      }
+      const type = mimeType.toLowerCase();
+      if (!SUPPORTED_VISION_IMAGE_TYPES.has(type) || !dataUrl.startsWith("data:image/")) {
+        throw new Error("Use PNG, JPEG, WebP, or GIF photos for visual analysis.");
+      }
+      images.push({name: photo.name || "Sample photo", mime_type: type, data_url: dataUrl});
+    }
+    for (const reference of (page.references || []).slice(0, MAX_LIBRARY_REFERENCE_IMAGES)) {
+      try {
+        const response = await fetch(reference.image);
+        if (!response.ok) continue;
+        const blob = await response.blob();
+        const type = (blob.type || "").toLowerCase();
+        if (!SUPPORTED_VISION_IMAGE_TYPES.has(type)) continue;
+        images.push({
+          name: "Library example — " + (reference.label || reference.code || "reference"),
+          mime_type: type,
+          data_url: await blobToDataUrl(blob)
+        });
+      } catch (_) {
+        // The labels remain in the text prompt when an illustrative asset cannot be loaded.
+      }
+    }
+    return images;
   }
   function dataUrlToBlob(dataUrl) {
     const parts = dataUrl.split(",", 2);
@@ -446,7 +580,23 @@
       const text = document.createElement("span");
       text.className = "observation-text";
       text.textContent = observation;
-      row.append(number, text);
+      const remove = document.createElement("button");
+      remove.className = "observation-remove";
+      remove.type = "button";
+      remove.textContent = "Remove";
+      remove.disabled = requestPending || comparisonPending;
+      remove.setAttribute("aria-label", "Remove observation " + (index + 1));
+      remove.addEventListener("click", () => {
+        page.observations.splice(index, 1);
+        page.reply = "";
+        page.sources = [];
+        page.comparison = "";
+        page.comparisonSources = [];
+        lastFailedRequest = null;
+        saveState();
+        renderAll();
+      });
+      row.append(number, text, remove);
       elements.observationList.appendChild(row);
     });
   }
@@ -471,7 +621,7 @@
       },
       mixed: {
         title: "Mixed pieces",
-        text: "Treat this as a mixture first. If safe, add an overview and a close-up of the different pieces. The assistant will describe what is visible instead of forcing one material name."
+        text: "Treat this as a mixture first. If safe, add an overview and a close-up of the different pieces. The assistant will inspect the attached image and keep the result as a mixture instead of forcing one material name."
       },
       closed: {
         title: "Closed container",
@@ -506,14 +656,18 @@
         }
         const remove = document.createElement("button");
         remove.type = "button";
-        remove.textContent = "Remove";
-        remove.setAttribute("aria-label", "Remove user sample photo " + (index + 1));
+        remove.textContent = "Remove from page";
+        remove.setAttribute("aria-label", "Remove user sample photo " + (index + 1) + " from this page");
         remove.addEventListener("click", () => {
           activePage().evidence.photos = activePage().evidence.photos.filter((item) => item.id !== photo.id);
           activePage().comparison = "";
           activePage().comparisonSources = [];
           saveState();
           renderAll();
+          void detachPhoto(photo.id).then(refreshDetachedPhotoStatus).catch(() => {
+            photoStorageError = "The photo was removed from this page, but local photo storage could not update its archive status.";
+            renderNotebook();
+          });
         });
         frame.append(image, remove);
         elements.evidencePhotos.appendChild(frame);
@@ -534,10 +688,12 @@
     }
     const detail = evidence.form || evidence.condition || evidence.origin || evidence.details;
     elements.evidenceNote.textContent = evidence.photos.length
-      ? "Your photo" + (evidence.photos.length === 1 ? " stays" : "s stay") + " here. The assistant will keep the sample form and limits with the comparison."
+      ? "Your original photo" + (evidence.photos.length === 1 ? " is" : "s are") + " ready for the next comparison."
       : detail
         ? "These details stay with this page. Add a photo when you have one."
         : "No photo yet. Your notes are enough to start.";
+    if (elements.modelDisclosure) elements.modelDisclosure.textContent = modelTargetLabel();
+    updateDetachedPhotoControl();
   }
   function renderReferences(page) {
     elements.referenceChips.replaceChildren();
@@ -596,7 +752,7 @@
     });
     if (page.reply) {
       elements.assistantRead.hidden = false;
-      elements.assistantText.textContent = page.reply;
+      elements.assistantText.textContent = withAssistantVerificationNotice(page.reply);
       const sources = page.sources || [];
       elements.sourceNote.textContent = sources.length ? sources.map((source) => source.label || "Reference").join(" · ") : "No source linked to this read yet.";
     } else {
@@ -606,7 +762,7 @@
     }
     if (page.comparison) {
       elements.comparisonRead.hidden = false;
-      elements.comparisonText.textContent = page.comparison;
+      elements.comparisonText.textContent = withAssistantVerificationNotice(page.comparison);
       const comparisonSources = page.comparisonSources || [];
       elements.comparisonSourceNote.textContent = comparisonSources.length
         ? comparisonSources.map((source) => source.label || "Reference").join(" · ")
@@ -622,6 +778,7 @@
     const phase = phases[state.currentPhase];
     const difficultForm = ["granules", "powder", "mixed", "closed"].includes(page.evidence.form);
     elements.noteTitle.value = state.title;
+    fitNoteTitle();
     elements.noteDate.textContent = "NOTE — " + new Intl.DateTimeFormat("en-GB", {day: "2-digit", month: "short", year: "numeric"}).format(new Date(state.createdAt || Date.now())).toUpperCase();
     elements.leftPageTag.textContent = phase.label.toUpperCase();
     elements.pageState.textContent = "Phase " + (state.currentPhase + 1) + " of " + phases.length;
@@ -642,11 +799,9 @@
     elements.statusNote.textContent = persistenceError || photoStorageError
       ? persistenceError || photoStorageError
       : pageComparisonPending
-      ? difficultForm
-        ? "Making a careful comparison. The sample form may limit what a photo can show..."
-        : "Comparing your notes with the library examples..."
+      ? "Sending the original photo and all saved page details to " + modelTargetLabel() + "..."
       : pageRequestPending
-        ? "Reading this page..."
+        ? "Sending the observation and attached photo to " + modelTargetLabel() + "..."
         : pageFailure
           ? offline
             ? "You appear to be offline. Your note is saved here; try again when connected."
@@ -655,13 +810,20 @@
               : "The observation is saved on this page. The assistant read is not available right now."
         : "Autosaved in this browser. Nothing is lost when you move between phases.";
     elements.retryRequest.hidden = !pageFailure || pageRequestPending || pageComparisonPending;
-    elements.compareEvidence.disabled = comparisonPending || requestPending || !(
+    const hasComparisonInput = Boolean(
       page.observations.length || page.references.length || page.evidence.photos.length || page.evidence.condition || page.evidence.origin || page.evidence.details
     );
+    elements.compareEvidence.disabled = comparisonPending || requestPending || !hasComparisonInput;
     elements.composer.setAttribute("aria-busy", pageRequestPending ? "true" : "false");
     elements.send.disabled = pageRequestPending || pageComparisonPending;
     elements.compareEvidence.textContent = pageComparisonPending ? "Comparing..." : difficultForm ? "Compare carefully" : "Compare with assistant";
-    elements.comparisonHint.textContent = difficultForm ? "Photo alone may not be enough · Unclear from photo is valid" : "Your notes + library examples";
+    elements.comparisonHint.textContent = hasComparisonInput
+      ? difficultForm
+        ? "Next: click Compare carefully · attached photo + all page details will be analyzed"
+        : "Next: click Compare with assistant · attached photo + all page details will be analyzed"
+      : difficultForm
+        ? "Add a note or example first · the attached photo will be analyzed with it"
+        : "Add an observation or library example first";
   }
   function renderHistory() {
     elements.historyList.replaceChildren();
@@ -835,7 +997,7 @@
       createdAt: state.createdAt,
       pages: state.pages.map((page) => validPage(page, false)),
       savedAt: new Date().toISOString()
-    }, ...(state.history || [])].slice(0, 5);
+    }, ...(state.history || [])];
   }
   function startNewNote() {
     archiveCurrentNote();
@@ -866,7 +1028,7 @@
     sessionId = null;
     state.sessionId = null;
     state.currentPhase = 0;
-    state.history = [current, ...state.history.filter((_, itemIndex) => itemIndex !== index)].slice(0, 5);
+    state.history = [current, ...state.history.filter((_, itemIndex) => itemIndex !== index)];
     conversationGeneration += 1;
     lastFailedRequest = null;
     saveState();
@@ -895,6 +1057,160 @@
       throw error;
     }
     return body;
+  }
+  async function loadModelIdentity() {
+    try {
+      const body = await request("/api/runtime/model");
+      if (typeof body.identity === "string") configuredModelIdentity = body.identity;
+      renderNotebook();
+    } catch (_) {
+      // The notebook remains usable with the generic provider label when the metadata route is unavailable.
+    }
+  }
+  const SETTINGS_PROFILE_FIELDS = new Set([
+    "temperature", "top_p", "top_k", "min_p", "max_tokens", "context_window",
+    "timeout_seconds", "vision", "include_reasoning", "chat_template_kwargs"
+  ]);
+  function setSettingsNumber(id, value) {
+    elements[id].value = value === undefined || value === null || value === "" ? "" : String(value);
+  }
+  function renderSettings(settings) {
+    loadedSettings = settings;
+    elements.settingsProvider.value = settings.provider || "localai";
+    elements.settingsModel.value = settings.model || "auto";
+    elements.settingsIdentity.textContent = settings.identity || "Not configured";
+    elements.settingsLocalaiBaseUrl.value = settings.localai_base_url || "";
+    elements.settingsAiEnabled.checked = Boolean(settings.ai_enabled);
+    elements.settingsLocalaiTls.checked = Boolean(settings.localai_tls_verify);
+    elements.settingsQualityJudges.checked = Boolean(settings.quality_judges);
+    setSettingsNumber("settingsRetries", settings.model_retries);
+    setSettingsNumber("settingsDiscoveryTimeout", settings.model_discovery_timeout);
+    setSettingsNumber("settingsMaxTimeout", settings.max_model_timeout_seconds);
+    elements.settingsTheme.value = loadTheme();
+    elements.settingsApiKey.value = "";
+    elements.settingsClearApiKey.checked = false;
+    const keyStatus = settings.api_keys && settings.api_keys[settings.provider];
+    if (keyStatus && keyStatus.configured) {
+      elements.settingsKeyStatus.textContent = keyStatus.source === "encrypted"
+        ? "An encrypted key is saved for this provider."
+        : "A key is supplied by the server environment.";
+    } else if (!settings.api_key_storage_available) {
+      elements.settingsKeyStatus.textContent = "Encrypted key storage is unavailable; set HELPME_MASTER_KEY before saving a key.";
+    } else {
+      elements.settingsKeyStatus.textContent = "No key is saved for this provider.";
+    }
+    const profile = settings.profile && typeof settings.profile === "object" ? settings.profile : {};
+    elements.settingsVision.checked = profile.vision === true;
+    elements.settingsIncludeReasoning.checked = profile.include_reasoning === true;
+    setSettingsNumber("settingsTemperature", profile.temperature);
+    setSettingsNumber("settingsTopP", profile.top_p);
+    setSettingsNumber("settingsTopK", profile.top_k);
+    setSettingsNumber("settingsMinP", profile.min_p);
+    setSettingsNumber("settingsMaxTokens", profile.max_tokens);
+    setSettingsNumber("settingsContextWindow", profile.context_window);
+    setSettingsNumber("settingsTimeout", profile.timeout_seconds);
+    const template = profile.chat_template_kwargs && typeof profile.chat_template_kwargs === "object" && !Array.isArray(profile.chat_template_kwargs)
+      ? Object.assign({}, profile.chat_template_kwargs)
+      : {};
+    elements.settingsReasoningStrength.value = typeof template.reasoning_strength === "string" ? template.reasoning_strength : "";
+    delete template.reasoning_strength;
+    const advanced = Object.fromEntries(Object.entries(profile).filter(([key]) => !SETTINGS_PROFILE_FIELDS.has(key)));
+    if (Object.keys(template).length) advanced.chat_template_kwargs = template;
+    elements.settingsAdvancedOptions.value = Object.keys(advanced).length ? JSON.stringify(advanced, null, 2) : "";
+  }
+  function settingsStatus(text, kind) {
+    elements.settingsStatus.textContent = text || "";
+    elements.settingsStatus.dataset.kind = kind || "";
+  }
+  async function loadSettings() {
+    if (!elements.settingsForm) return;
+    settingsStatus("Loading saved settings...", "busy");
+    try {
+      const body = await request("/api/settings");
+      renderSettings(body);
+      settingsStatus("Settings loaded.", "");
+    } catch (error) {
+      settingsStatus(error && error.code === "auth_required" ? "Enter the connection key in the notebook before opening settings." : (error.message || "Settings could not be loaded."), "error");
+    }
+  }
+  function numericSetting(id) {
+    const raw = elements[id].value.trim();
+    if (!raw) return undefined;
+    const value = Number(raw);
+    if (!Number.isFinite(value)) throw new Error("Model option must be a number.");
+    return value;
+  }
+  function buildSettingsProfile() {
+    let advanced = {};
+    const rawAdvanced = elements.settingsAdvancedOptions.value.trim();
+    if (rawAdvanced) {
+      try { advanced = JSON.parse(rawAdvanced); } catch (_) { throw new Error("Advanced request options must be valid JSON."); }
+      if (!advanced || typeof advanced !== "object" || Array.isArray(advanced)) throw new Error("Advanced request options must be a JSON object.");
+    }
+    const profile = Object.assign({}, advanced);
+    const numericFields = {
+      temperature: "settingsTemperature",
+      top_p: "settingsTopP",
+      top_k: "settingsTopK",
+      min_p: "settingsMinP",
+      max_tokens: "settingsMaxTokens",
+      context_window: "settingsContextWindow",
+      timeout_seconds: "settingsTimeout"
+    };
+    Object.entries(numericFields).forEach(([key, id]) => {
+      const value = numericSetting(id);
+      if (value === undefined) delete profile[key];
+      else profile[key] = value;
+    });
+    profile.vision = elements.settingsVision.checked;
+    profile.include_reasoning = elements.settingsIncludeReasoning.checked;
+    const template = profile.chat_template_kwargs && typeof profile.chat_template_kwargs === "object" && !Array.isArray(profile.chat_template_kwargs)
+      ? Object.assign({}, profile.chat_template_kwargs)
+      : {};
+    const reasoningStrength = elements.settingsReasoningStrength.value.trim();
+    if (reasoningStrength) template.reasoning_strength = reasoningStrength;
+    else delete template.reasoning_strength;
+    if (Object.keys(template).length) profile.chat_template_kwargs = template;
+    else delete profile.chat_template_kwargs;
+    return profile;
+  }
+  async function saveSettings(event) {
+    event.preventDefault();
+    let profile;
+    try { profile = buildSettingsProfile(); } catch (error) {
+      settingsStatus(error.message || "Check the model options.", "error");
+      return;
+    }
+    const payload = {
+      provider: elements.settingsProvider.value,
+      model: elements.settingsModel.value.trim(),
+      localai_base_url: elements.settingsLocalaiBaseUrl.value.trim(),
+      ai_enabled: elements.settingsAiEnabled.checked,
+      localai_tls_verify: elements.settingsLocalaiTls.checked,
+      quality_judges: elements.settingsQualityJudges.checked,
+      model_retries: Number(elements.settingsRetries.value),
+      model_discovery_timeout: Number(elements.settingsDiscoveryTimeout.value),
+      max_model_timeout_seconds: Number(elements.settingsMaxTimeout.value),
+      profile
+    };
+    const apiKey = elements.settingsApiKey.value;
+    if (apiKey) payload.api_key = apiKey;
+    if (elements.settingsClearApiKey.checked) payload.clear_api_key = true;
+    elements.saveSettings.disabled = true;
+    settingsStatus("Saving settings...", "busy");
+    try {
+      const body = await request("/api/settings", {method: "POST", body: JSON.stringify(payload)});
+      const saved = body.settings || body;
+      renderSettings(saved);
+      configuredModelIdentity = saved.identity || configuredModelIdentity;
+      setTheme(elements.settingsTheme.value);
+      settingsStatus("Saved. Start a new conversation to use provider or model changes.", "success");
+      renderNotebook();
+    } catch (error) {
+      settingsStatus(error.message || "Settings could not be saved.", "error");
+    } finally {
+      elements.saveSettings.disabled = false;
+    }
   }
   async function streamRequest(url, options, onDelta) {
     const response = await fetch(url, Object.assign({}, options, {headers: headers()}));
@@ -972,6 +1288,7 @@
     try {
       const body = await request("/api/sessions", {method: "POST", body: "{}"});
       sessionId = body.session_id;
+      configuredModelIdentity = typeof body.model === "string" ? body.model : configuredModelIdentity;
       state.sessionId = sessionId;
       saveState();
       elements.authGate.hidden = true;
@@ -987,12 +1304,14 @@
       elements.send.disabled = false;
     }
   }
-  async function sendAssistantMessage(message, onDelta) {
+  async function sendAssistantMessage(message, onDelta, images = []) {
     let activeSessionId = await createSession();
     if (!activeSessionId) throw Object.assign(new Error("assistant_unavailable"), {code: "assistant_unavailable"});
+    const payload = {message};
+    if (images.length) payload.images = images;
     const send = (id, onDelta) => streamRequest("/api/sessions/" + encodeURIComponent(id) + "/message/stream", {
       method: "POST",
-      body: JSON.stringify({message})
+      body: JSON.stringify(payload)
     }, onDelta);
     try {
       return await send(activeSessionId, onDelta);
@@ -1005,7 +1324,7 @@
       if (error && (error.status === 404 || error.status === 405 || error.code === "stream_unavailable")) {
         return request("/api/sessions/" + encodeURIComponent(activeSessionId) + "/message", {
           method: "POST",
-          body: JSON.stringify({message})
+          body: JSON.stringify(payload)
         });
       }
       throw error;
@@ -1019,14 +1338,20 @@
     renderNotebook();
     const targetPage = state.pages[phaseIndex];
     try {
-      const body = await sendAssistantMessage(text, (delta) => {
+      const images = await modelImagesForPage(targetPage);
+      const prompt = [
+        "Respond to the latest user observation naturally while using the attached image(s) and every saved detail on this page.",
+        "Latest observation:\n" + text,
+        comparisonPrompt(targetPage, phases[phaseIndex], state.title)
+      ].join("\n\n");
+      const body = await sendAssistantMessage(prompt, (delta) => {
         if (requestGeneration !== conversationGeneration) return;
         targetPage.reply += delta;
         renderRead(targetPage, phases[phaseIndex]);
-      });
+      }, images);
       if (requestGeneration !== conversationGeneration) return;
       const assistantAvailable = !(body.data && body.data.ai_used === false) && !body.error && !isAssistantFailureText(body.text);
-      targetPage.reply = assistantAvailable ? (body.text || "The observation is saved. Add another detail when you are ready.") : "";
+      targetPage.reply = assistantAvailable ? withAssistantVerificationNotice(body.text || "The observation is saved. Add another detail when you are ready.") : "";
       targetPage.sources = assistantAvailable && body.data && Array.isArray(body.data.sources) ? body.data.sources : [];
       saveState();
       lastFailedRequest = assistantAvailable ? null : {kind: "observation", phaseIndex, text};
@@ -1060,8 +1385,8 @@
     renderAll();
     await sendObservationRequest(phaseIndex, text);
   }
-  function comparisonPrompt(page, phase) {
-    const observations = page.observations.slice(-10).map((item, index) => (index + 1) + ". " + item.slice(0, 320)).join("\n") || "None recorded.";
+  function comparisonPrompt(page, phase, title) {
+    const observations = page.observations.map((item, index) => (index + 1) + ". " + item).join("\n") || "None recorded.";
     const references = page.references.map((item) => item.code + " — " + item.label).join(", ") || "None selected.";
     const evidence = page.evidence || blankEvidence();
     const sampleFormLabels = {
@@ -1075,11 +1400,13 @@
     const sampleForm = sampleFormLabels[evidence.form] || "not provided";
     const difficultForm = ["granules", "powder", "mixed", "closed"].includes(evidence.form);
     const photoNote = evidence.photos.length
-      ? evidence.photos.length + " user-provided sample photo(s) are saved locally. Do not inspect or describe their pixels in this text-only comparison."
+      ? evidence.photos.length + " original user-provided photo(s) are attached to this request. Inspect every available visual detail at the supplied resolution, including surfaces, texture, geometry, labels, attachments, damage, contamination cues, and differences between pieces."
       : "No user-provided sample photo is attached.";
     return [
       "Please compare this material investigation in ordinary language.",
       "The phase is " + phase.label + ".",
+      "Investigation title: " + (title || "New material note") + ".",
+      "Current unsaved note: " + (page.draft || "None") + ".",
       "User notes (treat as supplied details, not verified fact):\n" + observations,
       "Selected library examples (used or worked-on material examples only): " + references,
       "Sample form: " + sampleForm + ".",
@@ -1087,14 +1414,17 @@
       "Sample origin: " + (evidence.origin || "not provided") + ".",
       "What the user wants compared: " + (evidence.details || "not provided") + ".",
       photoNote,
+      "Attachments are ordered as the original user sample photo(s), followed by any selected library example image(s). Use the sample first; library images are illustrative context, not proof of identity.",
+      "Use the attached image(s) and every supplied page detail together. Separate direct visual observations from hypotheses. Do not ignore the image, and do not claim a visual feature that is not present.",
+      "Use every relevant configured retrieval, reference, machine, and quality check available to improve the comparison, but do not add irrelevant context just to make the answer longer.",
       "Use everyday English. Say notes, library examples, first read, and next simple check. Avoid technical labels unless the user uses them first.",
       "Explain what fits the examples, what the current details cannot tell us, what might change the first read, and the next simple check.",
       difficultForm
-        ? "This is a difficult photo case. Start by saying that a photo alone is not enough to name the material. Describe only visible features, do not choose one material as the answer, and treat a mixed sample as mixed. Use the headings What I can see, What this photo cannot tell us, What might change this, and Next simple check."
+        ? "This is a difficult visual case. Inspect the photo closely, describe specific visible features before interpreting them, do not choose one material as the answer from appearance alone, and treat a mixed sample as mixed. Use the headings What I can see, What this photo cannot tell us, What might change this, and Next simple check."
         : "Use the headings What fits, What this does not tell us, What might change this, and Next simple check.",
       "If the photo or notes are not enough, use the plain result label Unclear from photo and explain what extra detail would help.",
-      "Do not claim image inspection, confirmed identity, test results, composition, grade, recyclability, legal status, safety clearance, price, yield, or process suitability. Name material types only as possibilities and keep uncertainty visible. Do not invent sources or measurements."
-    ].join("\n\n").slice(0, 3950);
+      "You may inspect the supplied image, but do not claim confirmed identity, test results, composition, grade, recyclability, legal status, safety clearance, price, yield, or process suitability. Name material types only as possibilities and keep uncertainty visible. Do not invent sources or measurements."
+    ].join("\n\n");
   }
   async function sendComparisonRequest(phaseIndex) {
     const requestGeneration = conversationGeneration;
@@ -1104,14 +1434,15 @@
     renderNotebook();
     const targetPage = state.pages[phaseIndex];
     try {
-      const body = await sendAssistantMessage(comparisonPrompt(state.pages[phaseIndex], phases[phaseIndex]), (delta) => {
+      const images = await modelImagesForPage(targetPage);
+      const body = await sendAssistantMessage(comparisonPrompt(targetPage, phases[phaseIndex], state.title), (delta) => {
         if (requestGeneration !== conversationGeneration) return;
         targetPage.comparison += delta;
         renderRead(targetPage, phases[phaseIndex]);
-      });
+      }, images);
       if (requestGeneration !== conversationGeneration) return;
       const assistantAvailable = !(body.data && body.data.ai_used === false) && !body.error && !isAssistantFailureText(body.text);
-      targetPage.comparison = assistantAvailable ? (body.text || "Your notes are saved. Add another detail or library example when you are ready.") : "";
+      targetPage.comparison = assistantAvailable ? withAssistantVerificationNotice(body.text || "Your notes are saved. Add another detail or library example when you are ready.") : "";
       targetPage.comparisonSources = assistantAvailable && body.data && Array.isArray(body.data.sources) ? body.data.sources : [];
       saveState();
       lastFailedRequest = assistantAvailable ? null : {kind: "comparison", phaseIndex};
@@ -1150,41 +1481,11 @@
     }
     if (state.pages[failed.phaseIndex]) void sendComparisonRequest(failed.phaseIndex);
   }
-  function resizeEvidencePhoto(file) {
-    return new Promise((resolve, reject) => {
-      if (!file || !file.type.startsWith("image/")) {
-        reject(new Error("Choose an image file."));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("The sample photo could not be read."));
-      reader.onload = () => {
-        const image = new Image();
-        image.onerror = () => reject(new Error("The sample photo could not be opened."));
-        image.onload = () => {
-          const maxDimension = MAX_PHOTO_DIMENSION;
-          const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-          const context = canvas.getContext("2d");
-          if (!context) {
-            reject(new Error("The sample photo could not be prepared."));
-            return;
-          }
-          context.drawImage(image, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((blob) => {
-            if (!blob) {
-              reject(new Error("The sample photo could not be prepared."));
-              return;
-            }
-            resolve(blob);
-          }, "image/jpeg", PHOTO_QUALITY);
-        };
-        image.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
+  function prepareEvidencePhoto(file) {
+    if (!file || !SUPPORTED_VISION_IMAGE_TYPES.has(file.type.toLowerCase())) {
+      return Promise.reject(new Error("Use PNG, JPEG, WebP, or GIF photos for visual analysis."));
+    }
+    return Promise.resolve(file.slice(0, file.size, file.type));
   }
   async function addEvidencePhotos(event) {
     const page = activePage();
@@ -1196,7 +1497,7 @@
     }
     try {
       for (const file of files) {
-        const blob = await resizeEvidencePhoto(file);
+        const blob = await prepareEvidencePhoto(file);
         const photo = {
           id: "photo-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
           name: file.name,
@@ -1211,7 +1512,7 @@
       const persisted = saveState();
       renderAll();
       photoStorageError = "";
-      if (persisted) elements.statusNote.textContent = "The sample photo is saved locally on this page.";
+      if (persisted) elements.statusNote.textContent = "The original photo is saved here and will be sent with the next assistant comparison.";
     } catch (error) {
       photoStorageError = error.message || "The sample photo could not be saved.";
       renderNotebook();
@@ -1219,8 +1520,13 @@
       event.target.value = "";
     }
   }
+  function fitNoteTitle() {
+    elements.noteTitle.style.height = "0px";
+    elements.noteTitle.style.height = Math.max(elements.noteTitle.scrollHeight, 1) + "px";
+  }
   elements.noteTitle.addEventListener("input", () => {
     state.title = elements.noteTitle.value;
+    fitNoteTitle();
     saveState();
   });
   elements.message.addEventListener("input", () => {
@@ -1236,6 +1542,14 @@
   elements.composer.addEventListener("submit", saveObservation);
   elements.compareEvidence.addEventListener("click", compareEvidenceWithAssistant);
   elements.retryRequest.addEventListener("click", retryLastRequest);
+  if (elements.clearDetachedPhotos) {
+    elements.clearDetachedPhotos.addEventListener("click", () => {
+      void clearDetachedPhotos().catch((error) => {
+        photoStorageError = error.message || "Removed local photos could not be cleared.";
+        renderNotebook();
+      });
+    });
+  }
   elements.evidencePhotoInput.addEventListener("change", addEvidencePhotos);
   elements.evidenceForm.addEventListener("change", () => {
     activePage().evidence.form = elements.evidenceForm.value;
@@ -1278,6 +1592,7 @@
   if (libraryNav) {
     libraryNav.addEventListener("click", (event) => {
       event.preventDefault();
+      if (window.location.hash === "#kb" || window.location.hash === "#settings") window.location.hash = "#notebook";
       setLibraryOpen(true, event.currentTarget);
     });
   }
@@ -1314,6 +1629,21 @@
   });
   elements.newNote.addEventListener("click", startNewNote);
   elements.themeToggle.addEventListener("click", () => setTheme(elements.body.dataset.theme === "dark" ? "light" : "dark"));
+  if (elements.settingsForm) {
+    elements.settingsForm.addEventListener("submit", saveSettings);
+    elements.settingsProvider.addEventListener("change", () => {
+      const keyStatus = loadedSettings && loadedSettings.api_keys && loadedSettings.api_keys[elements.settingsProvider.value];
+      if (keyStatus && keyStatus.configured) {
+        elements.settingsKeyStatus.textContent = keyStatus.source === "encrypted"
+          ? "An encrypted key is saved for this provider."
+          : "A key is supplied by the server environment.";
+      } else if (loadedSettings && !loadedSettings.api_key_storage_available) {
+        elements.settingsKeyStatus.textContent = "Encrypted key storage is unavailable; set HELPME_MASTER_KEY before saving a key.";
+      } else {
+        elements.settingsKeyStatus.textContent = "No key is saved for this provider.";
+      }
+    });
+  }
   elements.authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     token = elements.authInput.value.trim();
@@ -1328,18 +1658,24 @@
   });
   window.addEventListener("online", renderNotebook);
   window.addEventListener("offline", renderNotebook);
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === "#settings") void loadSettings();
+  });
 
   setTheme(loadTheme());
   renderAll();
   if (window.innerWidth <= 1080) setLibraryOpen(false);
-  void migrateLegacyPhotos();
+  void migrateLegacyPhotos().then(refreshDetachedPhotoStatus);
+  void loadModelIdentity();
+  if (window.location.hash === "#settings") void loadSettings();
 })();
 
 (() => {
   const KB_TOKEN_KEY = "helpme.green.kb.token";
   const notebook = document.getElementById("notebook");
+  const settingsView = document.getElementById("settingsView");
   const kbView = document.getElementById("kbView");
-  if (!notebook || !kbView) return;
+  if (!notebook || !kbView || !settingsView) return;
 
   let kbToken = "";
   try { kbToken = localStorage.getItem(KB_TOKEN_KEY) || ""; } catch (_) {}
@@ -1420,15 +1756,23 @@
     document.querySelectorAll(".primary-nav .nav-link").forEach((link) => {
       const href = link.getAttribute("href") || "";
       if (href === "#kb") link.classList.toggle("active", hash === "#kb");
-      if (href === "#notebook") link.classList.toggle("active", hash !== "#kb" && hash !== "#library");
+      if (href === "#settings") link.classList.toggle("active", hash === "#settings");
+      if (href === "#notebook") link.classList.toggle("active", hash !== "#kb" && hash !== "#settings" && hash !== "#library");
     });
   }
 
   async function kbRoute() {
     const hash = location.hash || "#notebook";
     const kbActive = hash === "#kb";
-    notebook.hidden = kbActive;
+    const settingsActive = hash === "#settings";
+    notebook.hidden = kbActive || settingsActive;
+    settingsView.hidden = !settingsActive;
     kbView.hidden = !kbActive;
+    document.title = kbActive
+      ? "helpme.green — Knowledge base"
+      : settingsActive
+        ? "helpme.green — Settings"
+        : "helpme.green — Lab Notebook";
     navActive(hash);
     if (kbActive) {
       await kbLoad();

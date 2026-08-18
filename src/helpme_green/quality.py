@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -39,7 +38,7 @@ class QualityReport:
 
 
 class AnswerQualityGate:
-    """Provider-neutral answer guard with optional independent model critics.
+    """Provider-neutral answer guard with independent model critics when configured.
 
     Critics may flag a draft, but they never write knowledge or replace the main answer. The local
     checks remain active when no critic model is available.
@@ -86,8 +85,8 @@ class AnswerQualityGate:
         critic_scores: tuple[int, ...] = ()
         if (
             self.router is not None
-            and self._env_flag("HELPME_AI_ENABLED", default=False)
-            and self._env_flag("HELPME_QUALITY_JUDGES", default=False)
+            and self.router.ai_enabled()
+            and self.router.quality_judges_enabled()
         ):
             critic_scores, critic_flags = self._run_critics(
                 user_message=user_message,
@@ -187,10 +186,3 @@ class AnswerQualityGate:
         for _score, item_flags in results:
             flags.update(item_flags)
         return scores, flags
-
-    @staticmethod
-    def _env_flag(name: str, *, default: bool) -> bool:
-        raw = os.environ.get(name)
-        if raw is None:
-            return default
-        return raw.strip().casefold() not in {"", "0", "false", "no", "off"}
