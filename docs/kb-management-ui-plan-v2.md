@@ -2,7 +2,7 @@
 
 Status: implementation baseline and roadmap
 
-Verified against `main` at `95e137e` on 2026-08-18. The core operator console, upload lifecycle,
+Verified against `main` at `7c4a970` on 2026-08-18. The core operator console, upload lifecycle,
 approved-only retrieval policy, durable jobs, graph provenance fields, and filtered artifact path
 now exist in the repository. The phase plan below remains useful for separating what is implemented
 from remaining polish and future multi-user or distribution work; it is not a claim that every

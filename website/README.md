@@ -1,7 +1,7 @@
 # helpme.green onboarding page
 
-This is the static public onboarding page for helpme.green. It is designed to be served from
-GitHub Pages or any static host and does not require a build step.
+This is the static public onboarding page for helpme.green. It is live at
+<https://bnelabs.github.io/helpme.green/> and does not require a build step.
 
 ## Preview locally
 
@@ -20,6 +20,7 @@ and notarization remain release gates.
 
 ## GitHub Pages
 
-Publish the `website/` directory through the repository's Pages configuration or copy this folder
-to the Pages source branch. Keep the page's relative asset paths intact. Publishing the page does
-not publish local runtime databases, provider keys, raw source downloads, or model files.
+The repository's [Pages workflow](../.github/workflows/pages.yml) publishes the `website/` directory
+on every push to `main` and on explicit workflow dispatch. Keep the page's relative asset paths
+intact. Publishing the page does not publish local runtime databases, provider keys, raw source
+downloads, or model files.
