@@ -12,6 +12,12 @@ format and are immutable after publication.
 - Release validation, release-note generation, native-bundle packaging, bundle verification, and
   target-runner automation are now part of the repository.
 
+## [0.1.0-rc.3] - 2026-08-18
+
+### Fixed
+
+- Release-gate formatting is clean for the downloadable candidate workflow.
+
 ## [0.1.0-rc.2] - 2026-08-18
 
 ### Fixed

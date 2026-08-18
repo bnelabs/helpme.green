@@ -31,8 +31,8 @@ verify_native_bundle = _load_script("verify_native_bundle")
 def test_packaging_uses_one_version_source() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     assert project["dynamic"] == ["version"]
-    assert check_release.read_source_version() == "0.1.0-rc.2"
-    assert check_release.validate_tag("v0.1.0-rc.2") == "0.1.0-rc.2"
+    assert check_release.read_source_version() == "0.1.0-rc.3"
+    assert check_release.validate_tag("v0.1.0-rc.3") == "0.1.0-rc.3"
 
 
 def test_release_tag_must_match_source_version() -> None:
@@ -46,9 +46,9 @@ def test_release_notes_extract_the_versioned_changelog_section(tmp_path: Path) -
     output = tmp_path / "notes.md"
     generate_release_notes.main(
         [
-            "0.1.0-rc.2",
+            "0.1.0-rc.3",
             "--tag",
-            "v0.1.0-rc.2",
+            "v0.1.0-rc.3",
             "--commit",
             "a" * 40,
             "--output",
@@ -56,12 +56,12 @@ def test_release_notes_extract_the_versioned_changelog_section(tmp_path: Path) -
         ]
     )
     text = output.read_text(encoding="utf-8")
-    assert "helpme.green v0.1.0-rc.2" in text
+    assert "helpme.green v0.1.0-rc.3" in text
     assert "Exact commit: `" + "a" * 40 in text
-    assert "Private-repository release runs now retain native assets" in text
+    assert "Release-gate formatting is clean" in text
     assert "## [Unreleased]" not in text
-    assert "Private-repository release runs now retain native assets" in generate_release_notes.render(
-        "0.1.0-rc.2", tag="v0.1.0-rc.2", commit="c" * 40
+    assert "Release-gate formatting is clean" in generate_release_notes.render(
+        "0.1.0-rc.3", tag="v0.1.0-rc.3", commit="c" * 40
     )
 
 
@@ -72,8 +72,8 @@ def test_release_manifest_records_asset_checksums_and_knowledge_status(tmp_path:
     (asset_dir / "example.zip.sha256").write_text("ignored\n", encoding="utf-8")
     output = tmp_path / "release-manifest.json"
     create_release_manifest.create_manifest(
-        version="0.1.0-rc.2",
-        tag="v0.1.0-rc.2",
+        version="0.1.0-rc.3",
+        tag="v0.1.0-rc.3",
         asset_dir=asset_dir,
         output=output,
         commit="b" * 40,
@@ -90,11 +90,11 @@ def test_release_manifest_records_asset_checksums_and_knowledge_status(tmp_path:
 
 
 def test_native_artifact_names_cover_requested_targets() -> None:
-    assert package_native.artifact_stem("0.1.0-rc.2", "linux-amd64") == (
-        "helpme-green-0.1.0-rc.2-linux-amd64"
+    assert package_native.artifact_stem("0.1.0-rc.3", "linux-amd64") == (
+        "helpme-green-0.1.0-rc.3-linux-amd64"
     )
-    assert package_native.artifact_stem("0.1.0-rc.2", "windows-arm64") == (
-        "helpme-green-0.1.0-rc.2-windows-arm64"
+    assert package_native.artifact_stem("0.1.0-rc.3", "windows-arm64") == (
+        "helpme-green-0.1.0-rc.3-windows-arm64"
     )
     assert set(package_native.TARGETS) == {
         "linux-amd64",
@@ -108,9 +108,9 @@ def test_native_artifact_names_cover_requested_targets() -> None:
 def test_bundle_metadata_is_explicit_about_data_boundaries(tmp_path: Path) -> None:
     bundle = tmp_path / "helpme-green"
     bundle.mkdir()
-    package_native._write_bundle_metadata(bundle, version="0.1.0-rc.2", target="linux-amd64")
+    package_native._write_bundle_metadata(bundle, version="0.1.0-rc.3", target="linux-amd64")
     metadata = json.loads((bundle / "RELEASE-METADATA.json").read_text(encoding="utf-8"))
-    assert metadata["version"] == "0.1.0-rc.2"
+    assert metadata["version"] == "0.1.0-rc.3"
     assert metadata["target"] == "linux-amd64"
     assert "not bundled" in metadata["knowledge"]
     assert "provider key" in (bundle / "RUN.md").read_text(encoding="utf-8")
