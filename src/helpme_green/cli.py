@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 from pathlib import Path
 
 from .application import ApplicationProcessor
@@ -12,15 +13,41 @@ from .server import serve
 
 
 def _repository_root() -> Path:
-    candidates = (
-        Path(os.environ.get("HELPME_ROOT", Path.cwd())).resolve(),
-        Path(__file__).resolve().parents[2],
-        Path(__file__).resolve().parents[3],
-    )
+    configured_root = os.environ.get("HELPME_ROOT")
+    candidates: list[Path] = []
+    if configured_root:
+        candidates.append(Path(configured_root).resolve())
+    else:
+        candidates.append(Path.cwd().resolve())
+    frozen_root = getattr(sys, "_MEIPASS", None)
+    if frozen_root:
+        frozen_path = Path(frozen_root).resolve()
+        candidates.extend((frozen_path, frozen_path.parent))
+    candidates.extend((Path(__file__).resolve().parents[2], Path(__file__).resolve().parents[3]))
+    seen: set[Path] = set()
     for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
         if (candidate / "knowledge/source-manifest.yml").exists():
             return candidate
     raise FileNotFoundError("Cannot locate the helpme.green source manifest.")
+
+
+def _default_data_dir(root: Path) -> Path:
+    """Choose a writable native data directory without changing repository/Docker defaults."""
+    configured = os.environ.get("HELPME_DATA_DIR")
+    if configured:
+        return Path(configured)
+    if not getattr(sys, "frozen", False):
+        return root / ".data"
+    if sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    elif os.name == "nt":
+        base = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
+    else:
+        base = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
+    return base / "helpme.green"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -53,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
 
     root = _repository_root()
     knowledge = KnowledgeBase.from_repository(root)
-    data_dir = args.data_dir or Path(os.environ.get("HELPME_DATA_DIR", root / ".data"))
+    data_dir = args.data_dir or _default_data_dir(root)
     configured_roots = [root, data_dir, *args.mcp_root]
     configured_roots.extend(
         Path(item) for item in os.environ.get("HELPME_MCP_ROOTS", "").split(os.pathsep) if item

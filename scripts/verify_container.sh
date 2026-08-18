@@ -9,7 +9,17 @@ data_dir=$(mktemp -d)
 
 cleanup() {
   docker rm --force "$container_name" >/dev/null 2>&1 || true
-  rm -rf "$data_dir"
+  if ! rm -rf "$data_dir" 2>/dev/null; then
+    # The application deliberately runs as a non-root user, so bind-mounted
+    # session files can be owned by a UID that cannot be removed by the runner.
+    # Use the already-built image as a short-lived root cleanup helper.
+    docker run --rm --user 0 \
+      --volume "$data_dir:/app/.data" \
+      "$image_name" \
+      sh -c 'rm -rf /app/.data/* /app/.data/.[!.]* /app/.data/..?*' \
+      >/dev/null 2>&1 || true
+    rmdir "$data_dir" 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT
 
