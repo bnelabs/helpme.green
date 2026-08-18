@@ -10,9 +10,9 @@ package, container, and six native-target jobs on 2026-08-18. The draft contains
 Python distributions, `SHA256SUMS`, and `release-manifest.json`; it is not a stable signed release.
 User-facing wording should describe this honestly and professionally: automated checks are present,
 but an RC may still occasionally break, change behavior, or expose unfinished edges.
-The current `main` branch is `7c4a970b5e89d8445883aab938ab36c5bfef51c0`, so changes after the RC
-tag are not represented by the existing binary. Do not move the immutable RC tag; advance the source
-version and create the next candidate when a new build is intended.
+The `main` branch contains post-tag onboarding and documentation commits, so those changes are not
+represented by the existing binary. Do not move the immutable RC tag; advance the source version and
+create the next candidate when a new build is intended.
 
 The repository is now public and the static onboarding page is published at
 <https://bnelabs.github.io/helpme.green/> through the checked-in GitHub Pages workflow. This is a

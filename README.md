@@ -261,5 +261,6 @@ distributions and a multi-platform container image. [Open the GitHub Releases pa
 for the current candidate and checksums; stable publication remains a maintainer decision because
 macOS and Windows signing/notarization are still required. This is an early release candidate:
 automated checks reduce risk, but occasional breakage, rough edges, and behavior changes are still
-possible between candidates. The draft was built from tagged commit `955d8ed`; `main` has since
-advanced to `7c4a970`, so a future candidate is needed to package later main-branch changes.
+possible between candidates. The draft was built from tagged commit `955d8ed`; `main` now contains
+post-tag onboarding and documentation updates, so a future candidate is needed to package later
+main-branch changes.

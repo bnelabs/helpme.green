@@ -1,17 +1,19 @@
 # Documentation audit — 2026-08-18
 
 Scope: repository documentation, release instructions, public onboarding content, source-manifest
-references, and the latest GitHub PR/release state. The audit was refreshed after publication against
-local `main` `7c4a970b5e89d8445883aab938ab36c5bfef51c0` and the live `bnelabs/helpme.green` metadata.
+references, and GitHub PR/release evidence. This dated audit was refreshed after publication and
+records immutable merge/CI/deployment evidence rather than claiming a permanently fixed `main` tip.
 
 ## GitHub and release evidence
 
-- No open pull requests remain. The latest merged change is PR #15, “Build public onboarding page
-  and release guidance”, merged to `main` at `7c4a970`.
-- The post-merge CI run `32129310630` for `7c4a970` passed Python 3.11, Python 3.12, Python
-  distributions, and the container build/rehearsal.
-- GitHub Pages is configured for the now-public repository. Deployment run `32129534246` passed,
-  and the live page is <https://bnelabs.github.io/helpme.green/>.
+- PR #15, “Build public onboarding page and release guidance”, merged the public site and Pages
+  workflow at `7c4a970`.
+- Its post-merge CI run `32129310630` passed Python 3.11, Python 3.12, Python distributions, and
+  the container build/rehearsal.
+- The documentation refresh was merged by PR #16 at `6c8ecaa`; its post-merge CI run
+  `32131139429` and Pages deployment run `32131139443` also passed.
+- GitHub Pages is configured for the public repository, and the live page is
+  <https://bnelabs.github.io/helpme.green/>.
 - `v0.1.0-rc.6` is a draft pre-release at tagged commit `955d8ed9779c36d660fe86f5ca3241313a426b7f`.
   It contains six native archives, checksums, Python distributions, and a release manifest. The
   tag predates the current `main` commit; it must not be moved. A later candidate is required to
