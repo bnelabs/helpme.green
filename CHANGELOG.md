@@ -12,6 +12,13 @@ format and are immutable after publication.
 - Release validation, release-note generation, native-bundle packaging, bundle verification, and
   target-runner automation are now part of the repository.
 
+## [0.1.0-rc.5] - 2026-08-18
+
+### Fixed
+
+- Replace the remaining Node 20-targeting artifact download action with the current Node 24
+  release, and refresh artifact uploads to the current release.
+
 ## [0.1.0-rc.4] - 2026-08-18
 
 ### Fixed
