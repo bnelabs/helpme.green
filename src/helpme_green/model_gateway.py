@@ -46,7 +46,7 @@ def _json_object(value: Any, *, label: str) -> dict[str, Any]:
         json.dumps(value)
     except (TypeError, ValueError) as exc:
         raise ProviderUnavailable(f"{label} must contain JSON values only.") from exc
-    return value
+    return dict(value)
 
 
 def _looks_like_context_overflow(value: str) -> bool:
@@ -81,6 +81,16 @@ class ModelRouter:
         self._tokens_out = 0
         self._calls = 0
         self._counter_lock = threading.Lock()
+        self._runtime_settings: dict[str, Any] = {}
+
+    def configure(self, settings: Mapping[str, Any]) -> None:
+        """Apply validated local settings without changing process environment variables."""
+        if not isinstance(settings, Mapping):
+            raise ValueError("Runtime settings must be an object.")
+        identity = settings.get("identity")
+        if isinstance(identity, str) and identity.strip():
+            self.selection = self.selection_for(identity)
+        self._runtime_settings = dict(settings)
 
     @staticmethod
     def _default_selection() -> ModelSelection:
@@ -138,11 +148,12 @@ class ModelRouter:
 
     def complete_json(
         self,
-        messages: Sequence[Mapping[str, str]],
+        messages: Sequence[Mapping[str, Any]],
         *,
         system_contract: str,
         max_tokens: int | None = None,
         selection: ModelSelection | None = None,
+        images: Sequence[Mapping[str, str]] | None = None,
     ) -> Mapping[str, Any]:
         """Call an OpenAI-compatible provider using the selected model profile."""
         if not self.ai_enabled():
@@ -157,16 +168,27 @@ class ModelRouter:
                 f"{selected.provider} key is not configured; local reference services remain available."
             )
         profile = self._model_profile(selected.identity)
+        vision_enabled = self._profile_supports_vision(profile)
         timeout_seconds = self._timeout_seconds(profile)
         profile.pop("timeout_seconds", None)
         profile.pop("context_window", None)
         profile_max_tokens = profile.pop("max_tokens", None)
+        profile.pop("vision", None)
+        profile.pop("input_modalities", None)
+        outgoing_messages: list[dict[str, Any]] = [
+            {"role": "system", "content": system_contract},
+            *[dict(message) for message in messages],
+        ]
+        if images:
+            if not vision_enabled:
+                raise ProviderUnavailable(
+                    "The selected model is not configured for image input; set vision=true in its model profile.",
+                    code="vision_unavailable",
+                )
+            outgoing_messages = self._messages_with_images(outgoing_messages, images)
         payload = {
             "model": selected.model,
-            "messages": [
-                {"role": "system", "content": system_contract},
-                *messages,
-            ],
+            "messages": outgoing_messages,
             "temperature": 0,
             "response_format": {"type": "json_object"},
         }
@@ -262,7 +284,58 @@ class ModelRouter:
         return decoded
 
     @staticmethod
-    def _timeout_seconds(profile: dict[str, Any]) -> float:
+    def _profile_supports_vision(profile: Mapping[str, Any]) -> bool:
+        if profile.get("vision") is True:
+            return True
+        modalities = profile.get("input_modalities")
+        return isinstance(modalities, list) and any(
+            isinstance(item, str) and item.casefold() == "image" for item in modalities
+        )
+
+    @staticmethod
+    def _messages_with_images(
+        messages: Sequence[Mapping[str, Any]], images: Sequence[Mapping[str, str]]
+    ) -> list[dict[str, Any]]:
+        outgoing = [dict(message) for message in messages]
+        user_index = next(
+            (
+                index
+                for index in range(len(outgoing) - 1, -1, -1)
+                if outgoing[index].get("role") == "user"
+            ),
+            None,
+        )
+        if user_index is None:
+            raise ProviderUnavailable(
+                "Image input requires a user message.", code="invalid_vision_request"
+            )
+        text = outgoing[user_index].get("content")
+        if not isinstance(text, str):
+            raise ProviderUnavailable(
+                "Image input requires a text user message.", code="invalid_vision_request"
+            )
+        content: list[dict[str, Any]] = [{"type": "text", "text": text}]
+        for image in images:
+            mime_type = image.get("mime_type")
+            data = image.get("data")
+            if not isinstance(mime_type, str) or not mime_type.startswith("image/"):
+                raise ProviderUnavailable(
+                    "Image input has an invalid media type.", code="invalid_vision_request"
+                )
+            if not isinstance(data, str) or not data:
+                raise ProviderUnavailable(
+                    "Image input has no image data.", code="invalid_vision_request"
+                )
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:{mime_type};base64,{data}"},
+                }
+            )
+        outgoing[user_index]["content"] = content
+        return outgoing
+
+    def _timeout_seconds(self, profile: dict[str, Any]) -> float:
         raw = profile.get("timeout_seconds", 30)
         if isinstance(raw, bool):
             raise ProviderUnavailable("Model profile timeout_seconds must be positive.")
@@ -272,7 +345,12 @@ class ModelRouter:
             raise ProviderUnavailable("Model profile timeout_seconds must be positive.") from exc
         if not math.isfinite(timeout) or timeout <= 0:
             raise ProviderUnavailable("Model profile timeout_seconds must be positive.")
-        maximum_raw = os.environ.get("HELPME_MAX_MODEL_TIMEOUT_SECONDS", "240")
+        maximum_value = self._runtime_settings.get("max_model_timeout_seconds")
+        maximum_raw = (
+            str(maximum_value)
+            if maximum_value is not None
+            else os.environ.get("HELPME_MAX_MODEL_TIMEOUT_SECONDS", "240")
+        )
         try:
             maximum = float(maximum_raw)
         except (TypeError, ValueError) as exc:
@@ -285,9 +363,13 @@ class ModelRouter:
             )
         return timeout
 
-    @staticmethod
-    def _retry_count() -> int:
-        raw = os.environ.get("HELPME_MODEL_RETRIES", "1")
+    def _retry_count(self) -> int:
+        configured = self._runtime_settings.get("model_retries")
+        raw = (
+            str(configured)
+            if configured is not None
+            else os.environ.get("HELPME_MODEL_RETRIES", "1")
+        )
         try:
             retries = int(raw)
         except (TypeError, ValueError) as exc:
@@ -300,13 +382,17 @@ class ModelRouter:
 
     def _model_profile(self, identity: str | None = None) -> dict[str, Any]:
         """Return request options for the selected model, without changing other models."""
-        raw = os.environ.get("HELPME_MODEL_PROFILES", "").strip()
-        if not raw:
-            return {}
-        try:
-            profiles = _json_object(json.loads(raw), label="HELPME_MODEL_PROFILES")
-        except json.JSONDecodeError as exc:
-            raise ProviderUnavailable("HELPME_MODEL_PROFILES must contain valid JSON.") from exc
+        configured_profiles = self._runtime_settings.get("profiles")
+        if configured_profiles is not None:
+            profiles = _json_object(configured_profiles, label="Runtime model profiles")
+        else:
+            raw = os.environ.get("HELPME_MODEL_PROFILES", "").strip()
+            if not raw:
+                return {}
+            try:
+                profiles = _json_object(json.loads(raw), label="HELPME_MODEL_PROFILES")
+            except json.JSONDecodeError as exc:
+                raise ProviderUnavailable("HELPME_MODEL_PROFILES must contain valid JSON.") from exc
 
         selected_identity = identity or self.selection.identity
         selected_provider = selected_identity.split(":", 1)[0]
@@ -356,7 +442,16 @@ class ModelRouter:
         return ModelSelection(selected.provider, models[0])
 
     def ai_enabled(self) -> bool:
+        configured = self._runtime_settings.get("ai_enabled")
+        if isinstance(configured, bool):
+            return configured
         return self._env_flag("HELPME_AI_ENABLED", default=False)
+
+    def quality_judges_enabled(self) -> bool:
+        configured = self._runtime_settings.get("quality_judges")
+        if isinstance(configured, bool):
+            return configured
+        return self._env_flag("HELPME_QUALITY_JUDGES", default=True)
 
     def _api_key(self, provider: str, env_name: str) -> str | None:
         api_key = os.environ.get(env_name)
@@ -371,7 +466,12 @@ class ModelRouter:
 
     def _provider_base_url(self, provider: str) -> tuple[str, str]:
         if provider == "localai":
-            base_url = os.environ.get("HELPME_LOCALAI_BASE_URL", "").strip().rstrip("/")
+            configured = self._runtime_settings.get("localai_base_url")
+            base_url = (
+                str(configured).strip().rstrip("/")
+                if configured is not None
+                else os.environ.get("HELPME_LOCALAI_BASE_URL", "").strip().rstrip("/")
+            )
             if not base_url:
                 raise ProviderUnavailable(
                     "Local model endpoint is not configured; set HELPME_LOCALAI_BASE_URL."
@@ -434,9 +534,13 @@ class ModelRouter:
                         break
         return models
 
-    @staticmethod
-    def _discovery_timeout() -> float:
-        raw = os.environ.get("HELPME_MODEL_DISCOVERY_TIMEOUT", "10")
+    def _discovery_timeout(self) -> float:
+        configured = self._runtime_settings.get("model_discovery_timeout")
+        raw = (
+            str(configured)
+            if configured is not None
+            else os.environ.get("HELPME_MODEL_DISCOVERY_TIMEOUT", "10")
+        )
         try:
             timeout = float(raw)
         except (TypeError, ValueError) as exc:
@@ -457,7 +561,13 @@ class ModelRouter:
             "https://"
         ):
             return None
-        if self._env_flag("HELPME_LOCALAI_TLS_VERIFY", default=True):
+        configured = self._runtime_settings.get("localai_tls_verify")
+        tls_verify = (
+            configured
+            if isinstance(configured, bool)
+            else self._env_flag("HELPME_LOCALAI_TLS_VERIFY", default=True)
+        )
+        if tls_verify:
             return None
         context = ssl.create_default_context()
         context.check_hostname = False

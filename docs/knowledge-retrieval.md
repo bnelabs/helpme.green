@@ -39,14 +39,16 @@ small amount of latency. It is less useful for a tiny, clean corpus or an exact 
 lookup. The implementation therefore fails back to hybrid/lexical results when the reranker is
 missing, rate-limited, or returns an invalid response.
 
-The current OpenRouter free reranker is an opt-in experiment. Free endpoints may have rate limits
-and provider logging; only public source passages should be sent to them. User case details should
-remain local unless the operator has deliberately accepted that data boundary.
+An OpenRouter or local reranker is used when configured and can be disabled with
+`HELPME_RERANK_ENABLED=0`. External endpoints may have rate limits and provider logging; the
+operator should configure them only after accepting that query and selected public passages may
+leave the machine.
 
 ## Embedding and reranker configuration
 
-The embedding provider is OpenAI-compatible and provider-agnostic. For a public text-only corpus,
-the current recommended test configuration is:
+The embedding provider is OpenAI-compatible and provider-agnostic. OpenRouter can provide a hosted
+embedding model; LocalAI can provide the same interface without an external key. For a public
+text-only corpus, the current recommended OpenRouter test configuration is:
 
 ```bash
 export HELPME_EMBEDDING_BASE_URL=https://openrouter.ai/api/v1
@@ -55,13 +57,23 @@ export HELPME_EMBEDDING_API_KEY='set-outside-the-repository'
 export HELPME_EMBEDDING_TLS_VERIFY=1
 ```
 
-Enable query-time semantic/hybrid retrieval only when the operator wants remote query embedding:
+For a local LocalAI embedding model, use a loopback endpoint and omit the key:
 
 ```bash
-export HELPME_EMBEDDING_QUERY_ENABLED=1
+export HELPME_EMBEDDING_BASE_URL=http://127.0.0.1:8090/v1
+export HELPME_EMBEDDING_MODEL='local-embedding-model'
+unset HELPME_EMBEDDING_API_KEY
+export HELPME_EMBEDDING_TLS_VERIFY=1
 ```
 
-Reranking is separately opt-in:
+Query-time semantic/hybrid retrieval is automatic when the provider is configured. Disable it
+explicitly when the deployment should remain lexical-only:
+
+```bash
+export HELPME_EMBEDDING_QUERY_ENABLED=0
+```
+
+Reranking is automatic when configured and can be disabled explicitly:
 
 ```bash
 export HELPME_RERANK_ENABLED=1
@@ -70,6 +82,8 @@ export HELPME_RERANK_MODEL='nvidia/llama-nemotron-rerank-vl-1b-v2:free'
 export HELPME_RERANK_API_KEY='set-outside-the-repository'
 export HELPME_RERANK_TLS_VERIFY=1
 ```
+
+Set `HELPME_RERANK_ENABLED=0` only when you want to disable the configured reranker.
 
 The exact model is configuration, not code. Changing provider or model creates a new embedding
 model label in the health summary; chunks from different models are not mixed in semantic search.

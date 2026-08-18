@@ -5,9 +5,11 @@ import json
 import threading
 from pathlib import Path
 
+from cryptography.fernet import Fernet
+
 from helpme_green.application import ApplicationProcessor
 from helpme_green.knowledge import KnowledgeBase
-from helpme_green.persistence import SessionStore
+from helpme_green.persistence import SecretStore, SessionStore
 from helpme_green.server import _HelpmeServer
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,6 +23,19 @@ def _running_server(tmp_path: Path) -> tuple[_HelpmeServer, threading.Thread]:
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     return server, thread
+
+
+def _running_server_with_secret(
+    tmp_path: Path,
+) -> tuple[_HelpmeServer, threading.Thread, SecretStore]:
+    knowledge = KnowledgeBase.from_repository(ROOT)
+    sessions = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
+    secrets = SecretStore(tmp_path / "secrets", master_key=Fernet.generate_key())
+    processor = ApplicationProcessor(knowledge, sessions, secret_store=secrets)
+    server = _HelpmeServer(("127.0.0.1", 0), processor, sessions)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    return server, thread, secrets
 
 
 def test_http_conversation_api_and_health_surface(tmp_path: Path) -> None:
@@ -47,6 +62,108 @@ def test_http_conversation_api_and_health_surface(tmp_path: Path) -> None:
     assert health_response.status == 200
     assert health["status"] == "ok"
     assert health["audit_chain_valid"]
+
+
+def test_runtime_model_identity_exposes_provider_and_model_without_secrets(tmp_path: Path) -> None:
+    server, thread = _running_server(tmp_path)
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        connection.request("GET", "/api/runtime/model")
+        response = connection.getresponse()
+        body = json.loads(response.read())
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert response.status == 200
+    assert body["identity"] == body["provider"] + ":" + body["model"]
+    assert "key" not in json.dumps(body).casefold()
+
+
+def test_settings_api_persists_model_configuration_without_returning_provider_key(
+    tmp_path: Path, monkeypatch
+) -> None:
+    for name in (
+        "HELPME_MODEL",
+        "HELPME_PROVIDER",
+        "HELPME_MODEL_PROFILES",
+        "HELPME_AI_ENABLED",
+        "OPENROUTER_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "HELPME_LOCALAI_API_KEY",
+        "LOCALAI_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    secret = "api-key-that-must-never-return"
+    server, thread, secrets = _running_server_with_secret(tmp_path)
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        connection.request("GET", "/api/settings")
+        initial_response = connection.getresponse()
+        initial = json.loads(initial_response.read())
+        connection.request(
+            "POST",
+            "/api/settings",
+            body=json.dumps(
+                {
+                    "provider": "openrouter",
+                    "model": "example/model",
+                    "ai_enabled": True,
+                    "localai_base_url": "",
+                    "localai_tls_verify": True,
+                    "quality_judges": False,
+                    "model_retries": 0,
+                    "model_discovery_timeout": 10,
+                    "max_model_timeout_seconds": 120,
+                    "profile": {"vision": True, "temperature": 0.4, "max_tokens": 800},
+                    "api_key": secret,
+                }
+            ),
+            headers={"Content-Type": "application/json"},
+        )
+        saved_response = connection.getresponse()
+        saved = json.loads(saved_response.read())
+        connection.request("GET", "/api/runtime/model")
+        runtime_response = connection.getresponse()
+        runtime = json.loads(runtime_response.read())
+        connection.request(
+            "POST",
+            "/api/sessions",
+            body=json.dumps({}),
+            headers={"Content-Type": "application/json"},
+        )
+        session_response = connection.getresponse()
+        session = json.loads(session_response.read())
+        connection.request(
+            "POST",
+            "/api/settings",
+            body=json.dumps({"profile": {"messages": "blocked"}}),
+            headers={"Content-Type": "application/json"},
+        )
+        invalid_response = connection.getresponse()
+        invalid = json.loads(invalid_response.read())
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    settings_file = (tmp_path / "data" / "settings.json").read_text(encoding="utf-8")
+    encrypted_key = secrets.get("provider_api_key_openrouter")
+    assert initial_response.status == 200
+    assert initial["api_keys"]["openrouter"]["configured"] is False
+    assert saved_response.status == 200
+    assert saved["settings"]["identity"] == "openrouter:example/model"
+    assert saved["settings"]["api_keys"]["openrouter"]["source"] == "encrypted"
+    assert runtime_response.status == 200
+    assert runtime["identity"] == "openrouter:example/model"
+    assert session_response.status == 201
+    assert session["model"] == "openrouter:example/model"
+    assert invalid_response.status == 400
+    assert invalid["code"] == "invalid_settings"
+    assert secret not in settings_file
+    assert secret not in json.dumps(saved)
+    assert encrypted_key == secret
 
 
 def test_concurrent_messages_on_one_session_are_serialized(tmp_path: Path) -> None:
@@ -218,6 +335,64 @@ def test_http_conversation_api_accepts_ordinary_language(tmp_path: Path) -> None
     assert payload["data"]["hearing"]["subject"] == "rubber"
 
 
+def test_http_conversation_api_forwards_images_without_persisting_bytes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
+    monkeypatch.setenv("HELPME_MODEL", "localai:test-model")
+    server, thread = _running_server(tmp_path)
+    captured: dict[str, object] = {}
+
+    def fake_complete_json(messages, **kwargs):
+        del messages
+        captured.update(kwargs)
+        return {
+            "reply": "I can inspect the supplied image.",
+            "hearing": {"subject": "sample", "situation": "", "aim": ""},
+        }
+
+    server.processor.model_router.complete_json = fake_complete_json
+    image_data = "aGVsbG8="
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        connection.request(
+            "POST",
+            "/api/sessions",
+            body=json.dumps({}),
+            headers={"Content-Type": "application/json"},
+        )
+        created_response = connection.getresponse()
+        created = json.loads(created_response.read())
+        connection.request(
+            "POST",
+            f"/api/sessions/{created['session_id']}/message",
+            body=json.dumps(
+                {
+                    "message": "Look at this uploaded sample.",
+                    "images": [{"data_url": f"data:image/png;base64,{image_data}"}],
+                }
+            ),
+            headers={"Content-Type": "application/json"},
+        )
+        response = connection.getresponse()
+        payload = json.loads(response.read())
+        connection.request("GET", f"/api/sessions/{created['session_id']}")
+        session_response = connection.getresponse()
+        session_body = session_response.read().decode("utf-8")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert created_response.status == 201
+    assert response.status == 200
+    assert payload["text"].startswith("I can inspect the supplied image.")
+    assert "Models can make mistakes" in payload["text"]
+    assert captured["images"] == [{"mime_type": "image/png", "data": image_data}]
+    assert image_data not in session_body
+
+
 def test_http_streaming_conversation_api_emits_progress_and_deltas(tmp_path: Path) -> None:
     server, thread = _running_server(tmp_path)
     server.processor.model_router.complete_json = lambda messages, **kwargs: {
@@ -313,8 +488,9 @@ def test_homepage_has_natural_conversation_surface(tmp_path: Path) -> None:
     assert "Add a photo" in body
     assert "What form is the sample?" in body
     assert "Powder / dust" in body
-    assert "Photos can show colour and texture, but not reliably name the material." in body
-    assert "Unclear from photo" in body
+    assert "modelDisclosure" in body
+    assert "full image and every saved detail" in body
+    assert "Clear removed originals" in body
     assert "Compare with assistant" in body
     assert "not a test or a final answer" in body
     assert "Nothing is lost when you move between phases." in body

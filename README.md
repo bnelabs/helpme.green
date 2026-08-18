@@ -47,9 +47,11 @@ PYTHONPATH=src .venv/bin/python -m helpme_green --serve --host 127.0.0.1 --port 
 Open [http://localhost:8080](http://localhost:8080). Type a normal sentence. Enter sends; Shift+Enter
 adds a line break; New conversation starts a fresh thread.
 
-LocalAI does not need a user-entered API key. A browser access-token field appears only when
-`HELPME_ACCESS_TOKEN` is explicitly configured. `HELPME_MASTER_KEY` protects optional encrypted
-local provider-key storage; it is not a browser login token.
+LocalAI does not need a provider key by default. Open Settings in the app to choose a supported
+provider, model, model options, and app safeguards. A provider key entered there is stored only in
+the encrypted local store when `HELPME_MASTER_KEY` is configured; it is never returned to the
+browser or added to a conversation. The browser access-token field is a separate gate that appears
+only when `HELPME_ACCESS_TOKEN` is explicitly configured.
 
 ## Run the local Docker deployment
 
@@ -75,21 +77,40 @@ export HELPME_MODEL='localai:<model-id>'
 export HELPME_MODEL_PROFILES='{"localai:<model-id>":{"temperature":1.0,"top_p":0.95,"top_k":64,"max_tokens":16384,"timeout_seconds":240,"chat_template_kwargs":{"reasoning_strength":"xhigh"}}}'
 ```
 
+For image-assisted notebook comparisons, use a vision-capable model and mark that capability in its
+external profile. The browser sends the original selected photos, selected library example images,
+the saved page details, and labels to the configured provider when the user compares; raw image
+bytes remain outside the server knowledge base and session ledger:
+
+```bash
+export HELPME_MODEL='openrouter:dots-studio/dots-3-note-preview:free'
+export OPENROUTER_API_KEY='set-in-your-shell-or-secret-manager'
+export HELPME_MODEL_PROFILES='{"openrouter:dots-studio/dots-3-note-preview:free":{"vision":true,"include_reasoning":false,"max_tokens":8192,"timeout_seconds":180,"context_window":512000}}'
+export HELPME_MAX_VISION_IMAGE_BYTES=16777216
+export HELPME_MAX_VISION_REQUEST_BYTES=67108864
+```
+
+Provider keys must stay outside the repository and conversation history. Settings accepts them only
+through encrypted local storage. If the selected profile is not marked vision-capable, an image
+request fails honestly instead of silently falling back to text-only analysis.
+
 These settings are deployment configuration, not hardcoded model behavior. If a profile does not
 specify `max_tokens`, the application omits it and lets the provider/model choose. The application
-does not truncate the completed user-facing answer. Auxiliary quality checks may use smaller requests;
-they never replace or shorten the main answer. Local quality checks are on by default; optional AI
-critic calls are opt-in with `HELPME_QUALITY_JUDGES=1` because they add extra model requests and
-latency on smaller local deployments.
+does not truncate the completed user-facing answer. Auxiliary quality checks may use smaller
+requests; they never replace or shorten the main answer. Local quality checks are on by default,
+and configured AI critic calls are also on by default for factuality and usefulness checks. Set
+`HELPME_QUALITY_JUDGES=0` when latency or provider budget is more important than the extra review
+pass.
 
 The gateway retries one transient provider failure by default. Set `HELPME_MODEL_RETRIES=0` to
 disable retries, or choose a value from 0 to 3. `HELPME_MAX_MODEL_TIMEOUT_SECONDS` caps the
 per-provider wait at 240 seconds by default, even when a profile requests a longer timeout.
 
-Empty sessions are removed at startup after seven days by default; change that window with
-`HELPME_EMPTY_SESSION_TTL_DAYS`. Saved snapshots are capped at the newest 20 per session. The
-read-only import boundary supports explicitly allowed JSON, CSV, XLSX, and HTTPS reads for internal
-or CLI integrations, but the browser API does not expose arbitrary import.
+Sessions, snapshots, and browser note history are retained indefinitely by default. No startup or
+snapshot-creation pruning runs automatically. The explicit `SessionStore.prune_empty_sessions` and
+`SessionStore.prune_snapshots` maintenance methods remain available when an operator deliberately
+chooses cleanup. The read-only import boundary supports explicitly allowed JSON, CSV, XLSX, and
+HTTPS reads for internal or CLI integrations, but the browser API does not expose arbitrary import.
 
 ## Knowledge digest
 
@@ -108,7 +129,9 @@ PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
   --export-catalog knowledge/catalog.snapshot.json
 ```
 
-Add embeddings only when an endpoint is intentionally configured:
+Configure embeddings with either an OpenRouter endpoint or a local OpenAI-compatible LocalAI
+endpoint. When configured, query-time semantic/hybrid retrieval is used automatically; set
+`HELPME_EMBEDDING_QUERY_ENABLED=0` to disable it:
 
 ```bash
 export HELPME_EMBEDDING_BASE_URL='https://openrouter.ai/api/v1'
@@ -126,7 +149,7 @@ PYTHONPATH=src .venv/bin/python -m helpme_green.knowledge_loop \
 
 Reranking is an optional adapter. It is useful when the corpus grows or several sources use similar
 language, but it is not required for lexical search and is never treated as a source-authority
-judge.
+judge. A configured reranker is used automatically; set `HELPME_RERANK_ENABLED=0` to disable it.
 
 The full SQLite digest and raw downloads remain outside the normal Git tree because they contain
 extracted text and sources with mixed reuse terms. [knowledge/artifact-manifest.json](knowledge/artifact-manifest.json)
@@ -146,8 +169,11 @@ user message → relevant context selection → lexical/semantic retrieval
              → optional reranking → model answer → quality pass → natural reply
 ```
 
-The model receives a small relevant context, not the entire database. Registered source metadata and
-retrieval determine what is relevant; there is no special prompt path for a particular download.
+The model receives a small relevant context, not the entire database. When configured, semantic
+embeddings, hybrid ranking, reranking, machine references, and independent quality critics are used
+automatically to improve the answer; each remains bounded and relevance-filtered. Registered source
+metadata and retrieval determine what is relevant; there is no special prompt path for a particular
+download.
 Graph relationships are useful for provenance and navigation; GraphQL is a read-only access surface,
 not a replacement for retrieval or a truth authority.
 
@@ -157,6 +183,9 @@ not a replacement for retrieval or a truth authority.
 - `POST /api/sessions` — create a conversation session.
 - `POST /api/sessions/{id}/message` — send ordinary language.
 - `POST /api/sessions/{id}/message/stream` — stream progress and reply deltas as SSE.
+- `GET /api/runtime/model` — return the configured provider/model identity without secrets.
+- `GET /api/settings` and `POST /api/settings` — read or update validated local runtime settings;
+  provider keys are write-only and never returned.
 - `GET /api/sessions/{id}` — read a persisted session.
 - `GET /api/expert/capabilities` — skills, machinery, reference health, and read-only capabilities.
 - `GET /api/knowledge/sources` — source metadata, hashes, status, and limitations.

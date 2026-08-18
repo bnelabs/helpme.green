@@ -85,10 +85,10 @@ Comparison is a three-part relationship: the user’s real sample and notes, the
 
 - Let the user add up to three local sample photos, condition, origin, and the question they want compared.
 - Ask what form the sample is: whole piece, flakes/chips, granules/pellets, powder/dust, mixed pieces, or a closed container.
-- Send written notes, sample form, sample context, and selected library example labels to the ordinary-language assistant route.
+- Send the original selected photos, written notes, sample form, sample context, and selected library example labels and reference images to the configured vision-capable assistant route. Keep raw photos out of the server session ledger and knowledge base; removing a photo from a page detaches it from the investigation while preserving the recoverable local original until explicitly cleared.
 - For granules, powder/dust, mixed pieces, and closed containers, show a plain warning that a photo may not be enough and keep the result from forcing one material name.
 - Label the result `Assistant comparison — first read` and keep “what fits” or “what I can see”, “what this photo cannot tell us”, “what might change this”, and “next simple check” visible in the answer.
-- Never imply that the assistant inspected pixels, confirmed a polymer/alloy/fibre, produced a test result, or certified a route unless a separately approved evidence and provider contract supports that claim.
+- Label image-assisted output clearly as an assistant first read. It may inspect and describe pixels, but never imply that it confirmed a polymer/alloy/fibre, produced a test result, or certified a route. Every model-backed answer carries a concise reminder to check important details before acting.
 - Keep unknown dust closed rather than directing the user to spread or handle it for a photo.
 - Clear a comparison whenever the sample, notes, form, or library selection changes, so the page cannot display stale reasoning as if it were current.
 

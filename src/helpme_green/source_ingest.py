@@ -45,6 +45,11 @@ class Reranker(Protocol):
     def rerank(self, query: str, documents: list[str], top_n: int) -> list[tuple[int, float]]: ...
 
 
+def _is_loopback_endpoint(endpoint: str) -> bool:
+    parsed = urllib.parse.urlparse(endpoint)
+    return parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+
+
 @dataclass(frozen=True)
 class SourceManifest:
     sources: tuple[SourceSpec, ...]
@@ -312,10 +317,13 @@ class OpenAICompatibleEmbeddingProvider:
         tls_verify: bool = True,
         timeout: int = 45,
     ) -> None:
-        if not endpoint.startswith("https://"):
-            raise ValueError("Embedding endpoint must use HTTPS.")
-        if not model.strip() or not api_key.strip():
-            raise ValueError("Embedding model and API key are required.")
+        parsed = urllib.parse.urlparse(endpoint)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("Embedding endpoint must use HTTP(S) with a hostname.")
+        if parsed.scheme == "http" and not _is_loopback_endpoint(endpoint):
+            raise ValueError("Non-local embedding endpoints must use HTTPS.")
+        if not model.strip() or (not api_key.strip() and not _is_loopback_endpoint(endpoint)):
+            raise ValueError("Embedding model and API key are required for external providers.")
         self.endpoint = endpoint.rstrip("/")
         if not self.endpoint.endswith("/embeddings"):
             self.endpoint += "/embeddings"
@@ -327,14 +335,16 @@ class OpenAICompatibleEmbeddingProvider:
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "helpme.green/0.2",
+        }
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         request = urllib.request.Request(
             self.endpoint,
             data=json.dumps({"model": self.model, "input": texts}).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "helpme.green/0.2",
-            },
+            headers=headers,
             method="POST",
         )
         context = None
@@ -384,10 +394,13 @@ class OpenAICompatibleReranker:
         tls_verify: bool = True,
         timeout: int = 45,
     ) -> None:
-        if not endpoint.startswith("https://"):
-            raise ValueError("Reranker endpoint must use HTTPS.")
-        if not model.strip() or not api_key.strip():
-            raise ValueError("Reranker model and API key are required.")
+        parsed = urllib.parse.urlparse(endpoint)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("Reranker endpoint must use HTTP(S) with a hostname.")
+        if parsed.scheme == "http" and not _is_loopback_endpoint(endpoint):
+            raise ValueError("Non-local reranker endpoints must use HTTPS.")
+        if not model.strip() or (not api_key.strip() and not _is_loopback_endpoint(endpoint)):
+            raise ValueError("Reranker model and API key are required for external providers.")
         self.endpoint = endpoint.rstrip("/")
         if not self.endpoint.endswith("/rerank"):
             self.endpoint += "/rerank"
@@ -399,6 +412,12 @@ class OpenAICompatibleReranker:
     def rerank(self, query: str, documents: list[str], top_n: int) -> list[tuple[int, float]]:
         if not query.strip() or not documents:
             return []
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "helpme.green/0.2",
+        }
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
         request = urllib.request.Request(
             self.endpoint,
             data=json.dumps(
@@ -409,11 +428,7 @@ class OpenAICompatibleReranker:
                     "top_n": max(1, min(top_n, len(documents))),
                 }
             ).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "helpme.green/0.2",
-            },
+            headers=headers,
             method="POST",
         )
         context = None
@@ -449,7 +464,9 @@ def embedding_provider_from_environment() -> EmbeddingProvider | None:
     endpoint = os.environ.get("HELPME_EMBEDDING_BASE_URL", "").strip()
     model = os.environ.get("HELPME_EMBEDDING_MODEL", "").strip()
     api_key = os.environ.get("HELPME_EMBEDDING_API_KEY", "").strip()
-    if not endpoint or not model or not api_key:
+    if not endpoint or not model:
+        return None
+    if not api_key and not _is_loopback_endpoint(endpoint):
         return None
     return OpenAICompatibleEmbeddingProvider(
         endpoint=endpoint,
@@ -461,13 +478,15 @@ def embedding_provider_from_environment() -> EmbeddingProvider | None:
 
 
 def reranker_from_environment() -> Reranker | None:
-    enabled = os.environ.get("HELPME_RERANK_ENABLED", "").casefold()
-    if enabled not in {"1", "true", "yes", "on"}:
+    enabled = os.environ.get("HELPME_RERANK_ENABLED", "1").casefold()
+    if enabled in {"", "0", "false", "no", "off"}:
         return None
     endpoint = os.environ.get("HELPME_RERANK_BASE_URL", "").strip()
     model = os.environ.get("HELPME_RERANK_MODEL", "").strip()
     api_key = os.environ.get("HELPME_RERANK_API_KEY", "").strip()
-    if not endpoint or not model or not api_key:
+    if not endpoint or not model:
+        return None
+    if not api_key and not _is_loopback_endpoint(endpoint):
         return None
     return OpenAICompatibleReranker(
         endpoint=endpoint,

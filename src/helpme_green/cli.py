@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import math
 import os
 from pathlib import Path
 
@@ -22,17 +21,6 @@ def _repository_root() -> Path:
         if (candidate / "knowledge/source-manifest.yml").exists():
             return candidate
     raise FileNotFoundError("Cannot locate the helpme.green source manifest.")
-
-
-def _empty_session_retention_days() -> float:
-    raw = os.environ.get("HELPME_EMPTY_SESSION_TTL_DAYS", "7")
-    try:
-        days = float(raw)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("HELPME_EMPTY_SESSION_TTL_DAYS must be positive.") from exc
-    if not math.isfinite(days) or days <= 0:
-        raise ValueError("HELPME_EMPTY_SESSION_TTL_DAYS must be positive.")
-    return days
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -82,8 +70,6 @@ def main(argv: list[str] | None = None) -> int:
     if os.environ.get("HELPME_MASTER_KEY"):
         secret_store = SecretStore(data_dir / "secrets")
     store = SessionStore(data_dir, knowledge_digest=knowledge.digest)
-    store.prune_empty_sessions(max_age_seconds=_empty_session_retention_days() * 24 * 60 * 60)
-    store.prune_snapshots()
     processor = ApplicationProcessor(knowledge, store, mcp=mcp, secret_store=secret_store)
     serve(processor, store, host=args.host, port=args.port)
     return 0

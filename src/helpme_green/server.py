@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import logging
 import os
+import re
 import secrets
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -14,6 +17,7 @@ from .application import ApplicationProcessor
 from .knowledge_graphql import execute_graphql
 from .knowledge_store import KnowledgeStoreError
 from .persistence import SessionState, SessionStore
+from .settings import SettingsError
 from .upload_ingest import UploadError, parse_multipart
 from .web import get_index_html, get_static_root
 
@@ -30,6 +34,11 @@ _STATIC_CONTENT_TYPES = {
     ".js": "text/javascript; charset=utf-8",
 }
 LOGGER = logging.getLogger(__name__)
+_DEFAULT_JSON_REQUEST_BYTES = 64_000
+_DEFAULT_VISION_REQUEST_BYTES = 64 * 1024 * 1024
+_DEFAULT_VISION_IMAGE_BYTES = 16 * 1024 * 1024
+_MAX_MESSAGE_CHARACTERS = 100_000
+_MAX_VISION_IMAGES = 6
 _SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
@@ -66,6 +75,19 @@ class _Handler(BaseHTTPRequestHandler):
             self._send_static(path)
             return
         if not self._authorized():
+            return
+        if path == "/api/runtime/model":
+            selection = self.server.processor.model_router.selection
+            self._send_json(
+                {
+                    "provider": selection.provider,
+                    "model": selection.model,
+                    "identity": selection.identity,
+                }
+            )
+            return
+        if path == "/api/settings":
+            self._send_json(self.server.processor.runtime_settings())
             return
         if path.startswith("/api/kb/"):
             if not self._kb_authorized():
@@ -119,7 +141,17 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             self._handle_kb_post(path, body)
             return
-        body = self._read_json()
+        message_request = path.startswith("/api/sessions/") and path.endswith(
+            ("/message", "/message/stream")
+        )
+        try:
+            request_limit = (
+                self._vision_body_limit() if message_request else _DEFAULT_JSON_REQUEST_BYTES
+            )
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
+            return
+        body = self._read_json(max_bytes=request_limit)
         if body is None:
             return
         if path == "/graphql":
@@ -144,6 +176,7 @@ class _Handler(BaseHTTPRequestHandler):
             session = SessionState.new(
                 topic=str(body.get("topic", "")),
                 geography=str(body.get("geography", "")),
+                model_identity=self.server.processor.current_model_identity(),
             )
             self.server.store.save_session(session)
             self._send_json(
@@ -155,6 +188,19 @@ class _Handler(BaseHTTPRequestHandler):
                 HTTPStatus.CREATED,
             )
             return
+        if path == "/api/settings":
+            try:
+                settings = self.server.processor.update_runtime_settings(body)
+            except SettingsError as exc:
+                status = (
+                    HTTPStatus.CONFLICT
+                    if exc.code == "secret_store_unavailable"
+                    else HTTPStatus.BAD_REQUEST
+                )
+                self._send_json({"error": str(exc), "code": exc.code}, status)
+                return
+            self._send_json({"settings": settings})
+            return
         parts = [unquote(item) for item in path.split("/") if item]
         if (
             len(parts) == 5
@@ -165,12 +211,12 @@ class _Handler(BaseHTTPRequestHandler):
             return
         if len(parts) == 4 and parts[:2] == ["api", "sessions"] and parts[3] == "message":
             try:
-                message = body.get("message")
-                if not isinstance(message, str) or len(message) > 4000:
-                    raise ValueError("message must be a short string")
+                message, images = self._message_payload(body)
                 with self.server.store.session_lock(parts[2]):
                     session = self.server.store.load_session(parts[2])
-                    response = self.server.processor.respond_to_message(session, message)
+                    response = self.server.processor.respond_to_message(
+                        session, message, images=images
+                    )
             except (FileNotFoundError, ValueError) as exc:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
                 return
@@ -453,9 +499,10 @@ class _Handler(BaseHTTPRequestHandler):
             return None
 
     def _stream_message(self, session_id: str, body: dict[str, Any]) -> None:
-        message = body.get("message")
-        if not isinstance(message, str) or len(message) > 4000:
-            self._send_json({"error": "message must be a short string"}, HTTPStatus.BAD_REQUEST)
+        try:
+            message, images = self._message_payload(body)
+        except ValueError as exc:
+            self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
             return
         stream_started = False
         try:
@@ -464,7 +511,7 @@ class _Handler(BaseHTTPRequestHandler):
                 self._send_sse_headers()
                 stream_started = True
                 self._send_sse_event("status", {"stage": "reading"})
-                response = self.server.processor.respond_to_message(session, message)
+                response = self.server.processor.respond_to_message(session, message, images=images)
                 for chunk in _text_chunks(response.text):
                     self._send_sse_event("delta", {"text": chunk})
                 self._send_sse_event(
@@ -500,10 +547,79 @@ class _Handler(BaseHTTPRequestHandler):
             return False
         return True
 
-    def _read_json(self) -> dict[str, Any] | None:
+    def _message_payload(self, body: dict[str, Any]) -> tuple[str, list[dict[str, str]]]:
+        message = body.get("message")
+        if not isinstance(message, str) or len(message) > _MAX_MESSAGE_CHARACTERS:
+            raise ValueError("message is missing or too long")
+        raw_images = body.get("images", [])
+        if raw_images is None:
+            raw_images = []
+        if not isinstance(raw_images, list) or len(raw_images) > _MAX_VISION_IMAGES:
+            raise ValueError(f"images must contain at most {_MAX_VISION_IMAGES} items")
+        images: list[dict[str, str]] = []
+        total_bytes = 0
+        for item in raw_images:
+            if not isinstance(item, dict):
+                raise ValueError("each image must be an object")
+            data_url = item.get("data_url")
+            if not isinstance(data_url, str):
+                raise ValueError("each image must contain a data_url")
+            match = re.fullmatch(
+                r"data:(image/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)",
+                data_url,
+                flags=re.IGNORECASE,
+            )
+            if match is None:
+                raise ValueError("images must use PNG, JPEG, WebP, or GIF data URLs")
+            mime_type = match.group(1).casefold()
+            encoded = match.group(2)
+            try:
+                decoded = base64.b64decode(encoded, validate=True)
+            except (ValueError, binascii.Error) as exc:
+                raise ValueError("image data is not valid base64") from exc
+            if not decoded:
+                raise ValueError("image data cannot be empty")
+            if len(decoded) > self._vision_image_limit():
+                raise ValueError("an image exceeds the configured vision image limit")
+            total_bytes += len(decoded)
+            images.append({"mime_type": mime_type, "data": encoded})
+        if total_bytes > self._vision_request_limit():
+            raise ValueError("the attached images exceed the configured vision request limit")
+        return message, images
+
+    @staticmethod
+    def _positive_environment_bytes(name: str, default: int) -> int:
+        raw = os.environ.get(name, str(default))
+        try:
+            value = int(raw)
+        except ValueError as exc:
+            raise ValueError(f"{name} must be a positive integer") from exc
+        if value <= 0:
+            raise ValueError(f"{name} must be a positive integer")
+        return value
+
+    @classmethod
+    def _vision_request_limit(cls) -> int:
+        return cls._positive_environment_bytes(
+            "HELPME_MAX_VISION_REQUEST_BYTES", _DEFAULT_VISION_REQUEST_BYTES
+        )
+
+    @classmethod
+    def _vision_body_limit(cls) -> int:
+        # The configured limit is on decoded image bytes; JSON data URLs add base64 overhead.
+        decoded_limit = cls._vision_request_limit()
+        return decoded_limit + (decoded_limit + 2) // 3 + 256_000
+
+    @classmethod
+    def _vision_image_limit(cls) -> int:
+        return cls._positive_environment_bytes(
+            "HELPME_MAX_VISION_IMAGE_BYTES", _DEFAULT_VISION_IMAGE_BYTES
+        )
+
+    def _read_json(self, *, max_bytes: int = _DEFAULT_JSON_REQUEST_BYTES) -> dict[str, Any] | None:
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if length <= 0 or length > 64_000:
+            if length <= 0 or length > max_bytes:
                 raise ValueError("request body limit exceeded")
             data = json.loads(self.rfile.read(length).decode("utf-8"))
             if not isinstance(data, dict):

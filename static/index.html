@@ -5,13 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4f0e7">
 <meta name="description" content="A calm, source-aware material investigation notebook.">
-<link rel="stylesheet" href="/static/app.css">
+<script src="../static/file-launch-guard.js" defer></script>
+<link rel="stylesheet" href="../static/app.css">
 <link rel="icon" href="/assets/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/assets/brand-mark.png">
 <title>helpme.green — Lab Notebook</title>
 </head>
 <body data-theme="light">
-<div class="app-shell">
+<main class="file-launch-guard" aria-labelledby="fileLaunchTitle" hidden>
+  <section>
+    <p class="rail-kicker">Local app</p>
+    <h1 id="fileLaunchTitle">Start helpme.green through its local server</h1>
+    <p>Opening <code>static/index.html</code> directly cannot load the local assistant, saved settings, or server-backed notes.</p>
+    <p>From the repository root, run:</p>
+    <pre>PYTHONPATH=src .venv/bin/python -m helpme_green --serve --host 127.0.0.1 --port 8080</pre>
+    <p>Then open <a href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>. Keep <code>HELPME_MASTER_KEY</code> configured if you want to save an encrypted provider API key.</p>
+  </section>
+</main>
+<div class="app-shell" hidden>
   <header class="topbar">
     <a class="brand-lockup" href="/" aria-label="helpme.green home">
       <img class="brand-mark" src="/assets/brand-mark.png" alt="" width="33" height="33">
@@ -20,6 +31,7 @@
     <nav class="primary-nav" aria-label="Primary navigation">
       <a class="nav-link active" href="#notebook">Lab Notebook</a>
       <a class="nav-link" href="#library">Library</a>
+      <a class="nav-link" href="#settings">Settings</a>
       <a class="nav-link" href="#kb">Knowledge base</a>
     </nav>
     <div class="topbar-tools">
@@ -27,6 +39,7 @@
         <span class="sr-only">Search notes and materials</span>
         <input id="globalSearch" type="search" autocomplete="off" placeholder="Search notes, materials...">
       </label>
+      <a class="settings-link" href="#settings">Settings</a>
       <button class="new-note" id="newNote" type="button">New note</button>
       <button class="theme-toggle" id="themeToggle" type="button">Dark mode</button>
     </div>
@@ -69,7 +82,7 @@
               <span class="note-tag" id="leftPageTag">OBSERVE</span>
             </header>
             <label class="sr-only" for="noteTitle">Investigation title</label>
-            <input class="note-title" id="noteTitle" maxlength="90" value="New material note" aria-label="Investigation title">
+            <textarea class="note-title" id="noteTitle" maxlength="90" rows="1" aria-label="Investigation title">New material note</textarea>
             <p class="page-lede" id="pageLede">Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.</p>
 
             <div class="evidence-board" aria-label="Material examples">
@@ -92,10 +105,10 @@
 
             <section class="evidence-capture" aria-labelledby="sampleEvidenceTitle">
               <h2 class="section-title" id="sampleEvidenceTitle"><span>Your material</span><span id="evidenceCount">0 photos</span></h2>
-              <p class="evidence-intro">Add a photo of the real scrap if you have one. Photos can show colour and texture, but not reliably name the material. The assistant compares your notes with the library examples. “Unclear from photo” is a valid result. Your photos stay here for now.</p>
+              <p class="evidence-intro">Add the original photo of the real scrap. When you compare, <span id="modelDisclosure">the configured vision model</span> receives the full image and every saved detail on this page. It will inspect visible pixels and explain what fits, what remains uncertain, and what to check next.</p>
               <div class="evidence-photo-row" id="evidencePhotos"></div>
               <label class="evidence-upload" for="evidencePhotoInput">Add a photo</label>
-              <input class="evidence-upload-input" id="evidencePhotoInput" type="file" accept="image/*" capture="environment" multiple>
+              <input class="evidence-upload-input" id="evidencePhotoInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" capture="environment" multiple>
               <p class="sr-only" id="evidenceFieldsHint">Choose the sample form and condition when known. A guidance note appears after selecting a form.</p>
               <div class="evidence-fields">
                 <label class="evidence-field" for="evidenceForm">What form is the sample?
@@ -132,6 +145,7 @@
                 <input id="evidenceDetails" type="text" maxlength="220" placeholder="For example: surface, stiffness, colour, or attached parts">
               </label>
               <div class="evidence-note" id="evidenceNote">No photo yet. Your notes are enough to start.</div>
+              <button class="text-button clear-photos" id="clearDetachedPhotos" type="button" hidden>Clear removed originals</button>
             </section>
 
             <section class="reference-section" aria-labelledby="referencesTitle">
@@ -185,7 +199,7 @@
               <span class="page-kicker">Assistant comparison — first read</span>
               <p id="comparisonText"></p>
               <p class="source-note" id="comparisonSourceNote"></p>
-              <p class="comparison-disclaimer">This uses your notes and the library examples. It is not a test or a final answer.</p>
+              <p class="comparison-disclaimer">This uses your notes and the library examples. It is not a test or a final answer. AI first read: models can make mistakes. Check important details against reliable sources, measurements, or qualified professional advice before acting.</p>
             </section>
           </article>
         </div>
@@ -218,6 +232,120 @@
       <div class="library-note">These are used or worked-on materials, not a way to name a plastic or metal with certainty. Keep your notes, where it came from, and any test with the page.</div>
     </aside>
     <div class="library-backdrop" id="libraryBackdrop" data-open="false" aria-hidden="true"></div>
+  </main>
+
+  <main id="settingsView" class="settings-view" hidden>
+    <header class="settings-header">
+      <div>
+        <span class="library-kicker">Local runtime</span>
+        <h1>Settings</h1>
+        <p>Choose the AI connection, model behavior, and app safeguards used by new conversations.</p>
+      </div>
+      <a class="quiet-button settings-back" href="#notebook">Back to notebook</a>
+    </header>
+    <form class="settings-form" id="settingsForm">
+      <section class="settings-card">
+        <div class="settings-card-heading">
+          <div><span class="page-kicker">01</span><h2>AI connection</h2></div>
+          <span class="settings-badge" id="settingsIdentity">Not loaded</span>
+        </div>
+        <p class="settings-help">Keys entered here go to this local app only. When encrypted storage is available, the key is stored there and is never returned to the browser, session history, or logs.</p>
+        <div class="settings-grid">
+          <label class="settings-field" for="settingsProvider">Provider
+            <select id="settingsProvider">
+              <option value="localai">LocalAI / compatible endpoint</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="deepseek">DeepSeek</option>
+            </select>
+          </label>
+          <label class="settings-field" for="settingsModel">Model name
+            <input id="settingsModel" type="text" maxlength="400" placeholder="auto or provider model id" autocomplete="off">
+          </label>
+          <label class="settings-field settings-wide" for="settingsLocalaiBaseUrl">LocalAI endpoint (used for LocalAI)
+            <input id="settingsLocalaiBaseUrl" type="url" maxlength="2048" placeholder="http://127.0.0.1:8090/v1" autocomplete="url">
+          </label>
+          <label class="settings-field settings-wide" for="settingsApiKey">Provider API key (optional for LocalAI)
+            <input id="settingsApiKey" type="password" maxlength="4096" autocomplete="new-password" placeholder="Enter a new key to replace the saved key">
+          </label>
+        </div>
+        <div class="settings-inline">
+          <label class="check-field"><input id="settingsClearApiKey" type="checkbox"> Clear the encrypted key saved by this app</label>
+          <span class="settings-key-status" id="settingsKeyStatus">Key status will appear after loading.</span>
+        </div>
+        <div class="settings-grid settings-grid-compact">
+          <label class="check-field"><input id="settingsAiEnabled" type="checkbox"> Enable AI requests</label>
+          <label class="check-field"><input id="settingsLocalaiTls" type="checkbox"> Verify LocalAI TLS certificates</label>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <div class="settings-card-heading">
+          <div><span class="page-kicker">02</span><h2>Model behavior</h2></div>
+          <span class="settings-note">Profile-specific</span>
+        </div>
+        <p class="settings-help">These options are sent to the selected OpenAI-compatible model when the provider supports them. Blank values leave that choice to the provider.</p>
+        <div class="settings-grid">
+          <label class="check-field"><input id="settingsVision" type="checkbox"> Vision / image input</label>
+          <label class="check-field"><input id="settingsIncludeReasoning" type="checkbox"> Include reasoning when supported</label>
+          <label class="settings-field" for="settingsTemperature">Temperature
+            <input id="settingsTemperature" type="number" min="0" max="2" step="0.01" placeholder="Provider default">
+          </label>
+          <label class="settings-field" for="settingsTopP">Top P
+            <input id="settingsTopP" type="number" min="0" max="1" step="0.01" placeholder="Provider default">
+          </label>
+          <label class="settings-field" for="settingsTopK">Top K
+            <input id="settingsTopK" type="number" min="0" step="1" placeholder="Provider default">
+          </label>
+          <label class="settings-field" for="settingsMinP">Min P
+            <input id="settingsMinP" type="number" min="0" max="1" step="0.01" placeholder="Provider default">
+          </label>
+          <label class="settings-field" for="settingsMaxTokens">Max output tokens
+            <input id="settingsMaxTokens" type="number" min="1" step="1" placeholder="Provider decides">
+          </label>
+          <label class="settings-field" for="settingsContextWindow">Context window
+            <input id="settingsContextWindow" type="number" min="1" step="1" placeholder="Only if known">
+          </label>
+          <label class="settings-field" for="settingsTimeout">Model timeout (seconds)
+            <input id="settingsTimeout" type="number" min="0.1" step="0.1" placeholder="Gateway default">
+          </label>
+          <label class="settings-field" for="settingsReasoningStrength">Reasoning strength (provider-specific)
+            <input id="settingsReasoningStrength" type="text" maxlength="40" placeholder="e.g. xhigh" autocomplete="off">
+          </label>
+          <label class="settings-field settings-wide" for="settingsAdvancedOptions">Advanced request options (JSON)
+            <textarea id="settingsAdvancedOptions" rows="4" spellcheck="false" placeholder='{"frequency_penalty": 0.1}'></textarea>
+          </label>
+        </div>
+        <p class="settings-help settings-warning">Protected request fields such as model, messages, response format, and streaming cannot be changed here. Do not put credentials in advanced options.</p>
+      </section>
+
+      <section class="settings-card">
+        <div class="settings-card-heading">
+          <div><span class="page-kicker">03</span><h2>App safeguards</h2></div>
+          <span class="settings-note">Runtime-wide</span>
+        </div>
+        <div class="settings-grid">
+          <label class="check-field"><input id="settingsQualityJudges" type="checkbox"> Run optional AI answer checks</label>
+          <label class="settings-field" for="settingsRetries">Transient retries (0–3)
+            <input id="settingsRetries" type="number" min="0" max="3" step="1">
+          </label>
+          <label class="settings-field" for="settingsDiscoveryTimeout">Local model discovery timeout (seconds)
+            <input id="settingsDiscoveryTimeout" type="number" min="0.1" max="120" step="0.1">
+          </label>
+          <label class="settings-field" for="settingsMaxTimeout">Maximum model timeout (seconds)
+            <input id="settingsMaxTimeout" type="number" min="0.1" max="3600" step="0.1">
+          </label>
+          <label class="settings-field" for="settingsTheme">Appearance
+            <select id="settingsTheme"><option value="light">Light</option><option value="dark">Dark</option></select>
+          </label>
+        </div>
+        <p class="settings-help">Changing provider or model affects new conversations. Existing notes keep their recorded model identity so their history remains understandable.</p>
+      </section>
+
+      <div class="settings-actions">
+        <button class="primary-button" id="saveSettings" type="submit">Save settings</button>
+        <span class="settings-status" id="settingsStatus" aria-live="polite"></span>
+      </div>
+    </form>
   </main>
 
   <main id="kbView" class="kb-console" hidden>
@@ -290,6 +418,6 @@
 </div>
 
 
-<script src="/static/app.js" defer></script>
+<script src="../static/app.js" defer></script>
 </body>
 </html>

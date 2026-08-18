@@ -99,8 +99,13 @@ class SessionState:
             self.working_context = [dict(item) for item in self.conversation]
 
     @classmethod
-    def new(cls, *, topic: str, geography: str) -> SessionState:
-        return cls(session_id=str(uuid.uuid4()), topic=topic, geography=geography)
+    def new(cls, *, topic: str, geography: str, model_identity: str | None = None) -> SessionState:
+        return cls(
+            session_id=str(uuid.uuid4()),
+            topic=topic,
+            geography=geography,
+            model_identity=model_identity or _default_model_identity(),
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -579,7 +584,7 @@ class SessionStore:
         return ""
 
     def prune_empty_sessions(self, *, max_age_seconds: float = 7 * 24 * 60 * 60) -> int:
-        """Remove only old, valid sessions that contain no conversation turns."""
+        """Explicitly remove old empty sessions when an operator requests maintenance."""
         if not math.isfinite(max_age_seconds) or max_age_seconds <= 0:
             raise ValueError("Session retention must be positive.")
         cutoff = time.time() - max_age_seconds
@@ -605,7 +610,7 @@ class SessionStore:
         return removed
 
     def prune_snapshots(self, session_id: str | None = None, *, max_per_session: int = 20) -> int:
-        """Keep the newest snapshots while leaving the append-only audit history intact."""
+        """Explicitly prune snapshots when an operator requests maintenance."""
         if max_per_session <= 0:
             raise ValueError("Snapshot retention must be positive.")
         if session_id is not None:
@@ -654,7 +659,6 @@ class SessionStore:
             "snapshot.created",
             {"snapshot_id": snapshot_id, "snapshot_sha256": body_hash},
         )
-        self.prune_snapshots(session.session_id)
         return snapshot_id
 
     def load_snapshot(self, snapshot_id: str, *, session_id: str | None = None) -> SessionState:
@@ -751,6 +755,16 @@ class SecretStore:
     def names(self) -> tuple[str, ...]:
         with self._lock:
             return tuple(sorted(path.stem for path in self.root.glob("*.json")))
+
+    def delete(self, name: str) -> bool:
+        """Remove one encrypted secret when the user explicitly clears it."""
+        with self._lock:
+            target = self._path(name)
+            try:
+                target.unlink()
+            except FileNotFoundError:
+                return False
+            return True
 
     def _write_secret(self, name: str, secret: str, fernet: Fernet) -> None:
         ciphertext = fernet.encrypt(secret.encode("utf-8")).decode("ascii")

@@ -814,7 +814,7 @@ Exit gate: clean verification report states what was tested, what remains local-
 ## 17. Explicit v1 non-goals
 
 - OCR or scanned-PDF recovery.
-- Image/photo ingestion into the KB; notebook photos remain local-only.
+- Image/photo ingestion into the KB; notebook photos may be sent transiently to a configured vision model for assistant comparison but remain outside the KB.
 - In-app editing of source documents.
 - Citation parsing or automatic legal/source-quality adjudication.
 - Automatic source merging across different uploads.

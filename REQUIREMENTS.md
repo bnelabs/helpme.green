@@ -30,6 +30,9 @@ The primary experience is an ordinary-language conversation:
   when a safety-critical distinction requires it.
 - Explain uncertainty in natural language. Do not expose internal labels or database mechanics as
   the answer.
+- Use every relevant configured context and quality aid before making a suggestion or decision,
+  including retained conversation context, source retrieval, semantic ranking, machine references,
+  and independent answer checks. Relevance still limits what enters the answer.
 - For an unrelated question, answer it normally when possible; do not force it into a recycling
   frame.
 
@@ -95,10 +98,10 @@ system. The local digest is a derived asset built by:
 source manifest
   → bounded download and extraction
   → source/document/chunk records
-  → optional embeddings
+  → optional embeddings when configured
   → optional source notes
   → lexical, semantic, or hybrid retrieval
-  → optional second-stage reranking
+  → optional second-stage reranking when configured
 ```
 
 The corpus covers science, chemistry, engineering, machinery, HSE, regulation, industry practice,
@@ -109,9 +112,10 @@ Source notes are compact aids for navigation and explanation. They remain linked
 source and do not replace reading the source or checking current conditions. A failed or inaccessible
 source is recorded as a coverage gap, not treated as a negative answer.
 
-SQLite is the local working store. Full-text search is always available after extraction; embeddings
-and reranking are optional adapters. The graph projection and GraphQL endpoint support provenance,
-navigation, inspection, and integration. They are not a truth engine and do not replace retrieval.
+SQLite is the local working store. Full-text search is always available after extraction; configured
+embedding and reranking adapters run automatically unless explicitly disabled. The graph projection
+and GraphQL endpoint support provenance, navigation, inspection, and integration. They are not a
+truth engine and do not replace retrieval.
 
 Raw downloads and the full derived database stay in a separate local directory until source-by-
 source redistribution rights have been reviewed. The repository may carry manifests, checksums,
@@ -121,8 +125,8 @@ versioned release asset with checksum verification.
 ## Interface and persistence
 
 The browser surface contains one conversation composer, a new-conversation action, optional access
-authentication, and a quiet summary of what the assistant is hearing. It does not require the user
-to understand the internals.
+authentication, a Settings surface for the local runtime, and a quiet summary of what the assistant
+is hearing. It does not require the user to understand the internals.
 
 The application exposes:
 
@@ -131,27 +135,65 @@ The application exposes:
 - `POST /api/sessions/{id}/message` to send ordinary language;
 - `POST /api/sessions/{id}/message/stream` for progressive SSE replies;
 - `GET /api/sessions/{id}` to read a persisted conversation;
+- `GET /api/runtime/model` for the configured provider/model identity only;
+- `GET /api/settings` and `POST /api/settings` for validated local runtime settings without
+  returning provider keys;
 - `GET /api/expert/capabilities` for read-only runtime capability metadata;
 - `GET /api/knowledge/sources` for source metadata and retrieval health;
 - `POST /graphql` for read-only source, machine, skill, search, graph, and digest queries.
 
 Sessions retain full conversation history in a hash-linked per-session event ledger, a derived
-working context, a small working understanding, model identity, and optional geography. Snapshots
-and the append-only audit chain protect local continuity without turning the conversation into a
-case file or exposing internal record formats. Compaction changes only the derived working context;
-it never silently deletes source history.
+working context, a small working understanding, model identity, and optional geography. Product
+retention is indefinite: startup does not delete empty sessions, snapshot creation does not prune
+older snapshots, and browser note history is not automatically capped. Explicit operator cleanup
+methods remain available for deliberate maintenance. Compaction changes only the derived working
+context; it never silently deletes source history.
 
 The read-only import boundary may read explicitly allowed JSON, CSV, XLSX, and HTTPS resources. It
 cannot execute code, write files, mutate configuration, or send imported content to an unconfigured
 destination. It is an internal/CLI boundary today; the browser API does not expose arbitrary file or
-URL import. Imported data is not sent to the model unless a future, explicit product flow selects it.
+URL import. Imported data is not sent to the model unless an explicit product flow selects it.
+
+### Local runtime settings
+
+The Settings surface may configure the supported provider, model identity, LocalAI endpoint, AI
+enablement, model profile options, timeouts, retries, optional quality judges, TLS verification, and
+appearance. Model profiles support common sampling/output/context/vision controls plus bounded
+provider-specific JSON options. Protected request fields such as `model`, `messages`, response
+format, and streaming remain server-controlled.
+
+Non-secret settings are stored as a mode-600 file under the local data directory. A provider key
+entered in Settings is accepted only when `HELPME_MASTER_KEY` enables the existing encrypted local
+secret store; it is never returned to the browser, written to the session ledger, or included in
+logs. Environment-provided keys remain supported and are reported only as configured/not configured.
+Changing the provider or model applies to new conversations; existing sessions retain their model
+identity.
+
+### Image-assisted comparison
+
+The notebook may keep up to three original user photos in browser storage. When the user invokes an
+assistant comparison and the selected provider/model profile declares `vision: true`, the server
+forwards the original image bytes, all saved page details, and selected library example images and
+labels to that configured model. Raw image bytes are request inputs only: they are not written into
+the server session ledger, conversation history, knowledge base, or source digest. Browser-local
+originals remain available until the user explicitly clears them; removing a photo from a page
+detaches it without silently destroying the recoverable local copy. A model profile without vision
+support must fail honestly rather than receive an image and pretend to understand it. Image-assisted
+model output remains untrusted observation; it may describe visible features but cannot by itself
+confirm composition, safety, legal status, recyclability, process suitability, or economic outcomes.
+
+Every model-backed reply carries a concise professional reminder that models can make mistakes and
+important details must be checked against reliable sources, measurements, or qualified professional
+advice before acting. The browser displays the configured provider/model identity and does not add a
+separate photo-consent screen before the user presses the comparison or observation action.
 
 ## Repository and deployment rules
 
 - The container image contains application code and checked-in metadata, not a hardcoded model.
 - Compose binds local development to loopback by default.
-- LocalAI requires no browser-entered provider key. An access-token field appears only when the
-  operator explicitly configures the optional browser gate.
+- LocalAI requires no provider key by default. Settings may accept a provider key for LocalAI,
+  OpenRouter, or DeepSeek only when encrypted local key storage is enabled. The access-token field
+  is a separate browser gate and appears only when the operator explicitly configures it.
 - Provider keys and encryption keys come from the environment or an encrypted local store and are
   never printed.
 - Docker, local Python, and a browser smoke test must exercise the same natural-language route.

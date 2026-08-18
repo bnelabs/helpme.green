@@ -39,15 +39,15 @@ Material images are deliberately post-use or process scrap: scuffed, cut, torn, 
 
 The next interaction keeps the same distinction between a real sample, library examples, and the assistant's first read:
 
-1. The user adds a real sample photo and chooses its form: whole piece, flakes/chips, granules/pellets, powder/dust, mixed pieces, or a closed container. The resized photo stays in browser-local notebook state; it is not silently sent to the assistant.
+1. The user adds a real sample photo and chooses its form: whole piece, flakes/chips, granules/pellets, powder/dust, mixed pieces, or a closed container. The original supported photo stays in browser-local notebook state until the user explicitly compares it, then the configured vision route receives it with the saved page details.
 2. Granules, powder/dust, mixed pieces, and closed containers show a clear limit before comparison. Unknown dust is not opened or spread just to make a better photo.
 3. The user adds optional condition, origin, and comparison detail, then selects one or more library examples.
 4. “Compare carefully” sends the written observations, sample form, sample context, and selected example labels through the existing ordinary-language assistant route. The prompt requires a description of visible or supplied details and an explicit limit instead of a forced material name.
 5. The result is shown with plain headings: what fits or what can be seen, what the photo cannot tell us, what might change this, and the next simple check.
 6. Any new observation, changed sample detail, changed sample form, or changed example selection clears the old comparison so stale reasoning is not presented as current.
 
-This slice is still text-and-context assisted. It does not claim to inspect photo pixels or identify a material from an image. A future vision-capable comparison can be added only when the provider contract, consent, retention, and source boundaries are explicit. The next asset pass should add separate real scrap examples for whole pieces, flakes, granules, and powder/dust rather than reusing one image for every form.
+The current comparison path is image-and-context assisted when the configured model profile declares vision support. It may describe visible features, but it must not present visual appearance as a confirmed material identity or test result. Raw photos are request inputs and remain outside the server session ledger and knowledge base; browser-local originals can be detached and explicitly cleared without automatic retention pruning. Selected library reference images can accompany the sample to improve comparison, while the standard model-verification reminder remains visible. The next asset pass should add separate real scrap examples for whole pieces, flakes, granules, and powder/dust rather than reusing one image for every form.
 
 ## Remaining boundaries
 
-This audit covers the UI, assets, interaction model, local evidence capture, and comparison request path. It does not certify material identity, environmental claims, provider-backed answer quality, photo-pixel analysis, server-backed phase sync, production deployment, screen-reader output, native safe-area rendering, or full WCAG conformance.
+This audit covers the UI, assets, interaction model, local evidence capture, and comparison request path. It does not certify material identity, environmental claims, provider-backed answer quality, model visual comprehension, server-backed phase sync, production deployment, screen-reader output, native safe-area rendering, or full WCAG conformance.

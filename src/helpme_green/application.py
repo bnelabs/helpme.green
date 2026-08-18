@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from .machinery import MachineCatalog
 from .mcp import ReadOnlyMCP
 from .model_gateway import ModelRouter, ProviderUnavailable
 from .persistence import SecretStore, SessionState, SessionStore
+from .settings import RuntimeSettingsStore
 from .source_ingest import (
     SourceManifest,
     embedding_provider_from_environment,
@@ -21,8 +23,11 @@ from .source_ingest import (
 )
 
 
-def _environment_enabled(name: str) -> bool:
-    return os.environ.get(name, "").casefold() in {"1", "true", "yes", "on"}
+def _environment_enabled(name: str, *, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.casefold() in {"1", "true", "yes", "on"}
 
 
 @dataclass(frozen=True)
@@ -49,8 +54,9 @@ class ApplicationProcessor:
     ) -> None:
         self.knowledge = knowledge
         self.store = store
-        key_provider = secret_store.get if secret_store is not None else None
-        self.model_router = ModelRouter(key_provider=key_provider)
+        self.settings = RuntimeSettingsStore(store.root, secret_store=secret_store)
+        self.model_router = ModelRouter(key_provider=self.settings.get_api_key)
+        self.model_router.configure(self.settings.runtime())
         self.skill_registry = SkillRegistry.from_repository(knowledge.root)
         self.machine_catalog = MachineCatalog.from_path(
             knowledge.root / "knowledge/machine-catalog.yml"
@@ -63,7 +69,7 @@ class ApplicationProcessor:
         self.store.knowledge_digest = self._runtime_knowledge_digest()
         self.query_embedding_provider = (
             embedding_provider_from_environment()
-            if _environment_enabled("HELPME_EMBEDDING_QUERY_ENABLED")
+            if _environment_enabled("HELPME_EMBEDDING_QUERY_ENABLED", default=True)
             else None
         )
         self.reranker = reranker_from_environment()
@@ -85,6 +91,17 @@ class ApplicationProcessor:
             reranker=self.reranker,
         )
         self.mcp = mcp or ReadOnlyMCP(file_roots=(knowledge.root, store.root))
+
+    def runtime_settings(self) -> dict[str, Any]:
+        return self.settings.public()
+
+    def update_runtime_settings(self, payload: dict[str, Any]) -> dict[str, Any]:
+        result = self.settings.update(payload)
+        self.model_router.configure(self.settings.runtime())
+        return result
+
+    def current_model_identity(self) -> str:
+        return self.model_router.selection.identity
 
     def _runtime_knowledge_digest(self) -> str:
         return f"{self.knowledge.digest}:{self.knowledge_db.digest()}"
@@ -126,7 +143,13 @@ class ApplicationProcessor:
         for source in manifest.sources:
             self.knowledge_db.register_source(source, status="catalogued")
 
-    def respond_to_message(self, session: SessionState, message: str) -> ApplicationResponse:
+    def respond_to_message(
+        self,
+        session: SessionState,
+        message: str,
+        *,
+        images: Sequence[Mapping[str, str]] | None = None,
+    ) -> ApplicationResponse:
         self.store.knowledge_digest = self._runtime_knowledge_digest()
         try:
             session_selection = self.model_router.selection_for(session.model_identity)
@@ -135,7 +158,12 @@ class ApplicationProcessor:
                 if session_selection.identity != self.model_router.selection.identity
                 else None
             )
-            result = self.conversation.respond(session, message, model_selection=model_selection)
+            result = self.conversation.respond(
+                session,
+                message,
+                model_selection=model_selection,
+                images=images,
+            )
         except (ProviderUnavailable, ValueError) as exc:
             return ApplicationResponse(
                 text="I couldn’t answer that right now. Please try again when the local assistant is available.",

@@ -23,6 +23,24 @@ docker compose up -d --build
 curl http://127.0.0.1:8080/healthz
 ```
 
+To enable image-assisted notebook comparisons through OpenRouter, configure the provider and a
+vision-enabled model profile in the deployment environment. The selected original photos, selected
+library example images, and all saved page details are then included in the comparison request; raw
+image bytes are not written to the server session ledger or knowledge base:
+
+```bash
+export HELPME_MODEL='openrouter:dots-studio/dots-3-note-preview:free'
+export OPENROUTER_API_KEY='set-in-your-shell-or-secret-manager'
+export HELPME_MODEL_PROFILES='{"openrouter:dots-studio/dots-3-note-preview:free":{"vision":true,"include_reasoning":false,"max_tokens":8192,"timeout_seconds":180,"context_window":512000}}'
+export HELPME_MAX_VISION_IMAGE_BYTES=16777216
+export HELPME_MAX_VISION_REQUEST_BYTES=67108864
+```
+
+Do not paste provider keys into the browser access-token field; that field is only for
+`HELPME_ACCESS_TOKEN`. With `HELPME_MASTER_KEY` configured, provider keys may instead be entered in
+the app Settings surface and are stored encrypted in `.data`. Free model variants can be rate-limited
+or unavailable; keep a tested fallback profile if the workflow needs continuity.
+
 `localai:auto` asks the configured OpenAI-compatible local endpoint for its model list and selects
 the model only when exactly one is advertised. If the endpoint serves multiple models, set
 `HELPME_MODEL='localai:<model-id>'`. Keep model-specific sampling, context, reasoning, and timeout
@@ -79,8 +97,10 @@ docker compose run --rm helpme-green \
 ```
 
 To use embeddings, provide the variables transiently from a shell or a Git-ignored env file, then
-add `--embed`. Never place the key in Compose YAML, source manifests, documentation examples, or
-Git history. Query-time remote embedding and reranking are separately opt-in; see
+add `--embed`. OpenRouter and loopback LocalAI embedding endpoints are supported. When a query
+embedding or reranker endpoint is configured, query-time use is automatic; set the corresponding
+`HELPME_EMBEDDING_QUERY_ENABLED=0` or `HELPME_RERANK_ENABLED=0` opt-out when needed. Never place
+the key in Compose YAML, source manifests, documentation examples, or Git history. See
 [`docs/knowledge-retrieval.md`](knowledge-retrieval.md).
 
 The host `.data/knowledge.db` and `.data/source-downloads/` remain local by default. The tracked
@@ -101,6 +121,8 @@ Important endpoints:
 - `/healthz` — health and audit-chain validity.
 - `/api/sessions` and `/api/sessions/{id}/message` — natural-language session flow.
 - `/api/sessions/{id}/message/stream` — SSE progress and reply-delta flow used by the browser.
+- `/api/runtime/model` — configured provider/model identity without secrets.
+- `/api/settings` — validated local provider/model and app settings; provider keys are write-only.
 - `/api/expert/capabilities` — machine/skill/knowledge health metadata.
 - `/api/knowledge/sources` — source provenance metadata.
 - `/graphql` — read-only knowledge and retrieval projection.

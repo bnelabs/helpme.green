@@ -23,6 +23,8 @@ from helpme_green.knowledge import KnowledgeBase
 from helpme_green.mcp import ReadOnlyMCP, ReadOnlyViolation
 from helpme_green.model_gateway import ModelRouter, ModelSelection, ProviderUnavailable
 from helpme_green.persistence import SecretStore, SessionEventError, SessionState, SessionStore
+from helpme_green.settings import RuntimeSettingsStore, SettingsError
+from helpme_green.source_ingest import embedding_provider_from_environment
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -145,6 +147,7 @@ def test_conversation_keeps_full_history_and_hides_internal_result_metadata(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
     monkeypatch.delenv("HELPME_MODEL_PROFILES", raising=False)
     store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
     router = ModelRouter(ModelSelection("localai", "test-model"))
@@ -171,6 +174,7 @@ def test_conversation_keeps_full_history_and_hides_internal_result_metadata(
     assert len(resumed.conversation) == 30
     assert event_types.count("model.attempt") == 15
     assert event_types.count("conversation.turn") == 15
+    assert "Models can make mistakes" in result.text
     assert result.to_data().keys() == {"hearing", "sources", "model", "ai_used"}
 
 
@@ -178,6 +182,7 @@ def test_conversation_compacts_working_context_at_profile_ceiling(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
     monkeypatch.setenv(
         "HELPME_MODEL_PROFILES",
         json.dumps({"localai:test-model": {"context_window": 1800}}),
@@ -233,6 +238,7 @@ def test_context_overflow_retries_after_an_additional_safe_compaction(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
     monkeypatch.setenv(
         "HELPME_MODEL_PROFILES",
         json.dumps({"localai:test-model": {"context_window": 2200}}),
@@ -281,7 +287,8 @@ def test_context_overflow_retries_after_an_additional_safe_compaction(
     result = agent.respond(session, "What should I inspect next?")
 
     events = store.load_session_events(session.session_id)
-    assert result.text == "A shorter context now fits."
+    assert result.text.startswith("A shorter context now fits.")
+    assert "Models can make mistakes" in result.text
     assert calls == 2
     assert sum(item["event_type"] == "model.attempt" for item in events) == 2
     assert sum(item["event_type"] == "context.compacted" for item in events) >= 2
@@ -361,6 +368,19 @@ def test_snapshot_retention_keeps_newest_snapshots(tmp_path: Path) -> None:
     assert store.load_snapshot(snapshot_ids[2], session_id=session.session_id).conversation
 
 
+def test_snapshot_creation_does_not_prune_by_default(tmp_path: Path) -> None:
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+    snapshot_ids = [str(uuid.uuid4()) for _ in range(21)]
+
+    for snapshot_id in snapshot_ids:
+        store.create_snapshot(session, snapshot_id=snapshot_id)
+
+    snapshot_dir = store.root / "snapshots" / session.session_id
+    assert len(list(snapshot_dir.glob("*.json"))) == len(snapshot_ids)
+
+
 def test_byok_master_key_rotation_reencrypts_existing_keys(tmp_path: Path) -> None:
     old_key = Fernet.generate_key()
     new_key = Fernet.generate_key()
@@ -373,6 +393,109 @@ def test_byok_master_key_rotation_reencrypts_existing_keys(tmp_path: Path) -> No
     assert SecretStore(tmp_path / "secrets", master_key=new_key).get("provider") == "secret-value"
     with pytest.raises(ValueError):
         SecretStore(tmp_path / "secrets", master_key=old_key).get("provider")
+
+
+def test_runtime_settings_keep_api_keys_encrypted_and_restore_model_profile(
+    tmp_path: Path, monkeypatch
+) -> None:
+    for name in (
+        "HELPME_MODEL",
+        "HELPME_PROVIDER",
+        "HELPME_MODEL_PROFILES",
+        "HELPME_AI_ENABLED",
+        "HELPME_LOCALAI_BASE_URL",
+        "OPENROUTER_API_KEY",
+        "DEEPSEEK_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    secret = "openrouter-secret-that-must-not-leak"
+    secrets = SecretStore(tmp_path / "secrets", master_key=Fernet.generate_key())
+    settings = RuntimeSettingsStore(tmp_path / "data", secret_store=secrets)
+
+    public = settings.update(
+        {
+            "provider": "openrouter",
+            "model": "example/model",
+            "ai_enabled": True,
+            "model_retries": 0,
+            "profile": {
+                "vision": True,
+                "temperature": 0.4,
+                "max_tokens": 1200,
+                "chat_template_kwargs": {"reasoning_strength": "high"},
+            },
+            "api_key": secret,
+        }
+    )
+
+    raw_settings = (tmp_path / "data" / "settings.json").read_text(encoding="utf-8")
+    raw_secret = (tmp_path / "secrets" / "provider_api_key_openrouter.json").read_text(
+        encoding="utf-8"
+    )
+    assert public["identity"] == "openrouter:example/model"
+    assert public["profile"]["vision"] is True
+    assert public["api_keys"]["openrouter"] == {"configured": True, "source": "encrypted"}
+    assert secret not in raw_settings
+    assert secret not in raw_secret
+    assert secret not in json.dumps(public)
+
+    restored = RuntimeSettingsStore(tmp_path / "data", secret_store=secrets)
+    assert restored.get_api_key("openrouter") == secret
+    assert restored.public()["profile"]["max_tokens"] == 1200
+
+    with pytest.raises(SettingsError, match="protected request fields"):
+        settings.update({"profile": {"messages": "not allowed"}})
+
+
+def test_model_router_applies_saved_runtime_options_without_environment_mutation(
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.delenv("HELPME_MODEL_PROFILES", raising=False)
+    captured: list[dict[str, object]] = []
+
+    class FakeResponse:
+        def __enter__(self) -> FakeResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            del args
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {"choices": [{"message": {"content": '{"reply":"Configured."}'}}], "usage": {}}
+            ).encode("utf-8")
+
+    def fake_urlopen(request, timeout, context=None):
+        del timeout, context
+        captured.append(json.loads(request.data.decode("utf-8")))
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter(ModelSelection("localai", "old-model"))
+    router.configure(
+        {
+            "identity": "openrouter:configured/model",
+            "ai_enabled": True,
+            "model_retries": 0,
+            "max_model_timeout_seconds": 42,
+            "profiles": {
+                "openrouter:configured/model": {
+                    "temperature": 0.4,
+                    "top_p": 0.8,
+                    "max_tokens": 1200,
+                    "vision": True,
+                }
+            },
+        }
+    )
+
+    assert router.complete_json([], system_contract="Return JSON.") == {"reply": "Configured."}
+    assert router.selection.identity == "openrouter:configured/model"
+    assert captured[0]["model"] == "configured/model"
+    assert captured[0]["temperature"] == 0.4
+    assert captured[0]["top_p"] == 0.8
+    assert captured[0]["max_tokens"] == 1200
 
 
 def test_auto_model_resolution_does_not_mutate_shared_selection(monkeypatch) -> None:
@@ -413,6 +536,77 @@ def test_localai_gateway_omits_output_cap_without_a_model_profile(monkeypatch) -
 
     assert router.complete_json([], system_contract="Return JSON.") == {"reply": "Noted."}
     assert "max_tokens" not in captured[0]
+
+
+def test_model_gateway_attaches_configured_vision_images(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setenv(
+        "HELPME_MODEL_PROFILES",
+        json.dumps({"openrouter:vision-model": {"vision": True, "max_tokens": 900}}),
+    )
+    captured: list[dict[str, object]] = []
+
+    class FakeResponse:
+        def __enter__(self) -> FakeResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            del args
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {"choices": [{"message": {"content": '{"reply":"I can see it."}'}}], "usage": {}}
+            ).encode("utf-8")
+
+    def fake_urlopen(request, timeout, context=None):
+        del timeout, context
+        captured.append(json.loads(request.data.decode("utf-8")))
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter(ModelSelection("openrouter", "vision-model"))
+
+    assert router.complete_json(
+        [{"role": "user", "content": "Describe this image."}],
+        system_contract="Return JSON.",
+        images=[{"mime_type": "image/png", "data": "aGVsbG8="}],
+    ) == {"reply": "I can see it."}
+
+    user_content = captured[0]["messages"][-1]["content"]
+    assert isinstance(user_content, list)
+    assert user_content[0] == {"type": "text", "text": "Describe this image."}
+    assert user_content[1] == {
+        "type": "image_url",
+        "image_url": {"url": "data:image/png;base64,aGVsbG8="},
+    }
+    assert "vision" not in captured[0]
+    assert captured[0]["max_tokens"] == 900
+
+
+def test_model_gateway_rejects_images_without_vision_profile(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.delenv("HELPME_MODEL_PROFILES", raising=False)
+    router = ModelRouter(ModelSelection("openrouter", "text-model"))
+
+    with pytest.raises(ProviderUnavailable, match="not configured for image input"):
+        router.complete_json(
+            [{"role": "user", "content": "Describe this image."}],
+            system_contract="Return JSON.",
+            images=[{"mime_type": "image/png", "data": "aGVsbG8="}],
+        )
+
+
+def test_loopback_embedding_provider_can_run_without_a_provider_key(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_EMBEDDING_BASE_URL", "http://127.0.0.1:8090/v1")
+    monkeypatch.setenv("HELPME_EMBEDDING_MODEL", "local-embedding-model")
+    monkeypatch.delenv("HELPME_EMBEDDING_API_KEY", raising=False)
+
+    provider = embedding_provider_from_environment()
+
+    assert provider is not None
+    assert provider.model == "local-embedding-model"
 
 
 def test_model_gateway_retries_one_transient_failure(monkeypatch) -> None:
