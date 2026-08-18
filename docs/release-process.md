@@ -10,9 +10,13 @@ package, container, and six native-target jobs on 2026-08-18. The draft contains
 Python distributions, `SHA256SUMS`, and `release-manifest.json`; it is not a stable signed release.
 User-facing wording should describe this honestly and professionally: automated checks are present,
 but an RC may still occasionally break, change behavior, or expose unfinished edges.
-The current `main` branch is `95e137ee675625b0fdbe3127071187eb97fab1a4`, so changes after the RC
+The current `main` branch is `7c4a970b5e89d8445883aab938ab36c5bfef51c0`, so changes after the RC
 tag are not represented by the existing binary. Do not move the immutable RC tag; advance the source
 version and create the next candidate when a new build is intended.
+
+The repository is now public and the static onboarding page is published at
+<https://bnelabs.github.io/helpme.green/> through the checked-in GitHub Pages workflow. This is a
+documentation and onboarding surface, not a deployment of the local runtime or its knowledge data.
 
 This document is the release contract for helpme.green. A release is a reproducible, tested,
 versioned point in Git history with a reviewed release note, checksums, and provenance. It is not a
@@ -97,10 +101,11 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
 
 ## Signing and provenance
 
-The release workflow uses GitHub Actions artifact attestations for native files and the container
-image when the repository supports that GitHub feature. This user-owned private repository does not
-support persisted GitHub attestations, so its release evidence is SHA-256 checksums for every asset
-plus BuildKit provenance/SBOM metadata on the container image. Stable native publication requires
+The release workflow requests GitHub Actions artifact attestations for native files and the container
+image when the repository is public and the GitHub feature is available. The current `v0.1.0-rc.6`
+was built while the repository was private, so that historical candidate is evidenced by SHA-256
+checksums for every asset plus BuildKit provenance/SBOM metadata on the container image. Future
+public candidate runs may add persisted attestations. Stable native publication requires
 these repository or organization secrets:
 
 - `MACOS_CERTIFICATE_BASE64`, `MACOS_CERTIFICATE_PASSWORD`, `MACOS_SIGNING_IDENTITY`;
@@ -118,10 +123,11 @@ The checked-in artifact manifest may be changed to `ready` only after source-by-
 and privacy review, scrubbed packaging, checksum verification, and a clean-directory bootstrap test.
 An uncleared database must never be copied into a native bundle, container image, or GitHub Release.
 
-The repository is currently private and does not yet declare a project-level distribution licence.
-Before changing repository visibility or distributing the source/binaries outside the controlled
-GitHub audience, select and record the applicable code, asset, and reference-content licences. Do
-not infer a licence from the presence of a Git repository or from third-party dependency licences.
+The repository is public and does not yet declare a project-level distribution licence. Before
+distributing the source, binaries, or reference-derived material as a product, select and record the
+applicable code, asset, and reference-content licences. Public visibility does not clear third-party
+content for redistribution; do not infer a licence from the presence of a Git repository or from
+third-party dependency licences.
 
 ## Release-note checklist
 

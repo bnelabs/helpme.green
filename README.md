@@ -27,8 +27,9 @@ actual material can change the answer.
 - Read-only source, capability, health, and GraphQL endpoints for inspection and integration.
 - A separate operator-only knowledge-base console for bounded uploads, review, provenance, jobs, and
   retrieval eligibility; it is disabled by default and is not part of the public notebook.
-- A static newcomer onboarding page in [`website/`](website/) with the material-handling framework,
-  real notebook screenshots, and binary/Docker/source getting-started routes.
+- A public [newcomer onboarding page](https://bnelabs.github.io/helpme.green/) backed by
+  [`website/`](website/), with the material-handling framework, real notebook screenshots, and
+  binary/Docker/source getting-started routes.
 
 The assistant may explain uncertainty, limitations, and what would make an answer more specific. It
 does not pretend that a source passage proves a particular batch, machine, site, product, or business
@@ -238,7 +239,9 @@ PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
   distribution metadata.
 - `docs/` — deployment, retrieval, pipeline, source reuse, artifact boundaries, and the
   [material-handling framework](docs/material-handling-framework.md).
-- `website/` — static GitHub-ready onboarding page and visual evidence for the public surface.
+- `website/` — static onboarding page and visual evidence for the public surface; it is published
+  through [GitHub Pages](https://bnelabs.github.io/helpme.green/) by
+  [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
 - `docs/documentation-audit-2026-08-18.md` — current branch, release, and documentation consistency
   audit.
 
@@ -259,4 +262,4 @@ for the current candidate and checksums; stable publication remains a maintainer
 macOS and Windows signing/notarization are still required. This is an early release candidate:
 automated checks reduce risk, but occasional breakage, rough edges, and behavior changes are still
 possible between candidates. The draft was built from tagged commit `955d8ed`; `main` has since
-advanced to `95e137e`, so a future candidate is needed to package later main-branch changes.
+advanced to `7c4a970`, so a future candidate is needed to package later main-branch changes.

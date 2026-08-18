@@ -1,15 +1,17 @@
 # Documentation audit — 2026-08-18
 
 Scope: repository documentation, release instructions, public onboarding content, source-manifest
-references, and the latest GitHub PR/release state. The audit was performed against local `main`
-`95e137ee675625b0fdbe3127071187eb97fab1a4` and the live `bnelabs/helpme.green` metadata.
+references, and the latest GitHub PR/release state. The audit was refreshed after publication against
+local `main` `7c4a970b5e89d8445883aab938ab36c5bfef51c0` and the live `bnelabs/helpme.green` metadata.
 
 ## GitHub and release evidence
 
-- No open pull requests remain. The latest merged change is PR #14, “Add governed multi-platform
-  release protocol”, merged to `main`.
-- The current CI run for `95e137e` passed Python 3.11, Python 3.12, Python distributions, and the
-  container build/rehearsal.
+- No open pull requests remain. The latest merged change is PR #15, “Build public onboarding page
+  and release guidance”, merged to `main` at `7c4a970`.
+- The post-merge CI run `32129310630` for `7c4a970` passed Python 3.11, Python 3.12, Python
+  distributions, and the container build/rehearsal.
+- GitHub Pages is configured for the now-public repository. Deployment run `32129534246` passed,
+  and the live page is <https://bnelabs.github.io/helpme.green/>.
 - `v0.1.0-rc.6` is a draft pre-release at tagged commit `955d8ed9779c36d660fe86f5ca3241313a426b7f`.
   It contains six native archives, checksums, Python distributions, and a release manifest. The
   tag predates the current `main` commit; it must not be moved. A later candidate is required to
@@ -33,6 +35,7 @@ references, and the latest GitHub PR/release state. The audit was performed agai
 - `docs/kb-operator-runbook.md` — startup job recovery now matches the service implementation.
 - `docs/material-handling-framework.md` — canonical five-move orientation framework for the public
   page.
+- `.github/workflows/pages.yml` — static `website/` publication path and trigger contract.
 - `design-qa.md` — selected concept comparison, desktop/mobile browser evidence, interaction checks,
   and final visual QA result.
 - `website/` — GitHub-ready static onboarding page, real notebook/material assets, screenshots,
@@ -67,5 +70,8 @@ references, and the latest GitHub PR/release state. The audit was performed agai
 - `ruff check`, `ruff format --check`, `mypy src`, and `compileall` passed.
 - `bash scripts/verify_container.sh` passed health, restart recovery, and ordinary-language route
   checks.
+- Post-merge GitHub CI run `32129310630` passed all four jobs.
+- GitHub Pages deployment run `32129534246` passed; a live request returned HTTP 200 and the
+  published page contained the Get started route and `v0.1.0-rc.6` RC notice.
 - Codex In-app Browser rendered the page at 1280×720 and 390×844, exercised the mobile menu and
   install tabs, and returned no console errors or warnings.

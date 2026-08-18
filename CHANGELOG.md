@@ -11,6 +11,10 @@ format and are immutable after publication.
   downloads outside release artifacts.
 - Release validation, release-note generation, native-bundle packaging, bundle verification, and
   target-runner automation are now part of the repository.
+- Publish the static newcomer onboarding page through GitHub Pages, with binary, Docker, and source
+  getting-started routes and the material-handling framework.
+- Refresh the documentation audit and release/deployment guidance to record the public repository,
+  live Pages URL, current merge commit, and post-publication verification.
 
 ## [0.1.0-rc.6] - 2026-08-18
 

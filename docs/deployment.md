@@ -130,9 +130,17 @@ Important endpoints:
 - `/api/kb/*` — disabled-by-default, operator-authenticated knowledge-base management routes; see
   [`kb-operator-runbook.md`](kb-operator-runbook.md).
 
+## Public onboarding site
+
+The static newcomer guide is published separately from the local-first runtime at
+<https://bnelabs.github.io/helpme.green/>. The checked-in
+[Pages workflow](../.github/workflows/pages.yml) serves only `website/` on pushes to `main` or an
+explicit workflow dispatch. It contains onboarding copy, screenshots, and installation guidance;
+it does not expose `.data`, runtime databases, provider keys, raw source downloads, or model files.
+
 The release workflow is checked in and has produced the draft `v0.1.0-rc.6` candidate from tagged
 commit `955d8ed9779c36d660fe86f5ca3241313a426b7f`. It passed the six native bundle smoke checks and
-the multi-platform container rehearsal. `main` is now at `95e137ee675625b0fdbe3127071187eb97fab1a4`,
+the multi-platform container rehearsal. `main` is now at `7c4a970b5e89d8445883aab938ab36c5bfef51c0`,
 so changes after the tag are not represented by the existing binary; create a new candidate rather
 than moving the immutable tag. The candidate remains a draft pre-release: macOS and Windows bundles
 are unsigned until the stable signing/notarization secrets are configured. Use the [GitHub Releases
