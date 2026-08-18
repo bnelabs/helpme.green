@@ -8,7 +8,7 @@ dynamic = ["version"]
 description = "Circular-economy AI-backed R&D assistant with source-aware reference retrieval"
 requires-python = ">=3.11"
 dependencies = [
-  "cryptography>=43.0",
+  "cryptography==46.0.3",
   "openpyxl>=3.1",
   "pypdf>=5.0",
   "PyYAML>=6.0",

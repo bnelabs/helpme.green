@@ -59,8 +59,8 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
    and push an annotated pre-release tag only after the version checker passes:
 
    ```bash
-   git tag -a v0.1.0-rc.3 -m "helpme.green v0.1.0-rc.3"
-   git push origin v0.1.0-rc.3
+   git tag -a v0.1.0-rc.4 -m "helpme.green v0.1.0-rc.4"
+   git push origin v0.1.0-rc.4
    ```
 
    The workflow builds and attaches all five native bundles as unsigned pre-release assets, so they
