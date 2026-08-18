@@ -40,7 +40,10 @@ def _extract(archive: Path, destination: Path) -> None:
                     link_target = (destination / link_path).resolve()
                     if not link_target.is_relative_to(destination_root):
                         raise ValueError(f"Refusing archive link: {member.name}")
-            source.extractall(destination)
+            if sys.version_info >= (3, 12):
+                source.extractall(destination, filter="data")
+            else:
+                source.extractall(destination)
         return
     raise ValueError(f"Unsupported native archive: {archive}")
 

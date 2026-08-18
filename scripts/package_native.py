@@ -16,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = {
     "linux-amd64": "gztar",
+    "linux-arm64": "gztar",
     "macos-arm64": "zip",
     "macos-amd64": "zip",
     "windows-amd64": "zip",

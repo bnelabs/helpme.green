@@ -244,7 +244,7 @@ questions; it does not authorize physical, legal, financial, or operational acti
 Release policy, supported delivery targets, native bundle instructions, checksums, signing, and the
 knowledge-artifact boundary are documented in [docs/release-process.md](docs/release-process.md).
 The intended container release is a multi-platform Linux image; macOS and Windows hosts use the
-Linux container through Docker Desktop. Native bundles are target-specific and require the release
-verification and signing gates described there. The repository currently contains maintainer-run
-release scripts but no checked-in GitHub Actions release workflow, Git tag, or published GitHub
-Release; treat the delivery matrix as a release contract until that automation is added.
+Linux container through Docker Desktop. Native bundles are target-specific for Linux amd64/arm64,
+macOS arm64/amd64, and Windows amd64/arm64, and require the release verification and signing gates
+described there. The repository contains a checked-in GitHub Actions release workflow that creates a
+reviewable draft release; stable publication remains a maintainer decision.

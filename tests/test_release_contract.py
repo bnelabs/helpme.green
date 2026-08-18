@@ -5,6 +5,7 @@ import json
 import sys
 import tarfile
 import tomllib
+import warnings
 from pathlib import Path
 
 import pytest
@@ -31,8 +32,8 @@ verify_native_bundle = _load_script("verify_native_bundle")
 def test_packaging_uses_one_version_source() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     assert project["dynamic"] == ["version"]
-    assert check_release.read_source_version() == "0.1.0-rc.5"
-    assert check_release.validate_tag("v0.1.0-rc.5") == "0.1.0-rc.5"
+    assert check_release.read_source_version() == "0.1.0-rc.6"
+    assert check_release.validate_tag("v0.1.0-rc.6") == "0.1.0-rc.6"
 
 
 def test_workflows_use_node24_compatible_actions() -> None:
@@ -56,16 +57,19 @@ def test_workflows_use_node24_compatible_actions() -> None:
         "docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3"
         not in workflow_text
     )
-    assert (
-        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1"
-        in workflow_text
-    )
+    assert "actions/download-artifact@" not in workflow_text
     assert (
         "actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6"
         not in workflow_text
     )
     assert (
         "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1" in workflow_text
+    )
+    release_workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    assert "target: linux-arm64" in release_workflow
+    assert "runner: ubuntu-24.04-arm" in release_workflow
+    assert 'gh run download "$GITHUB_RUN_ID" --name python-distributions --dir dist/assets' in (
+        release_workflow
     )
 
 
@@ -80,9 +84,9 @@ def test_release_notes_extract_the_versioned_changelog_section(tmp_path: Path) -
     output = tmp_path / "notes.md"
     generate_release_notes.main(
         [
-            "0.1.0-rc.5",
+            "0.1.0-rc.6",
             "--tag",
-            "v0.1.0-rc.5",
+            "v0.1.0-rc.6",
             "--commit",
             "a" * 40,
             "--output",
@@ -90,12 +94,12 @@ def test_release_notes_extract_the_versioned_changelog_section(tmp_path: Path) -
         ]
     )
     text = output.read_text(encoding="utf-8")
-    assert "helpme.green v0.1.0-rc.5" in text
+    assert "helpme.green v0.1.0-rc.6" in text
     assert "Exact commit: `" + "a" * 40 in text
-    assert "remaining Node 20-targeting artifact download action" in text
+    assert "explicit Python tar extraction data filter" in text
     assert "## [Unreleased]" not in text
-    assert "remaining Node 20-targeting artifact download action" in generate_release_notes.render(
-        "0.1.0-rc.5", tag="v0.1.0-rc.5", commit="c" * 40
+    assert "explicit Python tar extraction data filter" in generate_release_notes.render(
+        "0.1.0-rc.6", tag="v0.1.0-rc.6", commit="c" * 40
     )
 
 
@@ -106,8 +110,8 @@ def test_release_manifest_records_asset_checksums_and_knowledge_status(tmp_path:
     (asset_dir / "example.zip.sha256").write_text("ignored\n", encoding="utf-8")
     output = tmp_path / "release-manifest.json"
     create_release_manifest.create_manifest(
-        version="0.1.0-rc.5",
-        tag="v0.1.0-rc.5",
+        version="0.1.0-rc.6",
+        tag="v0.1.0-rc.6",
         asset_dir=asset_dir,
         output=output,
         commit="b" * 40,
@@ -124,14 +128,18 @@ def test_release_manifest_records_asset_checksums_and_knowledge_status(tmp_path:
 
 
 def test_native_artifact_names_cover_requested_targets() -> None:
-    assert package_native.artifact_stem("0.1.0-rc.5", "linux-amd64") == (
-        "helpme-green-0.1.0-rc.5-linux-amd64"
+    assert package_native.artifact_stem("0.1.0-rc.6", "linux-amd64") == (
+        "helpme-green-0.1.0-rc.6-linux-amd64"
     )
-    assert package_native.artifact_stem("0.1.0-rc.5", "windows-arm64") == (
-        "helpme-green-0.1.0-rc.5-windows-arm64"
+    assert package_native.artifact_stem("0.1.0-rc.6", "linux-arm64") == (
+        "helpme-green-0.1.0-rc.6-linux-arm64"
+    )
+    assert package_native.artifact_stem("0.1.0-rc.6", "windows-arm64") == (
+        "helpme-green-0.1.0-rc.6-windows-arm64"
     )
     assert set(package_native.TARGETS) == {
         "linux-amd64",
+        "linux-arm64",
         "macos-arm64",
         "macos-amd64",
         "windows-amd64",
@@ -142,9 +150,9 @@ def test_native_artifact_names_cover_requested_targets() -> None:
 def test_bundle_metadata_is_explicit_about_data_boundaries(tmp_path: Path) -> None:
     bundle = tmp_path / "helpme-green"
     bundle.mkdir()
-    package_native._write_bundle_metadata(bundle, version="0.1.0-rc.5", target="linux-amd64")
+    package_native._write_bundle_metadata(bundle, version="0.1.0-rc.6", target="linux-amd64")
     metadata = json.loads((bundle / "RELEASE-METADATA.json").read_text(encoding="utf-8"))
-    assert metadata["version"] == "0.1.0-rc.5"
+    assert metadata["version"] == "0.1.0-rc.6"
     assert metadata["target"] == "linux-amd64"
     assert "not bundled" in metadata["knowledge"]
     assert "provider key" in (bundle / "RUN.md").read_text(encoding="utf-8")
@@ -159,6 +167,19 @@ def test_tar_extraction_rejects_links(tmp_path: Path) -> None:
         target.addfile(link)
     with pytest.raises(ValueError, match="archive link"):
         verify_native_bundle._extract(archive, tmp_path / "out")
+
+
+def test_tar_extraction_has_no_runtime_deprecation_warning(tmp_path: Path) -> None:
+    archive = tmp_path / "safe.tar.gz"
+    payload = tmp_path / "payload.txt"
+    payload.write_text("safe", encoding="utf-8")
+    with tarfile.open(archive, "w:gz") as target:
+        target.add(payload, arcname="helpme-green/payload.txt")
+    destination = tmp_path / "out"
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        verify_native_bundle._extract(archive, destination)
+    assert (destination / "helpme-green" / "payload.txt").read_text(encoding="utf-8") == "safe"
 
 
 def test_native_defaults_use_user_data_when_frozen(monkeypatch: pytest.MonkeyPatch) -> None:

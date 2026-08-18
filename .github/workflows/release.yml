@@ -6,6 +6,7 @@ on:
       - "v*"
 
 permissions:
+  actions: read
   contents: write
   packages: write
   id-token: write
@@ -69,6 +70,9 @@ jobs:
         include:
           - target: linux-amd64
             runner: ubuntu-24.04
+            signing: none
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
             signing: none
           - target: macos-arm64
             runner: macos-15
@@ -228,16 +232,21 @@ jobs:
         with:
           ref: ${{ github.ref }}
       - name: Download native assets
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: native-*
-          path: dist/assets
-          merge-multiple: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p dist/assets
+          for target in linux-amd64 linux-arm64 macos-arm64 macos-amd64 windows-amd64 windows-arm64; do
+            gh run download "$GITHUB_RUN_ID" \
+              --name "native-$target" \
+              --dir dist/assets
+          done
       - name: Download Python distributions
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: python-distributions
-          path: dist/assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run download "$GITHUB_RUN_ID" --name python-distributions --dir dist/assets
       - name: Write aggregate checksums
         shell: bash
         run: |

@@ -27,6 +27,7 @@ The release checker verifies the tag against the source version before building 
 | Target | Native release asset | Hosted build target | Required validation |
 | --- | --- | --- | --- |
 | Linux amd64 | `helpme-green-VERSION-linux-amd64.tar.gz` | `ubuntu-24.04` | bundle start, `/healthz`, session route |
+| Linux arm64 | `helpme-green-VERSION-linux-arm64.tar.gz` | `ubuntu-24.04-arm` | bundle start, `/healthz`, session route |
 | macOS arm64 | `helpme-green-VERSION-macos-arm64.zip` | `macos-15` | bundle start, `/healthz`, codesign, notarization |
 | macOS amd64 | `helpme-green-VERSION-macos-amd64.zip` | `macos-15-intel` | bundle start, `/healthz`, codesign, notarization |
 | Windows amd64 | `helpme-green-VERSION-windows-amd64.zip` | `windows-2025` | bundle start, `/healthz`, Authenticode |
@@ -59,11 +60,11 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
    and push an annotated pre-release tag only after the version checker passes:
 
    ```bash
-   git tag -a v0.1.0-rc.5 -m "helpme.green v0.1.0-rc.5"
-   git push origin v0.1.0-rc.5
+   git tag -a v0.1.0-rc.6 -m "helpme.green v0.1.0-rc.6"
+   git push origin v0.1.0-rc.6
    ```
 
-   The workflow builds and attaches all five native bundles as unsigned pre-release assets, so they
+   The workflow builds and attaches all six native bundles as unsigned pre-release assets, so they
    can be downloaded and tested without pretending that they are stable signed binaries.
 5. For stable publication, update the source version and changelog to the final value, then create
    and push the annotated stable tag:
@@ -74,7 +75,7 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
    ```
 
 6. The checked-in release workflow rebuilds the exact tag, runs the test and container gates, creates
-   all five native bundles, writes `SHA256SUMS`, and creates a draft GitHub Release with the assets.
+   all six native bundles, writes `SHA256SUMS`, and creates a draft GitHub Release with the assets.
 7. Review the generated notes and the asset matrix. A stable release must have signed/notarized
    macOS and Windows assets. If signing credentials are absent, the workflow must stop before a
    stable release is published.

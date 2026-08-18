@@ -12,6 +12,18 @@ format and are immutable after publication.
 - Release validation, release-note generation, native-bundle packaging, bundle verification, and
   target-runner automation are now part of the repository.
 
+## [0.1.0-rc.6] - 2026-08-18
+
+### Fixed
+
+- Add a native Linux arm64 bundle, built and smoke-tested on the hosted Ubuntu arm64 runner, so
+  Linux users are not limited to the container image.
+- Use the explicit Python tar extraction data filter on supported runtimes, removing the warning
+  about Python 3.14's default extraction-filter change from native bundle smoke tests.
+- Download workflow artifacts with the GitHub CLI in the draft-release job, avoiding the current
+  artifact action's deprecated internal `Buffer()` warning while retaining pinned Node 24 upload
+  actions.
+
 ## [0.1.0-rc.5] - 2026-08-18
 
 ### Fixed
