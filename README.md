@@ -27,6 +27,8 @@ actual material can change the answer.
 - Read-only source, capability, health, and GraphQL endpoints for inspection and integration.
 - A separate operator-only knowledge-base console for bounded uploads, review, provenance, jobs, and
   retrieval eligibility; it is disabled by default and is not part of the public notebook.
+- A static newcomer onboarding page in [`website/`](website/) with the material-handling framework,
+  real notebook screenshots, and binary/Docker/source getting-started routes.
 
 The assistant may explain uncertainty, limitations, and what would make an answer more specific. It
 does not pretend that a source passage proves a particular batch, machine, site, product, or business
@@ -177,8 +179,8 @@ user message → relevant context selection → lexical/semantic retrieval
 The model receives a small relevant context, not the entire database. When configured and enabled,
 semantic embeddings, hybrid ranking, reranking, machine references, and independent quality critics
 are used automatically to improve the answer; each remains bounded and relevance-filtered. Registered
-source metadata and retrieval determine what is relevant; there is no special prompt path for a particular
-download.
+source metadata and retrieval determine what is relevant; there is no special prompt path for a
+particular download.
 Graph relationships are useful for provenance and navigation; GraphQL is a read-only access surface,
 not a replacement for retrieval or a truth authority.
 
@@ -234,7 +236,11 @@ PYTHONPATH=src .venv/bin/python scripts/evaluate_retrieval.py \
 - `src/helpme_green/machinery.py` — machine-reference catalog.
 - `knowledge/` — source manifest, machine profiles, research register, retrieval benchmark, and
   distribution metadata.
-- `docs/` — deployment, retrieval, pipeline, source reuse, and artifact boundaries.
+- `docs/` — deployment, retrieval, pipeline, source reuse, artifact boundaries, and the
+  [material-handling framework](docs/material-handling-framework.md).
+- `website/` — static GitHub-ready onboarding page and visual evidence for the public surface.
+- `docs/documentation-audit-2026-08-18.md` — current branch, release, and documentation consistency
+  audit.
 
 The project is advisory and educational. It helps people think, research, compare, and ask better
 questions; it does not authorize physical, legal, financial, or operational action.
@@ -246,5 +252,11 @@ knowledge-artifact boundary are documented in [docs/release-process.md](docs/rel
 The intended container release is a multi-platform Linux image; macOS and Windows hosts use the
 Linux container through Docker Desktop. Native bundles are target-specific for Linux amd64/arm64,
 macOS arm64/amd64, and Windows amd64/arm64, and require the release verification and signing gates
-described there. The repository contains a checked-in GitHub Actions release workflow that creates a
-reviewable draft release; stable publication remains a maintainer decision.
+described there. The current source version is `0.1.0-rc.6`. The checked-in GitHub Actions release
+workflow has built and smoke-tested six native bundles for the draft candidate, plus Python
+distributions and a multi-platform container image. [Open the GitHub Releases page](https://github.com/bnelabs/helpme.green/releases)
+for the current candidate and checksums; stable publication remains a maintainer decision because
+macOS and Windows signing/notarization are still required. This is an early release candidate:
+automated checks reduce risk, but occasional breakage, rough edges, and behavior changes are still
+possible between candidates. The draft was built from tagged commit `955d8ed`; `main` has since
+advanced to `95e137e`, so a future candidate is needed to package later main-branch changes.

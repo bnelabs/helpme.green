@@ -10,9 +10,9 @@ source metadata from a corpus whose reuse terms are mixed.
 The checked-in [`knowledge/artifact-manifest.json`](../knowledge/artifact-manifest.json) records the
 current local snapshot's checksums and coverage:
 
-- logical KB digest: `e8180263ecc966a66e0acf276e14e00324eccfcf1393cb6a4e738b46ce5ed0c9`
+- logical KB digest: `5eec432bd869fabcf55b942081d64c17fa90885b9d753b32311671e67acae740`
 - database file size: 212,910,080 bytes
-- proposed gzip release asset: 75,008,500 bytes (not uploaded)
+- proposed gzip release asset: 75,003,282 bytes (not uploaded)
 - registered sources: 153
 - extracted documents: 121; blocked documents: 10
 - latest searchable chunks: 6,069; latest embedded chunks: 6,069
@@ -21,6 +21,8 @@ current local snapshot's checksums and coverage:
 Its status is currently `pending-redistribution-review`, so a fresh clone receives the manifest and
 the reproducible source queue, but not the full local database. That is deliberate: the current
 database includes material that has not been cleared for public redistribution source by source.
+The checked-in artifact is a database-version-3 snapshot; the current runtime schema is version 4
+and migrates an installed v3 database forward idempotently when it opens.
 
 Git cannot run an arbitrary post-clone downloader. Once a reviewed artifact is published, the
 supported flow is an explicit bootstrap command. This is safer and makes the download, checksum,

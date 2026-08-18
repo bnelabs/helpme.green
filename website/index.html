@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="helpme.green is a local-first lab notebook for careful material questions, comparison, and next checks."
+    />
+    <meta name="theme-color" content="#203d1c" />
+    <title>helpme.green — a practical guide for material questions</title>
+    <link rel="icon" href="assets/favicon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="site-shell">
+      <aside class="site-rail" aria-label="Site rail">
+        <a class="brand" href="#top" aria-label="helpme.green home">
+          <img src="assets/brand-mark.png" alt="" />
+          <span>helpme<span class="brand-dot">.</span>green</span>
+        </a>
+        <p class="rail-kicker">Circular Econ AI Backed R&amp;D</p>
+        <nav class="rail-nav" aria-label="Page navigation">
+          <a href="#how-it-works">How it works <span>01</span></a>
+          <a href="#safe-handling">Safe handling <span>02</span></a>
+          <a href="#lab-notebook">The notebook <span>03</span></a>
+          <a href="#limits">Limits <span>04</span></a>
+          <a class="rail-cta" href="#get-started">Get started <span>↗</span></a>
+        </nav>
+        <div class="rail-foot">
+          <span class="release-dot" aria-hidden="true"></span>
+          <span>v0.1.0-rc.6</span>
+          <span class="rail-muted">early release</span>
+        </div>
+      </aside>
+
+      <div class="site-content">
+        <header class="site-header">
+          <a class="mobile-brand brand" href="#top" aria-label="helpme.green home">
+            <img src="assets/brand-mark.png" alt="" />
+            <span>helpme<span class="brand-dot">.</span>green</span>
+          </a>
+          <nav class="header-nav" aria-label="Primary navigation">
+            <a href="#how-it-works">Guide</a>
+            <a href="#lab-notebook">Notebook</a>
+            <a href="#get-started">Downloads</a>
+            <a class="header-github" href="https://github.com/bnelabs/helpme.green" rel="noreferrer">GitHub ↗</a>
+          </nav>
+          <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">
+            Menu
+          </button>
+          <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile navigation" hidden>
+            <a href="#how-it-works">How it works</a>
+            <a href="#safe-handling">Safe handling</a>
+            <a href="#lab-notebook">The notebook</a>
+            <a href="#limits">Limits</a>
+            <a href="#get-started">Get started</a>
+          </nav>
+        </header>
+
+        <div class="release-banner" role="note">
+          <span class="banner-label">Release candidate</span>
+          <p>
+            <strong>v0.1.0-rc.6</strong> has passed the current automated release checks. It is still
+            an early build, so occasional breakage, rough edges, and behavior changes are possible.
+          </p>
+          <a href="https://github.com/bnelabs/helpme.green/releases" rel="noreferrer">Release notes ↗</a>
+        </div>
+
+        <main>
+          <section id="top" class="hero section-pad">
+            <div class="hero-copy">
+              <p class="eyebrow">A field guide for curious hands</p>
+              <h1>A practical guide for <em>material questions.</em></h1>
+              <p class="hero-lede">
+                helpme.green is a local-first lab notebook for noticing what is in front of you,
+                comparing references with care, and choosing what to verify next.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-dark" href="#get-started">Get started <span aria-hidden="true">→</span></a>
+                <a class="text-link" href="#safe-handling">See the handling framework</a>
+              </div>
+              <dl class="hero-facts" aria-label="Product principles">
+                <div>
+                  <dt>01</dt>
+                  <dd>Ordinary language first</dd>
+                </div>
+                <div>
+                  <dt>02</dt>
+                  <dd>Local-first by design</dd>
+                </div>
+                <div>
+                  <dt>03</dt>
+                  <dd>Uncertainty stays visible</dd>
+                </div>
+              </dl>
+            </div>
+            <div class="hero-visual">
+              <div class="visual-label"><span>Actual notebook surface</span><span>01 / 05</span></div>
+              <figure class="screenshot-frame">
+                <img
+                  src="assets/screenshots/notebook-viewport-desktop.png"
+                  alt="The helpme.green Lab Notebook showing the five investigation phases and material library."
+                />
+                <figcaption>Start with what you can see. Keep the next question close.</figcaption>
+              </figure>
+              <div class="visual-note">The library shows examples, not proof of identity.</div>
+            </div>
+          </section>
+
+          <section id="how-it-works" class="section-pad phase-section">
+            <div class="section-heading">
+              <p class="eyebrow">A slower, clearer loop</p>
+              <h2>Five phases keep a material question moving.</h2>
+              <p>
+                The notebook gives a natural place for observations, references, and open questions.
+                It does not turn an uncertain sample into a confident label.
+              </p>
+            </div>
+            <ol class="phase-grid">
+              <li class="phase-card phase-active">
+                <span class="phase-number">01</span>
+                <h3>Observe</h3>
+                <p>What is in front of you?</p>
+                <span class="phase-rule"></span>
+              </li>
+              <li class="phase-card">
+                <span class="phase-number">02</span>
+                <h3>Identify</h3>
+                <p>Name with care.</p>
+                <span class="phase-rule"></span>
+              </li>
+              <li class="phase-card">
+                <span class="phase-number">03</span>
+                <h3>Understand</h3>
+                <p>Keep the details.</p>
+                <span class="phase-rule"></span>
+              </li>
+              <li class="phase-card">
+                <span class="phase-number">04</span>
+                <h3>Options</h3>
+                <p>Compare routes.</p>
+                <span class="phase-rule"></span>
+              </li>
+              <li class="phase-card">
+                <span class="phase-number">05</span>
+                <h3>Next steps</h3>
+                <p>Choose the next check.</p>
+                <span class="phase-rule"></span>
+              </li>
+            </ol>
+          </section>
+
+          <section id="safe-handling" class="section-pad handling-section">
+            <div class="section-heading heading-wide">
+              <p class="eyebrow">The material-handling framework</p>
+              <h2>Before a recommendation, make the situation safer to understand.</h2>
+              <p>
+                This is an orientation framework for new and experienced users. If a sample is
+                hazardous, pressurised, contaminated, unknown, or unsafe to handle, stop and use
+                the appropriate professional or site procedure.
+              </p>
+            </div>
+            <div class="framework-grid">
+              <article class="framework-card">
+                <span class="card-index">01</span>
+                <h3>Pause &amp; protect</h3>
+                <p>Do not open, test, move, or process an unknown item just to gather information.</p>
+              </article>
+              <article class="framework-card">
+                <span class="card-index">02</span>
+                <h3>Describe</h3>
+                <p>Record appearance, form, condition, origin, and attachments before guessing.</p>
+              </article>
+              <article class="framework-card">
+                <span class="card-index">03</span>
+                <h3>Separate uncertainty</h3>
+                <p>Keep known, suspected, assumed, and still-open details visibly distinct.</p>
+              </article>
+              <article class="framework-card">
+                <span class="card-index">04</span>
+                <h3>Compare carefully</h3>
+                <p>Use library examples and references as context, never as a diagnosis.</p>
+              </article>
+              <article class="framework-card framework-card-dark">
+                <span class="card-index">05</span>
+                <h3>Verify before acting</h3>
+                <p>Check the relevant test, professional, site, legal, or route requirement first.</p>
+              </article>
+            </div>
+          </section>
+
+          <section id="lab-notebook" class="section-pad notebook-section">
+            <div class="notebook-image-wrap">
+              <div class="image-caption"><span>Field note / 2026</span><span>local notebook</span></div>
+              <img src="assets/helpme-field-journal.png" alt="A quiet green landscape used as the helpme.green field journal image." />
+              <div class="image-stamp">Keep the question<br />close to the material.</div>
+            </div>
+            <div class="notebook-copy">
+              <p class="eyebrow">Built for a first look</p>
+              <h2>Write it down before the answer gets ahead of the evidence.</h2>
+              <p>
+                Add an observation, attach the original sample photo when appropriate, and use the
+                five phases to keep a thread of reasoning intact. Notes are autosaved in the browser
+                so moving between phases does not erase the page.
+              </p>
+              <div class="material-strip" aria-label="Material library examples">
+                <figure><img src="assets/material-plastics.webp" alt="Plastic scraps example" /><figcaption>Plastics</figcaption></figure>
+                <figure><img src="assets/material-paper.webp" alt="Paper and board scraps example" /><figcaption>Paper &amp; board</figcaption></figure>
+                <figure><img src="assets/material-copper.webp" alt="Copper and metal scraps example" /><figcaption>Metals</figcaption></figure>
+                <figure><img src="assets/material-cable-harness.webp" alt="Cable and harness scraps example" /><figcaption>Cable</figcaption></figure>
+              </div>
+              <p class="small-note">The material library is contextual. The real sample, its history, and a suitable test still matter.</p>
+            </div>
+          </section>
+
+          <section id="limits" class="section-pad limits-section">
+            <div class="section-heading">
+              <p class="eyebrow">Useful, with clear edges</p>
+              <h2>Good guidance includes the limits.</h2>
+            </div>
+            <div class="limits-grid">
+              <article class="limit-card limit-yes">
+                <p class="card-kicker">It can help you</p>
+                <h3>Organise a question before the next check.</h3>
+                <ul>
+                  <li>Capture observations and context.</li>
+                  <li>Compare relevant reference material.</li>
+                  <li>Surface uncertainty and useful follow-ups.</li>
+                  <li>Keep source identity and limitations attached.</li>
+                </ul>
+              </article>
+              <article class="limit-card limit-no">
+                <p class="card-kicker">It cannot decide for you</p>
+                <h3>It does not prove what a sample is or what is safe.</h3>
+                <ul>
+                  <li>No material, legal, regulatory, or HSE clearance.</li>
+                  <li>No machine capability, yield, price, or outcome guarantee.</li>
+                  <li>No purchasing, shipment, production, or physical action.</li>
+                  <li>Reference text is not a substitute for current evidence.</li>
+                </ul>
+              </article>
+            </div>
+            <div class="local-first-card">
+              <div>
+                <p class="card-kicker">Local-first, provider-configurable</p>
+                <h3>Keep the working record close. Choose the model route deliberately.</h3>
+              </div>
+              <p>
+                LocalAI, OpenRouter, and other compatible providers remain configuration choices.
+                Native bundles contain the application and checked-in reference metadata, not a
+                model, provider key, encryption key, local database, or raw source download.
+              </p>
+            </div>
+          </section>
+
+          <section id="get-started" class="section-pad started-section">
+            <div class="started-intro">
+              <p class="eyebrow">Start where you are</p>
+              <h2>Get started with the notebook.</h2>
+              <p>
+                Choose a release binary, run the local container, or install from source. All three
+                routes open the same conversation-first browser surface.
+              </p>
+              <a class="button button-light" href="https://github.com/bnelabs/helpme.green/releases" rel="noreferrer">View GitHub releases <span aria-hidden="true">↗</span></a>
+            </div>
+
+            <div class="install-panel" aria-label="Installation routes">
+              <div class="install-tabs" role="tablist" aria-label="Choose an installation route">
+                <button class="install-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="install-binary" id="tab-binary" data-install-tab="binary">Release binary</button>
+                <button class="install-tab" type="button" role="tab" aria-selected="false" aria-controls="install-docker" id="tab-docker" data-install-tab="docker">Docker</button>
+                <button class="install-tab" type="button" role="tab" aria-selected="false" aria-controls="install-source" id="tab-source" data-install-tab="source">From source</button>
+              </div>
+
+              <div class="install-content" id="install-binary" role="tabpanel" aria-labelledby="tab-binary" data-install-panel="binary">
+                <div class="install-title"><span>01</span><h3>Download the right bundle</h3></div>
+                <p>
+                  The current candidate provides Linux amd64/arm64, macOS arm64/amd64, and Windows
+                  amd64/arm64 archives. Download from GitHub Releases and verify the matching
+                  <code>SHA256SUMS</code> file before extracting.
+                </p>
+                <pre><code># macOS / Linux
+./helpme-green --serve --host 127.0.0.1 --port 8080
+
+# Windows PowerShell
+.\helpme-green.exe --serve --host 127.0.0.1 --port 8080</code></pre>
+                <p class="install-footnote">Then open <code>http://127.0.0.1:8080</code>. The bundle does not include a model or provider key.</p>
+              </div>
+
+              <div class="install-content" id="install-docker" role="tabpanel" aria-labelledby="tab-docker" data-install-panel="docker" hidden>
+                <div class="install-title"><span>02</span><h3>Run the local container</h3></div>
+                <p>Docker is the short-term supported deployment path. It binds to loopback and keeps runtime data in the named volume.</p>
+                <pre><code>export HELPME_MASTER_KEY="$(python3 -c 'import base64,secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())')"
+docker compose up -d --build
+curl http://127.0.0.1:8080/healthz</code></pre>
+                <p class="install-footnote">Configure a compatible LocalAI or OpenAI-compatible provider separately; keep keys outside the repository.</p>
+              </div>
+
+              <div class="install-content" id="install-source" role="tabpanel" aria-labelledby="tab-source" data-install-panel="source" hidden>
+                <div class="install-title"><span>03</span><h3>Work from the repository</h3></div>
+                <p>Use Python 3.11 or newer, install the development extras, and start the same local server.</p>
+                <pre><code>python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+PYTHONPATH=src .venv/bin/python -m helpme_green \
+  --serve --host 127.0.0.1 --port 8080</code></pre>
+                <p class="install-footnote">The repository includes the full test, lint, container, and release verification paths.</p>
+              </div>
+            </div>
+
+            <div class="rc-note">
+              <span class="release-dot" aria-hidden="true"></span>
+              <div>
+                <strong>About the release candidate</strong>
+                <p>
+                  RC builds are for learning and controlled testing. They have automated checks, but
+                  they may occasionally break, change behavior, or expose unfinished edges. Stable
+                  macOS and Windows signing/notarization is still a release gate.
+                </p>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <footer class="site-footer">
+          <div class="footer-brand brand"><img src="assets/brand-mark.png" alt="" /><span>helpme<span class="brand-dot">.</span>green</span></div>
+          <p>Keep the question close to the material.</p>
+          <nav aria-label="Footer navigation">
+            <a href="https://github.com/bnelabs/helpme.green" rel="noreferrer">Repository ↗</a>
+            <a href="https://github.com/bnelabs/helpme.green/blob/main/docs/material-handling-framework.md" rel="noreferrer">Material framework ↗</a>
+            <a href="https://github.com/bnelabs/helpme.green/blob/main/docs/release-process.md" rel="noreferrer">Release process ↗</a>
+            <a href="https://github.com/bnelabs/helpme.green/releases" rel="noreferrer">Releases ↗</a>
+          </nav>
+        </footer>
+      </div>
+    </div>
+  </body>
+</html>

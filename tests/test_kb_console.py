@@ -5,6 +5,7 @@ import http.client
 import json
 import sqlite3
 import threading
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ import pytest
 from helpme_green.application import ApplicationProcessor
 from helpme_green.conversation import ConversationAgent
 from helpme_green.expert_skills import SkillRegistry
+from helpme_green.kb_service import KbConfig, KbService
 from helpme_green.knowledge import KnowledgeBase
 from helpme_green.knowledge_store import KnowledgeDatabase, KnowledgeStoreError, SourceSpec
 from helpme_green.model_gateway import ModelRouter, ModelSelection
@@ -239,6 +241,36 @@ def test_user_upload_source_has_null_url_and_review_status(tmp_path: Path) -> No
         assert catalog["upload-abc123"]["url"] == ""
         assert catalog["upload-abc123"]["status"] == "review"
         assert catalog["upload-abc123"]["origin"] == "user-upload"
+    finally:
+        database.close()
+
+
+def test_kb_service_recovers_expired_jobs_on_startup(tmp_path: Path) -> None:
+    database = KnowledgeDatabase(tmp_path / "knowledge.db")
+    store = SessionStore(tmp_path / "runtime", knowledge_digest="test")
+    try:
+        job_id = database.create_job("graph-rebuild", "graph")
+        database.claim_job(("graph-rebuild",), lease_seconds=1)
+        expired = (datetime.now(UTC) - timedelta(minutes=5)).isoformat()
+        with database._connection:
+            database._connection.execute(
+                "UPDATE jobs SET lease_until = ? WHERE job_id = ?", (expired, job_id)
+            )
+
+        KbService(
+            database,
+            store,
+            config=KbConfig(
+                enabled=False,
+                upload_dir=tmp_path / "uploads",
+                max_file_bytes=1024,
+                max_request_bytes=2048,
+                max_storage_bytes=4096,
+                external_processing_enabled=False,
+            ),
+        )
+
+        assert database.get_job(job_id)["status"] == "queued"
     finally:
         database.close()
 
