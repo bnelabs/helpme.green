@@ -31,13 +31,13 @@ verify_native_bundle = _load_script("verify_native_bundle")
 def test_packaging_uses_one_version_source() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
     assert project["dynamic"] == ["version"]
-    assert check_release.read_source_version() == "0.1.0"
-    assert check_release.validate_tag("v0.1.0") == "0.1.0"
+    assert check_release.read_source_version() == "0.1.0-rc.1"
+    assert check_release.validate_tag("v0.1.0-rc.1") == "0.1.0-rc.1"
 
 
 def test_release_tag_must_match_source_version() -> None:
     with pytest.raises(ValueError, match="does not match"):
-        check_release.validate_tag("v0.1.1")
+        check_release.validate_tag("v0.1.0")
     with pytest.raises(ValueError, match="valid v-prefixed"):
         check_release.version_from_tag("release-0.1.0")
 
@@ -45,14 +45,22 @@ def test_release_tag_must_match_source_version() -> None:
 def test_release_notes_extract_the_versioned_changelog_section(tmp_path: Path) -> None:
     output = tmp_path / "notes.md"
     generate_release_notes.main(
-        ["0.1.0", "--tag", "v0.1.0", "--commit", "a" * 40, "--output", str(output)]
+        [
+            "0.1.0-rc.1",
+            "--tag",
+            "v0.1.0-rc.1",
+            "--commit",
+            "a" * 40,
+            "--output",
+            str(output),
+        ]
     )
     text = output.read_text(encoding="utf-8")
-    assert "helpme.green v0.1.0" in text
+    assert "helpme.green v0.1.0-rc.1" in text
     assert "Exact commit: `" + "a" * 40 in text
-    assert "Initial versioned release baseline" in text
+    assert "First downloadable cross-platform release candidate" in text
     assert "## [Unreleased]" not in text
-    assert "Initial versioned release baseline" in generate_release_notes.render(
+    assert "First downloadable cross-platform release candidate" in generate_release_notes.render(
         "0.1.0-rc.1", tag="v0.1.0-rc.1", commit="c" * 40
     )
 
@@ -64,8 +72,8 @@ def test_release_manifest_records_asset_checksums_and_knowledge_status(tmp_path:
     (asset_dir / "example.zip.sha256").write_text("ignored\n", encoding="utf-8")
     output = tmp_path / "release-manifest.json"
     create_release_manifest.create_manifest(
-        version="0.1.0",
-        tag="v0.1.0",
+        version="0.1.0-rc.1",
+        tag="v0.1.0-rc.1",
         asset_dir=asset_dir,
         output=output,
         commit="b" * 40,
@@ -82,11 +90,11 @@ def test_release_manifest_records_asset_checksums_and_knowledge_status(tmp_path:
 
 
 def test_native_artifact_names_cover_requested_targets() -> None:
-    assert package_native.artifact_stem("0.1.0", "linux-amd64") == (
-        "helpme-green-0.1.0-linux-amd64"
+    assert package_native.artifact_stem("0.1.0-rc.1", "linux-amd64") == (
+        "helpme-green-0.1.0-rc.1-linux-amd64"
     )
-    assert package_native.artifact_stem("0.1.0", "windows-arm64") == (
-        "helpme-green-0.1.0-windows-arm64"
+    assert package_native.artifact_stem("0.1.0-rc.1", "windows-arm64") == (
+        "helpme-green-0.1.0-rc.1-windows-arm64"
     )
     assert set(package_native.TARGETS) == {
         "linux-amd64",
@@ -100,9 +108,9 @@ def test_native_artifact_names_cover_requested_targets() -> None:
 def test_bundle_metadata_is_explicit_about_data_boundaries(tmp_path: Path) -> None:
     bundle = tmp_path / "helpme-green"
     bundle.mkdir()
-    package_native._write_bundle_metadata(bundle, version="0.1.0", target="linux-amd64")
+    package_native._write_bundle_metadata(bundle, version="0.1.0-rc.1", target="linux-amd64")
     metadata = json.loads((bundle / "RELEASE-METADATA.json").read_text(encoding="utf-8"))
-    assert metadata["version"] == "0.1.0"
+    assert metadata["version"] == "0.1.0-rc.1"
     assert metadata["target"] == "linux-amd64"
     assert "not bundled" in metadata["knowledge"]
     assert "provider key" in (bundle / "RUN.md").read_text(encoding="utf-8")

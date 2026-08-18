@@ -1,9 +1,8 @@
 # Release process
 
 Status: the release contract, maintainer-run scripts, and checked-in GitHub Actions workflows are
-present; as of 2026-08-18 there is no published Git tag or GitHub Release. The delivery matrix below
-describes the intended release surface. The first stable release remains gated on signed/notarized
-macOS and Windows credentials and target verification.
+present. The delivery matrix below describes the release surface. Stable publication remains gated
+on signed/notarized macOS and Windows credentials and target verification.
 
 This document is the release contract for helpme.green. A release is a reproducible, tested,
 versioned point in Git history with a reviewed release note, checksums, and provenance. It is not a
@@ -56,21 +55,32 @@ not include `.data`, provider keys, encryption keys, raw source downloads, or a 
    ```
 
 3. Merge the reviewed change to `main` and confirm the exact merge commit.
-4. Create and push an annotated tag only after the version checker passes:
+4. For a downloadable release candidate, set the source version to the candidate value, then create
+   and push an annotated pre-release tag only after the version checker passes:
+
+   ```bash
+   git tag -a v0.1.0-rc.1 -m "helpme.green v0.1.0-rc.1"
+   git push origin v0.1.0-rc.1
+   ```
+
+   The workflow builds and attaches all five native bundles as unsigned pre-release assets, so they
+   can be downloaded and tested without pretending that they are stable signed binaries.
+5. For stable publication, update the source version and changelog to the final value, then create
+   and push the annotated stable tag:
 
    ```bash
    git tag -a v0.1.0 -m "helpme.green v0.1.0"
    git push origin v0.1.0
    ```
 
-5. The checked-in release workflow rebuilds the exact tag, runs the test and container gates, creates
+6. The checked-in release workflow rebuilds the exact tag, runs the test and container gates, creates
    all five native bundles, writes `SHA256SUMS`, and creates a draft GitHub Release with the assets.
-6. Review the generated notes and the asset matrix. A stable release must have signed/notarized
+7. Review the generated notes and the asset matrix. A stable release must have signed/notarized
    macOS and Windows assets. If signing credentials are absent, the workflow must stop before a
    stable release is published.
-7. Publish the draft release manually. The container job publishes the matching GHCR image with
+8. Publish the draft release manually. The container job publishes the matching GHCR image with
    the tag and immutable digest, and records build provenance.
-8. Verify a clean download and install for at least one native target and both container platforms;
+9. Verify a clean download and install for at least one native target and both container platforms;
    verify `/healthz`, restart recovery, and an ordinary-language session route. Record any target
    that could not be exercised as unverified rather than treating the build as proof.
 
