@@ -140,9 +140,9 @@ it does not expose `.data`, runtime databases, provider keys, raw source downloa
 
 The release workflow is checked in and has produced the draft `v0.1.0-rc.6` candidate from tagged
 commit `955d8ed9779c36d660fe86f5ca3241313a426b7f`. It passed the six native bundle smoke checks and
-the multi-platform container rehearsal. `main` is now at `7c4a970b5e89d8445883aab938ab36c5bfef51c0`,
-so changes after the tag are not represented by the existing binary; create a new candidate rather
-than moving the immutable tag. The candidate remains a draft pre-release: macOS and Windows bundles
+the multi-platform container rehearsal. `main` now contains post-tag onboarding and documentation
+updates, so changes after the tag are not represented by the existing binary; create a new candidate
+rather than moving the immutable tag. The candidate remains a draft pre-release: macOS and Windows bundles
 are unsigned until the stable signing/notarization secrets are configured. Use the [GitHub Releases
 page](https://github.com/bnelabs/helpme.green/releases) for the current candidate and checksums
 rather than copying binary assets into the repository. Treat the candidate as controlled-test
