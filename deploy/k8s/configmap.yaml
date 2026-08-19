@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helpme-green-runtime
+  namespace: helpme-green
+  labels:
+    app.kubernetes.io/name: helpme-green
+data:
+  HELPME_ROOT: /app
+  HELPME_DATA_DIR: /app/.data
+  HELPME_KNOWLEDGE_DB: /app/.data/knowledge.db
+  HELPME_SOURCE_DOWNLOAD_DIR: /app/.data/source-downloads
+  HELPME_AI_ENABLED: "1"
+  HELPME_MODEL: openrouter:dots-studio/dots-3-note-preview:free
+  HELPME_MODEL_PROFILES: >-
+    {"openrouter:dots-studio/dots-3-note-preview:free":{"vision":true,"include_reasoning":false,"max_tokens":8192,"timeout_seconds":180,"context_window":512000}}
+  HELPME_MAX_VISION_IMAGE_BYTES: "16777216"
+  HELPME_MAX_VISION_REQUEST_BYTES: "67108864"
+  HELPME_MODEL_RETRIES: "1"
+  HELPME_MAX_MODEL_TIMEOUT_SECONDS: "180"
+  HELPME_QUALITY_JUDGES: "0"
+  HELPME_EMBEDDING_QUERY_ENABLED: "0"
+  HELPME_RERANK_ENABLED: "0"
+  HELPME_KB_ENABLED: "0"
+  HELPME_KB_EXTERNAL_PROCESSING: "0"
+  HELPME_METRICS_ENABLED: "0"

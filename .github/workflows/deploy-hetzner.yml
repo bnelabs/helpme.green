@@ -1,0 +1,94 @@
+name: Deploy helpme.green to Hetzner
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: helpme-green-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy MicroK8s runtime
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    env:
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+      HETZNER_SSH_USER: ${{ secrets.HETZNER_SSH_USER }}
+    steps:
+      - name: Check out deployed commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Build amd64 image archive
+        run: |
+          set -euo pipefail
+          image_tag="${DEPLOY_SHA:0:12}-amd64"
+          docker buildx build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --sbom=false \
+            --tag "localhost:32000/helpme-green:${image_tag}" \
+            --output "type=docker,dest=${RUNNER_TEMP}/helpme-green-${image_tag}.tar" \
+            .
+
+      - name: Configure deployment SSH
+        env:
+          HETZNER_SSH_PRIVATE_KEY: ${{ secrets.HETZNER_SSH_PRIVATE_KEY }}
+          HETZNER_SSH_KNOWN_HOSTS: ${{ secrets.HETZNER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "${HETZNER_HOST}" || { echo "::error::HETZNER_HOST secret is not configured"; exit 1; }
+          test -n "${HETZNER_SSH_USER}" || { echo "::error::HETZNER_SSH_USER secret is not configured"; exit 1; }
+          test -n "${HETZNER_SSH_PRIVATE_KEY}" || { echo "::error::HETZNER_SSH_PRIVATE_KEY secret is not configured"; exit 1; }
+          test -n "${HETZNER_SSH_KNOWN_HOSTS}" || { echo "::error::HETZNER_SSH_KNOWN_HOSTS secret is not configured"; exit 1; }
+          install -d -m 700 "${HOME}/.ssh"
+          printf '%s\n' "${HETZNER_SSH_PRIVATE_KEY}" > "${HOME}/.ssh/helpme-green-deploy"
+          printf '%s\n' "${HETZNER_SSH_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+          chmod 600 "${HOME}/.ssh/helpme-green-deploy" "${HOME}/.ssh/known_hosts"
+
+      - name: Import image and apply MicroK8s manifests
+        run: |
+          set -euo pipefail
+          image_tag="${DEPLOY_SHA:0:12}-amd64"
+          image_ref="localhost:32000/helpme-green:${image_tag}"
+          image_archive="${RUNNER_TEMP}/helpme-green-${image_tag}.tar"
+          remote="${HETZNER_SSH_USER}@${HETZNER_HOST}"
+          ssh_args=(-i "${HOME}/.ssh/helpme-green-deploy" -o BatchMode=yes -o IdentitiesOnly=yes)
+          remote_tmp=""
+
+          cleanup() {
+            if [ -n "${remote_tmp}" ]; then
+              ssh "${ssh_args[@]}" "${remote}" "rm -rf -- '${remote_tmp}'" >/dev/null 2>&1 || true
+            fi
+          }
+          trap cleanup EXIT
+
+          ssh "${ssh_args[@]}" "${remote}" "microk8s status --wait-ready >/dev/null"
+          cat "${image_archive}" | ssh "${ssh_args[@]}" "${remote}" "microk8s ctr images import --digests -"
+          ssh "${ssh_args[@]}" "${remote}" "microk8s ctr images ls -q | grep -Fx '${image_ref}' >/dev/null"
+
+          remote_tmp="$(ssh "${ssh_args[@]}" "${remote}" 'mktemp -d /tmp/helpme-green-deploy.XXXXXX')"
+          tar -C deploy/k8s -czf - . | ssh "${ssh_args[@]}" "${remote}" "tar -xzf - -C '${remote_tmp}'"
+          ssh "${ssh_args[@]}" "${remote}" "set -eu
+            sed -i -E 's/^  newTag: .*/  newTag: ${image_tag}/' '${remote_tmp}/kustomization.yaml'
+            microk8s kubectl apply -k '${remote_tmp}'
+            microk8s kubectl -n helpme-green rollout status deployment/helpme-green --timeout=5m
+            microk8s kubectl -n helpme-green get deployment helpme-green -o wide
+          "

@@ -120,3 +120,23 @@ def test_frontend_navigation_isolates_kb_and_returns_to_notebook_for_library() -
         '"Next: click Compare carefully · attached photo + all page details will be analyzed"'
         in javascript
     )
+
+
+def test_mobile_layout_keeps_phase_rail_and_typography_readable() -> None:
+    stylesheet = (STATIC_ROOT / "app.css").read_text(encoding="utf-8")
+
+    assert "body { font-size: 16px; }" in stylesheet
+    assert "grid-template-columns: repeat(5, minmax(0, 1fr));" in stylesheet
+    assert "overflow: visible;" in stylesheet
+    assert ".phase-label { font-size: 10px; line-height: 1.15; white-space: normal; }" in stylesheet
+    assert ".page-lede { font-size: 14px; line-height: 1.6; }" in stylesheet
+    assert ".observation-composer textarea { font-size: 16px; min-height: 96px; }" in stylesheet
+    assert (
+        ".settings-field input, .settings-field select, .settings-field textarea { "
+        "font-size: 16px; min-height: 48px; }" in stylesheet
+    )
+    assert ".check-field { font-size: 14px; line-height: 1.4; min-height: 48px; }" in stylesheet
+    assert (
+        '.kb-toolbar input[type="search"], .kb-toolbar select, .kb-toolbar button '
+        "{ font-size: 16px; min-height: 44px; }" in stylesheet
+    )

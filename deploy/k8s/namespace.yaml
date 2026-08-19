@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: helpme-green
+  labels:
+    app.kubernetes.io/part-of: helpme-green
+    app.kubernetes.io/managed-by: kustomize

@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helpme-green
+  namespace: helpme-green
+  labels:
+    app.kubernetes.io/name: helpme-green
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: 84m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "240"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "240"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: green.konverta.eu
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: helpme-green
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - green.konverta.eu
+      secretName: helpme-green-tls
