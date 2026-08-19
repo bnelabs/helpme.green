@@ -47,7 +47,15 @@
 
   <main class="notebook-workspace" id="notebook">
     <aside class="phase-rail" aria-label="Investigation phases">
-      <span class="rail-kicker">Investigation</span>
+      <div class="phase-rail-header">
+        <span class="rail-kicker">Investigation</span>
+        <span class="mobile-phase-count" id="mobilePhaseCount">1 of 5</span>
+      </div>
+      <label class="mobile-phase-control" for="mobilePhaseSelect">
+        <span class="sr-only">Investigation phase</span>
+        <select id="mobilePhaseSelect"></select>
+      </label>
+      <div class="mobile-phase-progress" aria-hidden="true"><span id="mobilePhaseProgress"></span></div>
       <ol class="phase-list" id="phaseList"></ol>
       <div class="rail-footer">
         <div class="rail-page-count" id="railPageCount">Phase 1 of 5</div>
@@ -216,7 +224,7 @@
       </div>
     </section>
 
-    <aside class="library-drawer" id="library" data-open="true" role="dialog" aria-modal="false" aria-labelledby="libraryTitle" aria-hidden="false" tabindex="-1">
+    <aside class="library-drawer" id="library" data-open="false" role="dialog" aria-modal="false" aria-labelledby="libraryTitle" aria-hidden="true" tabindex="-1">
       <header class="library-header">
         <div>
       <span class="library-kicker">Examples only</span>

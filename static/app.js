@@ -68,6 +68,9 @@ import {createPhotoStorage} from "./app-storage.js";
   const elements = {
     body: document.body,
     phaseList: document.getElementById("phaseList"),
+    mobilePhaseSelect: document.getElementById("mobilePhaseSelect"),
+    mobilePhaseCount: document.getElementById("mobilePhaseCount"),
+    mobilePhaseProgress: document.getElementById("mobilePhaseProgress"),
     pageState: document.getElementById("pageState"),
     railPageCount: document.getElementById("railPageCount"),
     railProgress: document.getElementById("railProgress"),
@@ -477,6 +480,7 @@ import {createPhotoStorage} from "./app-storage.js";
   }
   function renderPhaseRail() {
     elements.phaseList.replaceChildren();
+    elements.mobilePhaseSelect.replaceChildren();
     phases.forEach((phase, index) => {
       const item = document.createElement("li");
       item.className = "phase-step";
@@ -504,8 +508,16 @@ import {createPhotoStorage} from "./app-storage.js";
       button.addEventListener("click", () => goToPhase(index));
       item.appendChild(button);
       elements.phaseList.appendChild(item);
+
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = (index + 1) + " · " + phase.label;
+      elements.mobilePhaseSelect.appendChild(option);
     });
     const progress = ((state.currentPhase + 1) / phases.length) * 100;
+    elements.mobilePhaseSelect.value = String(state.currentPhase);
+    elements.mobilePhaseCount.textContent = (state.currentPhase + 1) + " of " + phases.length;
+    elements.mobilePhaseProgress.style.width = progress + "%";
     elements.railPageCount.textContent = "Phase " + (state.currentPhase + 1) + " of " + phases.length;
     elements.railProgress.style.width = progress + "%";
   }
@@ -1495,6 +1507,9 @@ import {createPhotoStorage} from "./app-storage.js";
   });
   elements.previousPage.addEventListener("click", () => turnToPhase(state.currentPhase - 1));
   elements.nextPage.addEventListener("click", markPhaseAndAdvance);
+  elements.mobilePhaseSelect.addEventListener("change", () => {
+    goToPhase(Number(elements.mobilePhaseSelect.value));
+  });
   elements.usePrompt.addEventListener("click", () => {
     elements.message.value = phases[state.currentPhase].question + " ";
     activePage().draft = elements.message.value;
