@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,37 @@ from helpme_green.source_ingest import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_knowledge_database_serializes_local_concurrent_access(tmp_path: Path) -> None:
+    database = KnowledgeDatabase(tmp_path / "knowledge.db")
+
+    def ingest_and_list(index: int) -> list[dict[str, Any]]:
+        source = SourceSpec(
+            source_id=f"concurrent-source-{index}",
+            title=f"Concurrent source {index}",
+            url=f"https://example.gov/concurrent/{index}",
+            publisher="Example public body",
+            source_type="OFFICIAL_GUIDANCE",
+            material_families=("plastics",),
+            license_note="Synthetic concurrency test source",
+        )
+        database.ingest_document(
+            source,
+            f"Concurrent source {index} contains a bounded test passage.",
+            content_type="text/plain",
+        )
+        return database.documents_list(q=f"Concurrent source {index}")["items"]
+
+    try:
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            results = list(executor.map(ingest_and_list, range(12)))
+
+        assert all(result for result in results)
+        assert database._connection.execute("PRAGMA journal_mode").fetchone()[0].casefold() == "wal"
+        assert database._connection.execute("PRAGMA busy_timeout").fetchone()[0] == 5000
+    finally:
+        database.close()
 
 
 def test_skill_registry_selects_targeted_material_expertise() -> None:

@@ -634,7 +634,7 @@ Generate the projection deterministically and support a full rebuild. Do not mak
 
 ### 13.1 Worker rules
 
-Worker execution model: v1 workers run as threads inside the server process and share the existing single-connection `KnowledgeDatabase` lock, so queue durability is the only new persistence requirement and the current concurrency model is preserved. If a separate worker process is ever introduced, enable WAL mode and a busy timeout first and re-run the concurrent upload/conversation tests under that mode.
+Worker execution model: v1 workers run as threads inside the server process and share the existing single-connection `KnowledgeDatabase` lock, so queue durability is the only new persistence requirement and the current concurrency model is preserved. The store also uses WAL mode and a bounded busy timeout, with a concurrent read/write regression covering the shared connection. If a separate worker process is ever introduced, re-run the concurrent upload/conversation tests under that mode and design a separate writer or database service before scaling out.
 
 - The HTTP request only validates, stores, and queues.
 - Workers claim jobs with a lease and update progress transactionally.

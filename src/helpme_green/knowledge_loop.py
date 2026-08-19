@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
 
+from .config import RuntimePaths
 from .expert_skills import SkillRegistry
 from .knowledge_store import KnowledgeDatabase
 from .model_gateway import ModelRouter
@@ -109,11 +109,10 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.interval_seconds < 0:
         raise SystemExit("--interval-seconds must not be negative")
-    data_dir = Path(os.environ.get("HELPME_DATA_DIR", ".data"))
-    database_path = args.db or data_dir / "knowledge.db"
-    download_dir = args.downloads or Path(
-        os.environ.get("HELPME_SOURCE_DOWNLOAD_DIR", str(data_dir / "source-downloads"))
-    )
+    paths = RuntimePaths.from_environment()
+    data_dir = paths.data_dir or Path(".data")
+    database_path = args.db or paths.database_path(data_dir)
+    download_dir = args.downloads or paths.source_download_path(data_dir / "source-downloads")
     while True:
         print(
             json.dumps(

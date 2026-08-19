@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 
+from .config import RuntimePaths
 from .knowledge_store import KnowledgeDatabase
 from .source_ingest import (
     OfficialSourceFetcher,
@@ -60,10 +60,10 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     manifest = SourceManifest.from_path(args.manifest)
-    db_path = args.db or Path(os.environ.get("HELPME_DATA_DIR", ".data")) / "knowledge.db"
-    download_dir = args.downloads or Path(
-        os.environ.get("HELPME_SOURCE_DOWNLOAD_DIR", ".data/source-downloads")
-    )
+    paths = RuntimePaths.from_environment()
+    data_dir = paths.data_dir or Path(".data")
+    db_path = args.db or paths.database_path(data_dir)
+    download_dir = args.downloads or paths.source_download_path(Path(".data/source-downloads"))
     database = KnowledgeDatabase(db_path)
     for source in manifest.sources:
         database.register_source(source, status="catalogued")

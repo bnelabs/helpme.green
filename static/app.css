@@ -710,6 +710,7 @@ html.file-launch .file-launch-guard a { color: #1f5d39; }
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 9px;
+  display: block;
   margin: 20px 0 15px;
   padding: 0 10px;
 }

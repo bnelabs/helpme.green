@@ -41,6 +41,16 @@ Do not paste provider keys into the browser access-token field; that field is on
 the app Settings surface and are stored encrypted in `.data`. Free model variants can be rate-limited
 or unavailable; keep a tested fallback profile if the workflow needs continuity.
 
+For protected prompt replay, opt in explicitly after configuring `HELPME_MASTER_KEY`:
+
+```bash
+export HELPME_PROMPT_ARTIFACTS_ENABLED=1
+```
+
+Prompt envelopes are encrypted under a separate local `.data/prompt-artifacts/` directory, are not
+returned by the browser API, and retain image metadata without raw image bytes. Remove that directory
+only when the operator intentionally clears the protected replay record.
+
 `localai:auto` asks the configured OpenAI-compatible local endpoint for its model list and selects
 the model only when exactly one is advertised. If the endpoint serves multiple models, set
 `HELPME_MODEL='localai:<model-id>'`. Keep model-specific sampling, context, reasoning, and timeout

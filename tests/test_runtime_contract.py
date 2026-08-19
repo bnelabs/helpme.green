@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import io
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 import uuid
@@ -23,6 +25,7 @@ from helpme_green.knowledge import KnowledgeBase
 from helpme_green.mcp import ReadOnlyMCP, ReadOnlyViolation
 from helpme_green.model_gateway import ModelRouter, ModelSelection, ProviderUnavailable
 from helpme_green.persistence import SecretStore, SessionEventError, SessionState, SessionStore
+from helpme_green.prompt_artifacts import PromptArtifactReference, PromptArtifactStore
 from helpme_green.settings import RuntimeSettingsStore, SettingsError
 from helpme_green.source_ingest import embedding_provider_from_environment
 
@@ -322,6 +325,91 @@ def test_byok_is_encrypted_and_not_present_as_plaintext(tmp_path: Path) -> None:
 
     assert secret not in raw
     assert store.get("provider") == secret
+
+
+def test_prompt_artifacts_are_encrypted_and_survive_master_key_rotation(tmp_path: Path) -> None:
+    old_key = Fernet.generate_key()
+    new_key = Fernet.generate_key()
+    secrets = SecretStore(tmp_path / "secrets", master_key=old_key)
+    artifacts = PromptArtifactStore(tmp_path / "prompt-artifacts", secret_store=secrets)
+    session_id = str(uuid.uuid4())
+    envelope = {
+        "schema_version": 1,
+        "kind": "model_prompt_envelope",
+        "session_id": session_id,
+        "attempt": 1,
+        "system_contract": "PRIVATE_PROMPT_MARKER",
+        "messages": [{"role": "user", "content": "I have rubber."}],
+        "images": [],
+        "raw_image_bytes_stored": False,
+    }
+
+    reference = artifacts.write(session_id, 1, envelope)
+    stored_bytes = b"".join(
+        path.read_bytes() for path in (tmp_path / "prompt-artifacts").rglob("*.json")
+    )
+    assert b"PRIVATE_PROMPT_MARKER" not in stored_bytes
+    assert artifacts.read(session_id, reference) == envelope
+
+    secrets.rotate_master_key(new_key)
+    rotated = SecretStore(tmp_path / "secrets", master_key=new_key)
+    assert (
+        PromptArtifactStore(tmp_path / "prompt-artifacts", secret_store=rotated).read(
+            session_id, reference
+        )
+        == envelope
+    )
+
+
+def test_prompt_artifact_capture_is_opt_in_and_kept_out_of_session_events(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("HELPME_PROMPT_ARTIFACTS_ENABLED", "1")
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
+    monkeypatch.setenv("HELPME_MODEL", "localai:test-model")
+    knowledge = KnowledgeBase.from_repository(ROOT)
+    store = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
+    secrets = SecretStore(tmp_path / "secrets", master_key=Fernet.generate_key())
+    processor = ApplicationProcessor(knowledge, store, secret_store=secrets)
+    processor.model_router.complete_json = lambda messages, **kwargs: {
+        "reply": "The sample needs one more detail.",
+        "hearing": {"subject": "rubber", "situation": "", "aim": ""},
+    }
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+
+    result = processor.respond_to_message(
+        session,
+        "PRIVATE_PROMPT_MARKER: I have rubber.",
+        images=[{"mime_type": "image/png", "data": "PRIVATE_IMAGE_BYTES"}],
+    )
+
+    events = store.load_session_events(session.session_id)
+    attempt = next(item for item in events if item["event_type"] == "model.attempt")
+    reference = attempt["payload"]["prompt_artifact"]
+    assert "PRIVATE_PROMPT_MARKER" not in json.dumps(attempt)
+    assert "prompt_artifact" not in json.dumps(result.data or {})
+    assert processor.prompt_artifacts is not None
+    envelope = processor.prompt_artifacts.read(
+        session.session_id,
+        PromptArtifactReference.from_dict(reference),
+    )
+    assert envelope["kind"] == "model_prompt_envelope"
+    assert "PRIVATE_PROMPT_MARKER" in envelope["messages"][-1]["content"]
+    assert "PRIVATE_IMAGE_BYTES" not in json.dumps(envelope)
+    assert envelope["images"][0]["encoded_length"] == len("PRIVATE_IMAGE_BYTES")
+    assert envelope["raw_image_bytes_stored"] is False
+
+
+def test_prompt_artifacts_require_encrypted_storage(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_PROMPT_ARTIFACTS_ENABLED", "1")
+    monkeypatch.delenv("HELPME_MASTER_KEY", raising=False)
+    knowledge = KnowledgeBase.from_repository(ROOT)
+    store = SessionStore(tmp_path / "data", knowledge_digest=knowledge.digest)
+
+    with pytest.raises(ValueError, match="HELPME_MASTER_KEY"):
+        ApplicationProcessor(knowledge, store)
 
 
 def test_audit_chain_detects_tampering(tmp_path: Path) -> None:
@@ -642,6 +730,113 @@ def test_model_gateway_retries_one_transient_failure(monkeypatch) -> None:
     assert calls == 2
 
 
+def test_model_gateway_classifies_authentication_failures_without_retry(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_MODEL_RETRIES", "3")
+    monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
+    calls = 0
+
+    def fake_urlopen(request, timeout, context=None):
+        nonlocal calls
+        del request, timeout, context
+        calls += 1
+        raise urllib.error.HTTPError(
+            "http://127.0.0.1:8090/v1/chat/completions",
+            401,
+            "unauthorized",
+            {},
+            io.BytesIO(b"{}"),
+        )
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter(ModelSelection("localai", "auth-model"))
+
+    with pytest.raises(ProviderUnavailable) as failure:
+        router.complete_json([], system_contract="Return JSON.")
+
+    assert failure.value.code == "authentication"
+    assert calls == 1
+
+
+@pytest.mark.parametrize(("retry_after", "expected_delay"), [("0", 0.0), ("2", 0.25)])
+def test_model_gateway_honors_only_bounded_retry_after_hints(
+    monkeypatch, retry_after: str, expected_delay: float
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_MODEL_RETRIES", "1")
+    monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
+    sleeps: list[float] = []
+
+    class FakeResponse:
+        def __enter__(self) -> FakeResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            del args
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {"choices": [{"message": {"content": '{"reply":"Recovered."}'}}]}
+            ).encode("utf-8")
+
+    def fake_urlopen(request, timeout, context=None):
+        del request, timeout, context
+        if not sleeps:
+            raise urllib.error.HTTPError(
+                "http://127.0.0.1:8090/v1/chat/completions",
+                503,
+                "temporary",
+                {"Retry-After": retry_after},
+                io.BytesIO(b"{}"),
+            )
+        return FakeResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(time, "sleep", sleeps.append)
+    router = ModelRouter(ModelSelection("localai", "retry-hint-model"))
+
+    assert router.complete_json([], system_contract="Return JSON.") == {"reply": "Recovered."}
+    assert sleeps == [expected_delay]
+
+
+def test_model_gateway_classifies_timeout_and_empty_responses(monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_MODEL_RETRIES", "0")
+    monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
+    calls = 0
+
+    class EmptyResponse:
+        def __enter__(self) -> EmptyResponse:
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            del args
+
+        def read(self) -> bytes:
+            return b'{"choices": []}'
+
+    def fake_urlopen(request, timeout, context=None):
+        nonlocal calls
+        del request, timeout, context
+        calls += 1
+        if calls == 1:
+            raise urllib.error.URLError(TimeoutError("timed out"))
+        return EmptyResponse()
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    router = ModelRouter(ModelSelection("localai", "failure-model"))
+
+    with pytest.raises(ProviderUnavailable) as failure:
+        router.complete_json([], system_contract="Return JSON.")
+    assert failure.value.code == "timeout"
+
+    monkeypatch.setenv("HELPME_MODEL_RETRIES", "0")
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *args, **kwargs: EmptyResponse())
+    with pytest.raises(ProviderUnavailable) as empty:
+        router.complete_json([], system_contract="Return JSON.")
+    assert empty.value.code == "empty_response"
+
+
 def test_model_profile_is_scoped_to_the_selected_model(monkeypatch) -> None:
     monkeypatch.setenv("HELPME_AI_ENABLED", "1")
     monkeypatch.setenv("HELPME_LOCALAI_BASE_URL", "http://127.0.0.1:8090/v1")
@@ -720,6 +915,90 @@ def test_model_failure_has_a_plain_user_facing_fallback(tmp_path: Path) -> None:
     )
     assert "recommendation" not in result.text.casefold()
     assert "evidence" not in result.text.casefold()
+
+
+def test_quality_rejection_is_classified_without_persisting_the_rejected_reply(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    router = ModelRouter(ModelSelection("localai", "test-model"))
+    router.complete_json = lambda messages, **kwargs: {
+        "reply": "This is guaranteed to be safe and always works.",
+        "hearing": {"subject": "sample", "situation": "", "aim": ""},
+    }
+    agent = ConversationAgent(
+        router,
+        store,
+        skill_registry=SkillRegistry.from_repository(ROOT),
+    )
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+
+    result = agent.respond(session, "I have a sample")
+
+    events = store.load_session_events(session.session_id)
+    failed = [item for item in events if item["event_type"] == "model.failed"]
+    assert result.text == (
+        "I couldn’t make that answer reliable enough to give you as written. "
+        "Please try again with one more concrete detail."
+    )
+    assert result.ai_used is False
+    assert failed[-1]["payload"]["code"] == "quality_rejected"
+    assert "absolute_claim" in failed[-1]["payload"]["quality_flags"]
+    assert not any(item["event_type"] == "model.completed" for item in events)
+    assert not any(item["event_type"] == "conversation.turn" for item in events)
+    assert session.conversation == []
+
+
+@pytest.mark.parametrize("failure_path", ["save_session", "append_audit"])
+def test_persistence_failure_is_classified_and_kept_out_of_the_user_surface(
+    tmp_path: Path, monkeypatch, failure_path: str
+) -> None:
+    monkeypatch.setenv("HELPME_AI_ENABLED", "1")
+    monkeypatch.setenv("HELPME_QUALITY_JUDGES", "0")
+    store = SessionStore(tmp_path / "data", knowledge_digest="digest-v1")
+    router = ModelRouter(ModelSelection("localai", "test-model"))
+    router.complete_json = lambda messages, **kwargs: {
+        "reply": "A careful next step is to inspect the sample.",
+        "hearing": {"subject": "sample", "situation": "", "aim": ""},
+    }
+    agent = ConversationAgent(
+        router,
+        store,
+        skill_registry=SkillRegistry.from_repository(ROOT),
+    )
+    session = SessionState.new(topic="", geography="")
+    store.save_session(session)
+
+    if failure_path == "save_session":
+
+        def fail_save(_session: SessionState) -> None:
+            raise OSError("disk full")
+
+        monkeypatch.setattr(store, "save_session", fail_save)
+    else:
+        original_append_audit = store.append_audit
+        append_calls = 0
+
+        def fail_append_audit(session_id, event_type, payload):
+            nonlocal append_calls
+            append_calls += 1
+            if append_calls >= 2:
+                raise OSError("audit unavailable")
+            return original_append_audit(session_id, event_type, payload)
+
+        monkeypatch.setattr(store, "append_audit", fail_append_audit)
+
+    result = agent.respond(session, "I have a sample")
+
+    events = store.load_session_events(session.session_id)
+    failed = [item for item in events if item["event_type"] == "model.failed"]
+    assert result.text == "I couldn’t save that response safely. Please try again."
+    assert "disk full" not in result.text
+    assert "audit unavailable" not in result.text
+    assert failed[-1]["payload"]["code"] == "persistence_failed"
 
 
 def test_unrelated_local_reference_is_not_sent_to_the_model(tmp_path: Path, monkeypatch) -> None:
