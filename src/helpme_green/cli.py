@@ -6,17 +6,18 @@ import sys
 from pathlib import Path
 
 from .application import ApplicationProcessor
+from .config import RuntimePaths, environment_secret
 from .knowledge import KnowledgeBase
 from .mcp import ReadOnlyMCP
 from .persistence import SecretStore, SessionStore
 from .server import serve
 
 
-def _repository_root() -> Path:
-    configured_root = os.environ.get("HELPME_ROOT")
+def _repository_root(paths: RuntimePaths | None = None) -> Path:
+    configured_root = (paths or RuntimePaths.from_environment()).root
     candidates: list[Path] = []
     if configured_root:
-        candidates.append(Path(configured_root).resolve())
+        candidates.append(configured_root.resolve())
     else:
         candidates.append(Path.cwd().resolve())
     frozen_root = getattr(sys, "_MEIPASS", None)
@@ -34,11 +35,11 @@ def _repository_root() -> Path:
     raise FileNotFoundError("Cannot locate the helpme.green source manifest.")
 
 
-def _default_data_dir(root: Path) -> Path:
+def _default_data_dir(root: Path, paths: RuntimePaths | None = None) -> Path:
     """Choose a writable native data directory without changing repository/Docker defaults."""
-    configured = os.environ.get("HELPME_DATA_DIR")
+    configured = (paths or RuntimePaths.from_environment()).data_dir
     if configured:
-        return Path(configured)
+        return configured
     if not getattr(sys, "frozen", False):
         return root / ".data"
     if sys.platform == "darwin":
@@ -78,23 +79,19 @@ def main(argv: list[str] | None = None) -> int:
         print("Run helpme-green --serve to start the local web assistant.")
         return 0
 
-    root = _repository_root()
+    paths = RuntimePaths.from_environment()
+    root = _repository_root(paths)
     knowledge = KnowledgeBase.from_repository(root)
-    data_dir = args.data_dir or _default_data_dir(root)
+    data_dir = args.data_dir or _default_data_dir(root, paths)
     configured_roots = [root, data_dir, *args.mcp_root]
-    configured_roots.extend(
-        Path(item) for item in os.environ.get("HELPME_MCP_ROOTS", "").split(os.pathsep) if item
-    )
-    configured_hosts = list(args.mcp_host)
-    configured_hosts.extend(
-        item.strip() for item in os.environ.get("HELPME_MCP_HOSTS", "").split(",") if item.strip()
-    )
+    configured_roots.extend(paths.mcp_roots)
+    configured_hosts = [*args.mcp_host, *paths.mcp_hosts]
     mcp = ReadOnlyMCP(
         file_roots=tuple(configured_roots),
         allowed_url_hosts=tuple(configured_hosts),
     )
     secret_store = None
-    if os.environ.get("HELPME_MASTER_KEY"):
+    if environment_secret("HELPME_MASTER_KEY"):
         secret_store = SecretStore(data_dir / "secrets")
     store = SessionStore(data_dir, knowledge_digest=knowledge.digest)
     processor = ApplicationProcessor(knowledge, store, mcp=mcp, secret_store=secret_store)

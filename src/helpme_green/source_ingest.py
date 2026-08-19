@@ -3,7 +3,6 @@ from __future__ import annotations
 import hashlib
 import io
 import json
-import os
 import re
 import ssl
 import time
@@ -19,6 +18,7 @@ from typing import Any, Protocol
 
 import yaml
 
+from .config import RetrievalEnvironment, environment_secret
 from .knowledge_store import IngestResult, KnowledgeDatabase, SourceSpec
 
 
@@ -460,10 +460,13 @@ class OpenAICompatibleReranker:
         return result
 
 
-def embedding_provider_from_environment() -> EmbeddingProvider | None:
-    endpoint = os.environ.get("HELPME_EMBEDDING_BASE_URL", "").strip()
-    model = os.environ.get("HELPME_EMBEDDING_MODEL", "").strip()
-    api_key = os.environ.get("HELPME_EMBEDDING_API_KEY", "").strip()
+def embedding_provider_from_environment(
+    environment: RetrievalEnvironment | None = None,
+) -> EmbeddingProvider | None:
+    configured = environment or RetrievalEnvironment.from_environment()
+    endpoint = configured.embedding_base_url
+    model = configured.embedding_model
+    api_key = environment_secret("HELPME_EMBEDDING_API_KEY")
     if not endpoint or not model:
         return None
     if not api_key and not _is_loopback_endpoint(endpoint):
@@ -472,18 +475,19 @@ def embedding_provider_from_environment() -> EmbeddingProvider | None:
         endpoint=endpoint,
         model=model,
         api_key=api_key,
-        tls_verify=os.environ.get("HELPME_EMBEDDING_TLS_VERIFY", "1").casefold()
-        not in {"", "0", "false", "no", "off"},
+        tls_verify=configured.embedding_tls_verify,
     )
 
 
-def reranker_from_environment() -> Reranker | None:
-    enabled = os.environ.get("HELPME_RERANK_ENABLED", "1").casefold()
-    if enabled in {"", "0", "false", "no", "off"}:
+def reranker_from_environment(
+    environment: RetrievalEnvironment | None = None,
+) -> Reranker | None:
+    configured = environment or RetrievalEnvironment.from_environment()
+    if not configured.rerank_enabled:
         return None
-    endpoint = os.environ.get("HELPME_RERANK_BASE_URL", "").strip()
-    model = os.environ.get("HELPME_RERANK_MODEL", "").strip()
-    api_key = os.environ.get("HELPME_RERANK_API_KEY", "").strip()
+    endpoint = configured.rerank_base_url
+    model = configured.rerank_model
+    api_key = environment_secret("HELPME_RERANK_API_KEY")
     if not endpoint or not model:
         return None
     if not api_key and not _is_loopback_endpoint(endpoint):
@@ -492,8 +496,7 @@ def reranker_from_environment() -> Reranker | None:
         endpoint=endpoint,
         model=model,
         api_key=api_key,
-        tls_verify=os.environ.get("HELPME_RERANK_TLS_VERIFY", "1").casefold()
-        not in {"", "0", "false", "no", "off"},
+        tls_verify=configured.rerank_tls_verify,
     )
 
 

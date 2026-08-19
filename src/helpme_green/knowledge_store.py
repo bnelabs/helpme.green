@@ -341,7 +341,10 @@ class KnowledgeDatabase:
 
     Downloaded documents, source notes, and retrieval projections live here at runtime. The
     checked-in YAML packs remain registered source metadata; this store never silently turns a
-    fetch into an independent fact.
+    fetch into an independent fact. One shared connection and re-entrant lock serialize access
+    inside the local process; WAL mode and a bounded busy timeout cover short-lived coordination
+    with another process. A multi-process deployment still requires a separately designed writer
+    or database service.
     """
 
     database_version = 4
@@ -2334,9 +2337,10 @@ class KnowledgeDatabase:
         return {"items": items, "total": int(total["count"])}
 
     def _count_chunks(self, document_id: str) -> int:
-        row = self._connection.execute(
-            "SELECT COUNT(*) AS count FROM chunks WHERE document_id = ?", (document_id,)
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT COUNT(*) AS count FROM chunks WHERE document_id = ?", (document_id,)
+            ).fetchone()
         return int(row["count"])
 
     def document_detail(

@@ -53,6 +53,9 @@ def test_http_conversation_api_and_health_surface(tmp_path: Path) -> None:
         connection.request("GET", "/healthz")
         health_response = connection.getresponse()
         health = json.loads(health_response.read())
+        connection.request("GET", "/metrics")
+        metrics_response = connection.getresponse()
+        metrics_response.read()
     finally:
         server.shutdown()
         server.server_close()
@@ -62,6 +65,36 @@ def test_http_conversation_api_and_health_surface(tmp_path: Path) -> None:
     assert health_response.status == 200
     assert health["status"] == "ok"
     assert health["audit_chain_valid"]
+    assert metrics_response.status == 404
+
+
+def test_metrics_are_opt_in_and_aggregate_only(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("HELPME_METRICS_ENABLED", "1")
+    server, thread = _running_server(tmp_path)
+    try:
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        connection.request(
+            "POST",
+            "/api/sessions",
+            body=json.dumps({}),
+            headers={"Content-Type": "application/json"},
+        )
+        created_response = connection.getresponse()
+        created_response.read()
+        connection.request("GET", "/metrics")
+        metrics_response = connection.getresponse()
+        metrics = metrics_response.read().decode("utf-8")
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+    assert created_response.status == 201
+    assert metrics_response.status == 200
+    assert "helpme_http_requests_total" in metrics
+    assert 'route="/api/sessions"' in metrics
+    assert "prompt" not in metrics.casefold()
+    assert "authorization" not in metrics.casefold()
 
 
 def test_runtime_model_identity_exposes_provider_and_model_without_secrets(tmp_path: Path) -> None:
@@ -425,6 +458,8 @@ def test_http_streaming_conversation_api_emits_progress_and_deltas(tmp_path: Pat
     assert created_response.status == 201
     assert response.status == 200
     assert response.getheader("Content-Type") == "text/event-stream; charset=utf-8"
+    assert response.getheader("Transfer-Encoding") == "chunked"
+    assert response.getheader("Connection", "").casefold() != "close"
     assert "event: status" in stream
     assert "event: delta" in stream
     assert "event: complete" in stream
@@ -510,6 +545,12 @@ def test_homepage_serves_external_frontend_assets_with_security_headers(tmp_path
         connection.request("GET", "/static/app.js")
         js_response = connection.getresponse()
         javascript = js_response.read()
+        connection.request("GET", "/static/app-stream.js")
+        stream_response = connection.getresponse()
+        stream_javascript = stream_response.read()
+        connection.request("GET", "/static/app-storage.js")
+        storage_response = connection.getresponse()
+        storage_javascript = storage_response.read()
     finally:
         server.shutdown()
         server.server_close()
@@ -521,7 +562,11 @@ def test_homepage_serves_external_frontend_assets_with_security_headers(tmp_path
     assert b".status-note" in css
     assert js_response.status == 200
     assert js_response.getheader("Content-Type") == "text/javascript; charset=utf-8"
-    assert b"indexedDB" in javascript
+    assert b"createPhotoStorage" in javascript
+    assert stream_response.status == 200
+    assert b"createStreamRequest" in stream_javascript
+    assert storage_response.status == 200
+    assert b"createPhotoStorage" in storage_javascript
 
 
 def test_homepage_serves_the_owned_visual_asset(tmp_path: Path) -> None:

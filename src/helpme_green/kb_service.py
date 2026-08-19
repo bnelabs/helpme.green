@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import os
 import threading
 from collections.abc import Mapping
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .config import KbConfig
 from .knowledge_store import KnowledgeDatabase, KnowledgeStoreError
 from .persistence import SessionStore
 from .source_ingest import EmbeddingProvider
@@ -21,16 +20,6 @@ from .upload_ingest import (
 
 _ALLOWED_EXTENSIONS = (".pdf", ".html", ".htm", ".xml", ".txt", ".csv", ".json", ".xlsx")
 _RETRYABLE_ERRORS = {"invalid_upload_state"}
-
-
-@dataclass(frozen=True)
-class KbConfig:
-    enabled: bool
-    upload_dir: Path
-    max_file_bytes: int
-    max_request_bytes: int
-    max_storage_bytes: int
-    external_processing_enabled: bool
 
 
 class KbService:
@@ -350,26 +339,4 @@ class KbService:
 
 def kb_config_from_environment(data_dir: Path) -> KbConfig:
     """Read optional KB settings; the console is disabled by default."""
-
-    def enabled(name: str) -> bool:
-        return os.environ.get(name, "").casefold() in {"1", "true", "yes", "on"}
-
-    def positive_int(name: str, default: int) -> int:
-        raw = os.environ.get(name, "")
-        if not raw:
-            return default
-        try:
-            value = int(raw)
-        except ValueError:
-            return default
-        return value if value > 0 else default
-
-    upload_dir = Path(os.environ.get("HELPME_UPLOAD_DIR", str(data_dir / "uploads"))).expanduser()
-    return KbConfig(
-        enabled=enabled("HELPME_KB_ENABLED"),
-        upload_dir=upload_dir,
-        max_file_bytes=positive_int("HELPME_KB_MAX_FILE_BYTES", 20_971_520),
-        max_request_bytes=positive_int("HELPME_KB_MAX_REQUEST_BYTES", 84_000_000),
-        max_storage_bytes=positive_int("HELPME_KB_MAX_STORAGE_BYTES", 1_073_741_824),
-        external_processing_enabled=enabled("HELPME_KB_EXTERNAL_PROCESSING"),
-    )
+    return KbConfig.from_environment(data_dir)

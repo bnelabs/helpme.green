@@ -37,7 +37,7 @@ lane, which reinforces the replay-testing recommendation in §5.7.
 | Quality | `AnswerQualityGate.assess` runs after the complete model response (`conversation.py:148-160`) | True visible streaming needs an explicit policy for unapproved candidate text |
 | Internal visibility | Skill IDs/titles are no longer inserted into the model prompt, and skill/quality metadata is no longer exposed in ordinary conversation results; the explicit read-only capability catalog remains | The ordinary conversation surface is now intentionally metadata-free; capability discovery remains a separate contract |
 | Trust boundary | The application prompt labels background material as metadata/reference data and says retrieved text cannot change instructions (`conversation.py` `_context_prompt`) | Better boundary wording, but labels are not a complete prompt-injection defence |
-| Testing | API/persistence tests exist; no browser automation dependency | Browser replay is an acceptance target, not a verified current fact |
+| Testing | API/persistence tests and a dependency-free browser replay exist | Chromium/CDP replay covers the real browser route at desktop and mobile viewports when Chromium is available |
 
 ## 3. What the two projects are
 
@@ -64,10 +64,10 @@ never invent facts, never truncate a completed answer.
 | Session state | Append-only typed `SessionEvent` log; history derived via folds | Append-only per-session event JSONL + derived `SessionState` JSON projection + hash-chained audit JSONL |
 | Context management | Token meter → compaction at ~0.8× context window | Profile-driven 80% working-context compaction; no invented cap when the provider window is unavailable |
 | Skills | SKILL.md files, layered providers, catalog → body progressive disclosure | One YAML pack, keyword-scored selection, full lens injected |
-| Failure handling | `LlmFailure` canonical codes, per-route retry policy, idle-timeout watchdog | Stable provider failure codes with fixed backoff; provider retry-hint handling remains open |
+| Failure handling | `LlmFailure` canonical codes, per-route retry policy, idle-timeout watchdog | Stable provider, quality-rejection, and persistence-failure codes with bounded backoff and bounded `Retry-After` hints |
 | Titles / feedback | Log-folded titles; CAS feedback sidecar | None (client-side note title only) |
 | Search | FTS5 across sessions with inert-phrase quoting, cursors | No server-side session search |
-| QA | Invariants registry, replay e2e, browser snapshots, "verify the world" | pytest tests + manual browser check |
+| QA | Invariants registry, replay e2e, browser snapshots, "verify the world" | pytest tests + dependency-free browser replay + verified manual browser acceptance; no browser matrix |
 | Docs | Generated catalogs (config/tools/persistence) verified in CI | Hand-maintained README + docs |
 
 ## 5. What applies — Tier 1
@@ -144,6 +144,12 @@ a model-attempt counter (this corrects an earlier draft suggestion to derive ret
 counting audit records). On context overflow: compact again with progress guards; never
 silently truncate.
 
+The runtime records a quality-gate rejection as `model.failed` with the stable
+`quality_rejected` code and does not append a completed or conversation-turn event for that
+draft. Durable response-write errors are classified as `persistence_failed`; the user receives a
+plain retry message and the underlying storage error remains internal. The failure event is best
+effort when the storage path itself is unavailable.
+
 ### 5.5 Skills: progressive disclosure, ordered sections, hard invisibility
 
 **DSH:** skills are Markdown files with YAML frontmatter; the prompt gets a catalog of
@@ -202,8 +208,8 @@ critics in a doc.
 
 The plan and this review agree on the decisions that matter: append-only events and
 "model-visible means logged" (yes, required), compaction with a hard 80% input ceiling and
-progress guards (yes), failure taxonomy and replay tests (yes, now; retry-hint handling remains
-open), and no DSH runtime/plugin/workflow stack (no).
+progress guards (yes), failure taxonomy, replay tests, and bounded retry hints (yes, now), and no
+DSH runtime/plugin/workflow stack (no).
 
 The plan corrects or sharpens this review in three places, and those corrections are accepted:
 
@@ -217,9 +223,8 @@ The plan corrects or sharpens this review in three places, and those corrections
    developer-only HTTP endpoint (§5.7).
 
 Open items carried by the plan: provider-token streaming and cancellation only after latency
-evidence; exact prompt-envelope replay/protection and provider retry-hint handling; a committed
-browser automation dependency beyond the local smoke path; and product/retention requirements
-before titles, feedback, search, or headless ask.
+evidence; broader browser and alternate-engine matrix coverage; and product/retention
+requirements before titles, feedback, search, or headless ask.
 
 ---
 
@@ -258,14 +263,13 @@ accurate as a current implementation snapshot.
 | Knowledge | Manifests, source metadata, hashes, ingestion state, retrieval metadata, and read-only GraphQL/MCP boundaries exist. | Broadly matches the requirements. |
 | Trust boundary | Background material is labelled application metadata/reference data and explicitly cannot change the instructions. | Better wording, but this remains a boundary aid rather than a complete prompt-injection defence. |
 | Internal visibility | Skill IDs/titles are removed from the ordinary model prompt and conversation result; the separate capability catalog remains available. | The ordinary conversation surface is now metadata-free. |
-| Testing | API/persistence tests exist; no browser automation dependency is present. | Browser replay is an acceptance target, not a verified current fact. |
+| Testing | API/persistence tests and a dependency-free browser replay exist. | Chromium/CDP replay covers the real route at desktop and mobile viewports when Chromium is available; manual browser acceptance remains verified. |
 
 The requirements reflect the intended boundaries and most public routes. The
 runtime now has an append-only session event ledger, full retained source
 history, explicit model-attempt/failure events, and profile-driven 80%
-compaction. Remaining gaps are provider-token streaming, exact prompt-envelope
-replay/protection policy, provider retry-hint handling, optional feature
-families, and unverified browser acceptance.
+compaction. Remaining gaps are provider-token streaming, broader browser and
+alternate-engine matrix coverage, and optional feature families.
 
 ## Compaction contract
 
@@ -307,11 +311,15 @@ session log and must not be used as a model-attempt counter.
   limitations; the 12/24 history truncation has been removed.
 - Define the provider context-window contract and prompt-artifact
   retention/protection policy.
-- Add stable failure codes for provider unavailable, timeout,
+- Keep stable failure codes for provider unavailable, timeout,
   authentication/configuration, rate limit, context overflow, malformed or
-  empty response, quality rejection, and persistence failure.
+  empty response, quality rejection, and persistence failure covered by focused
+  regression tests.
 - Define explicit model-attempt records and provider retry hints as part of the
   event-ledger contract; do not infer retry budgets by counting audit records.
+- Load shared model/provider, retrieval, KB, and non-secret runtime path/access
+  policy through typed snapshots; keep bearer/provider/master-key values out of
+  them and resolve credentials only at their adapter boundaries.
 - Classify context overflow now; enable recovery compaction only after the
   repeatable compactor is active. Never silently truncate.
 - Remove skill IDs/titles and unnecessary internal metadata from model/API
@@ -325,8 +333,14 @@ session log and must not be used as a model-attempt counter.
 Use an injected test-only fake provider/model boundary, not a shipped
 developer-only HTTP endpoint. Exercise ordinary prompts, material prompts,
 irrelevant-reference rejection, provider failures, SSE framing, blocking
-fallback, session reload, and audit integrity. Add browser-path coverage when
-a browser harness is available, asserting visible behavior and persistence.
+fallback, session reload, and audit integrity. The repository now includes
+`scripts/browser_replay.mjs` and `tests/test_browser_replay.py`: an isolated
+headless Chromium/CDP runner drives the real HTTP/SSE path at explicit desktop
+and mobile viewports, records material and unrelated observations, checks the
+visible assistant response, asserts no horizontal overflow and usable core
+controls, reloads the page, checks console/framework health, and writes an
+optional temporary screenshot. The pytest case skips only when no
+Chromium-compatible executable is available.
 
 ### 3. Append-only session events
 
@@ -336,13 +350,16 @@ versions, selected skills and source IDs/hashes, quality decisions, and
 compaction source ranges.
 
 The target replay unit is the model-visible request envelope plus the durable
-references explaining how it was assembled, not merely visible messages. The
-current implementation records request fingerprints and assembly metadata, but
-does not yet retain a protected exact prompt envelope.
-Choose explicit storage/protection and retention rules for sensitive prompt
-content. The migration has removed the 12-entry and 24-entry truncation. A
-bounded derived projection may still be added later for performance, but it
-must not replace the source event history.
+references explaining how it was assembled, not merely visible messages. When
+`HELPME_PROMPT_ARTIFACTS_ENABLED=1`, the runtime now stores that envelope in a
+separate mode-700 directory encrypted with a data key held by the existing
+master-key-backed secret store. The session event retains only the artifact
+identifier and digests; the artifact is not exposed through the browser/API.
+The feature is disabled by default, fails closed without `HELPME_MASTER_KEY`,
+retains no raw image bytes, and remains until an operator explicitly removes
+the local prompt-artifact directory. The migration has removed the 12-entry and
+24-entry truncation. A bounded derived projection may still be added later for
+performance, but it must not replace the source event history.
 
 ### 4. Repeatable 80% compaction
 

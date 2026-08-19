@@ -9,9 +9,14 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
+from .config import (
+    SUPPORTED_PROVIDERS,
+    ModelEnvironment,
+    environment_secret,
+    provider_api_key_environment_names,
+)
 from .persistence import SecretStore
 
-SUPPORTED_PROVIDERS = ("localai", "deepseek", "openrouter")
 _PROFILE_RESERVED_KEYS = {"model", "messages", "response_format", "stream"}
 _PROFILE_SENSITIVE_KEYS = {"api_key", "authorization", "password", "secret", "token"}
 _PROFILE_NUMERIC_RANGES = {
@@ -47,42 +52,6 @@ class SettingsError(ValueError):
         super().__init__(message)
         if code is not None:
             self.code = code
-
-
-def _env_flag(name: str, default: bool) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.strip().casefold() not in {"", "0", "false", "no", "off"}
-
-
-def _env_number(name: str, default: float) -> float:
-    raw = os.environ.get(name)
-    if raw is None or not raw.strip():
-        return default
-    try:
-        value = float(raw)
-    except ValueError:
-        return default
-    return value if math.isfinite(value) else default
-
-
-def _default_identity() -> str:
-    identity = os.environ.get("HELPME_MODEL", "").strip()
-    if identity:
-        if ":" in identity:
-            provider, model = identity.split(":", 1)
-            provider = provider.strip().casefold()
-            if provider in SUPPORTED_PROVIDERS and model.strip():
-                return f"{provider}:{model.strip()}"
-        else:
-            provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold()
-            if provider in SUPPORTED_PROVIDERS:
-                return f"{provider}:{identity}"
-    provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold()
-    if provider not in SUPPORTED_PROVIDERS:
-        provider = "localai"
-    return f"{provider}:auto"
 
 
 def _split_identity(value: Any) -> tuple[str, str, str]:
@@ -168,8 +137,7 @@ def _validate_profile(value: Any, *, max_timeout: float) -> dict[str, Any]:
     return profile
 
 
-def _environment_profiles() -> dict[str, Any]:
-    raw = os.environ.get("HELPME_MODEL_PROFILES", "").strip()
+def _environment_profiles(raw: str) -> dict[str, Any]:
     if not raw:
         return {}
     try:
@@ -202,7 +170,13 @@ def _public_profile(value: Any) -> Any:
 class RuntimeSettingsStore:
     """Persist non-secret runtime settings and keep provider keys in SecretStore only."""
 
-    def __init__(self, root: Path, *, secret_store: SecretStore | None = None) -> None:
+    def __init__(
+        self,
+        root: Path,
+        *,
+        secret_store: SecretStore | None = None,
+        environment: ModelEnvironment | None = None,
+    ) -> None:
         self.root = root.resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         try:
@@ -211,6 +185,7 @@ class RuntimeSettingsStore:
             pass
         self.path = self.root / "settings.json"
         self.secret_store = secret_store
+        self.environment = environment or ModelEnvironment.from_environment()
         self._lock = threading.RLock()
         self._stored = self._read()
 
@@ -227,32 +202,25 @@ class RuntimeSettingsStore:
 
     def _effective(self) -> dict[str, Any]:
         stored = self._stored
-        profile_map = _environment_profiles()
+        profile_map = _environment_profiles(self.environment.model_profiles_json)
         stored_profiles = stored.get("profiles")
         if isinstance(stored_profiles, dict):
             profile_map.update(stored_profiles)
         values: dict[str, Any] = {
-            "identity": stored.get("identity", _default_identity()),
-            "ai_enabled": stored.get("ai_enabled", _env_flag("HELPME_AI_ENABLED", False)),
-            "localai_base_url": stored.get(
-                "localai_base_url", os.environ.get("HELPME_LOCALAI_BASE_URL", "").strip()
-            ),
+            "identity": stored.get("identity", self.environment.default_identity()),
+            "ai_enabled": stored.get("ai_enabled", self.environment.ai_enabled),
+            "localai_base_url": stored.get("localai_base_url", self.environment.localai_base_url),
             "localai_tls_verify": stored.get(
-                "localai_tls_verify", _env_flag("HELPME_LOCALAI_TLS_VERIFY", True)
+                "localai_tls_verify", self.environment.localai_tls_verify
             ),
-            "model_retries": stored.get(
-                "model_retries", int(_env_number("HELPME_MODEL_RETRIES", 1))
-            ),
+            "model_retries": stored.get("model_retries", self.environment.model_retries),
             "model_discovery_timeout": stored.get(
-                "model_discovery_timeout", _env_number("HELPME_MODEL_DISCOVERY_TIMEOUT", 10)
+                "model_discovery_timeout", self.environment.model_discovery_timeout
             ),
             "max_model_timeout_seconds": stored.get(
-                "max_model_timeout_seconds",
-                _env_number("HELPME_MAX_MODEL_TIMEOUT_SECONDS", 240),
+                "max_model_timeout_seconds", self.environment.max_model_timeout_seconds
             ),
-            "quality_judges": stored.get(
-                "quality_judges", _env_flag("HELPME_QUALITY_JUDGES", True)
-            ),
+            "quality_judges": stored.get("quality_judges", self.environment.quality_judges),
             "profiles": profile_map,
         }
         return values
@@ -366,14 +334,8 @@ class RuntimeSettingsStore:
 
     @staticmethod
     def _environment_key(provider: str) -> str:
-        names = {
-            "localai": ("HELPME_LOCALAI_API_KEY", "LOCALAI_API_KEY"),
-            "deepseek": ("DEEPSEEK_API_KEY",),
-            "openrouter": ("OPENROUTER_API_KEY",),
-        }
-        return next(
-            (os.environ.get(name, "") for name in names[provider] if os.environ.get(name)), ""
-        )
+        names = provider_api_key_environment_names(provider)
+        return environment_secret(*names)
 
     @staticmethod
     def _validate_config_value(key: str, value: Any) -> Any:

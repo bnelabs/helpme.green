@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import ssl
 import threading
 import time
@@ -10,7 +9,12 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import UTC
+from email.utils import parsedate_to_datetime
 from typing import Any
+
+from .config import ModelEnvironment, environment_secret, provider_api_key_environment_names
+from .observability import MetricsRegistry
 
 
 class ProviderUnavailable(RuntimeError):
@@ -36,7 +40,8 @@ class ModelSelection:
 
 _PROFILE_RESERVED_KEYS = {"model", "messages", "response_format", "stream"}
 _AUTO_MODEL_NAMES = {"", "auto", "*"}
-_RETRYABLE_HTTP_STATUS_CODES = {429, 500, 502, 503, 504}
+_RETRYABLE_HTTP_STATUS_CODES = {408, 429, 500, 502, 503, 504}
+_MAX_RETRY_DELAY_SECONDS = 1.0
 
 
 def _json_object(value: Any, *, label: str) -> dict[str, Any]:
@@ -64,6 +69,45 @@ def _looks_like_context_overflow(value: str) -> bool:
     )
 
 
+def _is_timeout_error(exc: BaseException) -> bool:
+    reason = getattr(exc, "reason", None)
+    return isinstance(exc, TimeoutError) or isinstance(reason, TimeoutError)
+
+
+def _http_failure_code(status: int) -> str:
+    if status in {401, 403}:
+        return "authentication"
+    if status == 408:
+        return "timeout"
+    if status == 429:
+        return "rate_limit"
+    if status in {500, 502, 503, 504}:
+        return "server_error"
+    return "provider_configuration"
+
+
+def _retry_delay(exc: urllib.error.HTTPError, attempt: int) -> tuple[float, bool]:
+    fallback = min(_MAX_RETRY_DELAY_SECONDS, 0.25 * (2**attempt))
+    headers = exc.headers
+    raw = headers.get("Retry-After") if headers is not None else None
+    if not raw:
+        return fallback, False
+    value = raw.strip()
+    try:
+        delay = float(int(value))
+    except ValueError:
+        try:
+            retry_at = parsedate_to_datetime(value)
+            if retry_at.tzinfo is None:
+                retry_at = retry_at.replace(tzinfo=UTC)
+            delay = retry_at.timestamp() - time.time()
+        except (TypeError, ValueError, OverflowError):
+            return fallback, False
+    if 0 <= delay <= fallback:
+        return delay, True
+    return fallback, False
+
+
 class ModelRouter:
     """Provider and model selection is separate from retrieval and answer quality."""
 
@@ -74,9 +118,13 @@ class ModelRouter:
         selection: ModelSelection | None = None,
         *,
         key_provider: Callable[[str], str] | None = None,
+        metrics: MetricsRegistry | None = None,
+        environment: ModelEnvironment | None = None,
     ) -> None:
-        self.selection = selection or self._default_selection()
+        self._environment = environment or ModelEnvironment.from_environment()
+        self.selection = selection or self._default_selection(self._environment)
         self._key_provider = key_provider
+        self._metrics = metrics or MetricsRegistry()
         self._tokens_in = 0
         self._tokens_out = 0
         self._calls = 0
@@ -93,17 +141,18 @@ class ModelRouter:
         self._runtime_settings = dict(settings)
 
     @staticmethod
-    def _default_selection() -> ModelSelection:
-        identity = os.environ.get("HELPME_MODEL", "").strip()
+    def _default_selection(environment: ModelEnvironment | None = None) -> ModelSelection:
+        configured = environment or ModelEnvironment.from_environment()
+        identity = configured.model_identity
         if not identity:
-            provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold() or "localai"
+            provider = configured.provider
             if provider not in ModelRouter.allowed:
                 provider = "localai"
             return ModelSelection(provider, "auto")
         try:
             provider, model = identity.split(":", 1)
         except ValueError:
-            provider = os.environ.get("HELPME_PROVIDER", "localai").strip().casefold() or "localai"
+            provider = configured.provider
             if provider not in ModelRouter.allowed:
                 provider = "localai"
             return ModelSelection(provider, identity)
@@ -216,46 +265,63 @@ class ModelRouter:
         )
         raw: Any = None
         retries = self._retry_count()
-        for attempt in range(retries + 1):
-            try:
-                context = self._tls_context(endpoint, selected.provider)
-                if context is None:
-                    response_context = urllib.request.urlopen(request, timeout=timeout_seconds)
-                else:
-                    response_context = urllib.request.urlopen(
-                        request, timeout=timeout_seconds, context=context
-                    )
-                with response_context as response:
-                    raw = json.loads(response.read().decode("utf-8"))
-                break
-            except urllib.error.HTTPError as exc:
-                error_body = ""
+        self._metrics.counter("model_requests_total", labels={"provider": selected.provider})
+        with self._metrics.track("model_request", labels={"provider": selected.provider}):
+            for attempt in range(retries + 1):
+                self._metrics.counter(
+                    "model_attempts_total", labels={"provider": selected.provider}
+                )
                 try:
-                    error_body = exc.read().decode("utf-8", errors="replace")
-                except OSError:
-                    pass
-                if _looks_like_context_overflow(error_body):
+                    context = self._tls_context(endpoint, selected.provider)
+                    if context is None:
+                        response_context = urllib.request.urlopen(request, timeout=timeout_seconds)
+                    else:
+                        response_context = urllib.request.urlopen(
+                            request, timeout=timeout_seconds, context=context
+                        )
+                    with response_context as response:
+                        raw = json.loads(response.read().decode("utf-8"))
+                    break
+                except urllib.error.HTTPError as exc:
+                    error_body = ""
+                    try:
+                        error_body = exc.read().decode("utf-8", errors="replace")
+                    except OSError:
+                        pass
+                    if _looks_like_context_overflow(error_body):
+                        raise ProviderUnavailable(
+                            f"{selected.provider} rejected the request because it exceeds the context window.",
+                            code="context_window_exceeded",
+                        ) from exc
+                    if exc.code not in _RETRYABLE_HTTP_STATUS_CODES or attempt >= retries:
+                        raise ProviderUnavailable(
+                            f"{selected.provider} request failed safely.",
+                            code=_http_failure_code(exc.code),
+                        ) from exc
+                    self._metrics.counter(
+                        "model_retries_total", labels={"provider": selected.provider}
+                    )
+                    delay, hint_honored = _retry_delay(exc, attempt)
+                    if hint_honored:
+                        self._metrics.counter(
+                            "model_retry_hints_honored_total",
+                            labels={"provider": selected.provider},
+                        )
+                    time.sleep(delay)
+                except (OSError, urllib.error.URLError) as exc:
+                    if attempt >= retries:
+                        raise ProviderUnavailable(
+                            f"{selected.provider} request failed safely.",
+                            code="timeout" if _is_timeout_error(exc) else "transport_error",
+                        ) from exc
+                    self._metrics.counter(
+                        "model_retries_total", labels={"provider": selected.provider}
+                    )
+                    time.sleep(min(_MAX_RETRY_DELAY_SECONDS, 0.25 * (2**attempt)))
+                except json.JSONDecodeError as exc:
                     raise ProviderUnavailable(
-                        f"{selected.provider} rejected the request because it exceeds the context window.",
-                        code="context_window_exceeded",
+                        f"{selected.provider} returned invalid JSON.", code="malformed_response"
                     ) from exc
-                if exc.code not in _RETRYABLE_HTTP_STATUS_CODES or attempt >= retries:
-                    raise ProviderUnavailable(
-                        f"{selected.provider} request failed safely.",
-                        code="rate_limit" if exc.code == 429 else "server_error",
-                    ) from exc
-                time.sleep(min(1.0, 0.25 * (2**attempt)))
-            except (OSError, urllib.error.URLError) as exc:
-                if attempt >= retries:
-                    raise ProviderUnavailable(
-                        f"{selected.provider} request failed safely.",
-                        code="transport_error",
-                    ) from exc
-                time.sleep(min(1.0, 0.25 * (2**attempt)))
-            except json.JSONDecodeError as exc:
-                raise ProviderUnavailable(
-                    f"{selected.provider} returned invalid JSON.", code="malformed_response"
-                ) from exc
         if raw is None:
             raise ProviderUnavailable(
                 f"{selected.provider} request failed safely.", code="provider_unavailable"
@@ -266,6 +332,7 @@ class ModelRouter:
             )
         with self._counter_lock:
             self._calls += 1
+        self._metrics.counter("model_calls_total", labels={"provider": selected.provider})
         message = self._message_text(raw)
         try:
             decoded = json.loads(self._strip_json_fence(message))
@@ -281,6 +348,16 @@ class ModelRouter:
         with self._counter_lock:
             self._tokens_in += int(usage.get("prompt_tokens", 0) or 0)
             self._tokens_out += int(usage.get("completion_tokens", 0) or 0)
+        self._metrics.counter(
+            "model_tokens_in_total",
+            int(usage.get("prompt_tokens", 0) or 0),
+            labels={"provider": selected.provider},
+        )
+        self._metrics.counter(
+            "model_tokens_out_total",
+            int(usage.get("completion_tokens", 0) or 0),
+            labels={"provider": selected.provider},
+        )
         return decoded
 
     @staticmethod
@@ -349,7 +426,7 @@ class ModelRouter:
         maximum_raw = (
             str(maximum_value)
             if maximum_value is not None
-            else os.environ.get("HELPME_MAX_MODEL_TIMEOUT_SECONDS", "240")
+            else str(self._environment.max_model_timeout_seconds)
         )
         try:
             maximum = float(maximum_raw)
@@ -365,11 +442,7 @@ class ModelRouter:
 
     def _retry_count(self) -> int:
         configured = self._runtime_settings.get("model_retries")
-        raw = (
-            str(configured)
-            if configured is not None
-            else os.environ.get("HELPME_MODEL_RETRIES", "1")
-        )
+        raw = str(configured) if configured is not None else str(self._environment.model_retries)
         try:
             retries = int(raw)
         except (TypeError, ValueError) as exc:
@@ -386,7 +459,7 @@ class ModelRouter:
         if configured_profiles is not None:
             profiles = _json_object(configured_profiles, label="Runtime model profiles")
         else:
-            raw = os.environ.get("HELPME_MODEL_PROFILES", "").strip()
+            raw = self._environment.model_profiles_json
             if not raw:
                 return {}
             try:
@@ -445,18 +518,17 @@ class ModelRouter:
         configured = self._runtime_settings.get("ai_enabled")
         if isinstance(configured, bool):
             return configured
-        return self._env_flag("HELPME_AI_ENABLED", default=False)
+        return self._environment.ai_enabled
 
     def quality_judges_enabled(self) -> bool:
         configured = self._runtime_settings.get("quality_judges")
         if isinstance(configured, bool):
             return configured
-        return self._env_flag("HELPME_QUALITY_JUDGES", default=True)
+        return self._environment.quality_judges
 
     def _api_key(self, provider: str, env_name: str) -> str | None:
-        api_key = os.environ.get(env_name)
-        if provider == "localai" and not api_key:
-            api_key = os.environ.get("LOCALAI_API_KEY")
+        del env_name
+        api_key = environment_secret(*provider_api_key_environment_names(provider)) or None
         if not api_key and self._key_provider is not None:
             try:
                 api_key = self._key_provider(provider)
@@ -470,7 +542,7 @@ class ModelRouter:
             base_url = (
                 str(configured).strip().rstrip("/")
                 if configured is not None
-                else os.environ.get("HELPME_LOCALAI_BASE_URL", "").strip().rstrip("/")
+                else self._environment.localai_base_url.rstrip("/")
             )
             if not base_url:
                 raise ProviderUnavailable(
@@ -539,7 +611,7 @@ class ModelRouter:
         raw = (
             str(configured)
             if configured is not None
-            else os.environ.get("HELPME_MODEL_DISCOVERY_TIMEOUT", "10")
+            else str(self._environment.model_discovery_timeout)
         )
         try:
             timeout = float(raw)
@@ -549,13 +621,6 @@ class ModelRouter:
             raise ProviderUnavailable("HELPME_MODEL_DISCOVERY_TIMEOUT must be positive.")
         return timeout
 
-    @staticmethod
-    def _env_flag(name: str, *, default: bool) -> bool:
-        raw = os.environ.get(name)
-        if raw is None:
-            return default
-        return raw.strip().casefold() not in {"", "0", "false", "no", "off"}
-
     def _tls_context(self, endpoint: str, provider: str | None = None) -> ssl.SSLContext | None:
         if (provider or self.selection.provider) != "localai" or not endpoint.casefold().startswith(
             "https://"
@@ -563,9 +628,7 @@ class ModelRouter:
             return None
         configured = self._runtime_settings.get("localai_tls_verify")
         tls_verify = (
-            configured
-            if isinstance(configured, bool)
-            else self._env_flag("HELPME_LOCALAI_TLS_VERIFY", default=True)
+            configured if isinstance(configured, bool) else self._environment.localai_tls_verify
         )
         if tls_verify:
             return None
@@ -578,13 +641,19 @@ class ModelRouter:
     def _message_text(raw: Mapping[str, Any]) -> str:
         choices = raw.get("choices")
         if not isinstance(choices, list) or not choices:
-            raise ProviderUnavailable("Model response did not contain a choice.")
+            raise ProviderUnavailable(
+                "Model response did not contain a choice.", code="empty_response"
+            )
         first = choices[0]
         if not isinstance(first, Mapping):
-            raise ProviderUnavailable("Model response contained an invalid choice.")
+            raise ProviderUnavailable(
+                "Model response contained an invalid choice.", code="malformed_response"
+            )
         message = first.get("message")
         if not isinstance(message, Mapping):
-            raise ProviderUnavailable("Model response did not contain a message.")
+            raise ProviderUnavailable(
+                "Model response did not contain a message.", code="malformed_response"
+            )
         for key in ("content", "reasoning", "reasoning_content"):
             value = message.get(key)
             if isinstance(value, str) and value.strip():
@@ -596,7 +665,9 @@ class ModelRouter:
                 )
                 if text.strip():
                     return text
-        raise ProviderUnavailable("Model response did not contain text content.")
+        raise ProviderUnavailable(
+            "Model response did not contain text content.", code="empty_response"
+        )
 
     @staticmethod
     def _strip_json_fence(value: str) -> str:

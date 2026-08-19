@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
+
+from .config import RuntimePaths
 
 _FALLBACK_INDEX_HTML = """<!doctype html>
 <html lang="en">
@@ -22,11 +23,11 @@ _FALLBACK_INDEX_HTML = """<!doctype html>
 """
 
 
-def _static_roots() -> tuple[Path, ...]:
+def _static_roots(paths: RuntimePaths | None = None) -> tuple[Path, ...]:
     candidates: list[Path] = []
-    configured_root = os.environ.get("HELPME_ROOT", "").strip()
+    configured_root = (paths or RuntimePaths.from_environment()).root
     if configured_root:
-        candidates.append(Path(configured_root).expanduser().resolve() / "static")
+        candidates.append(configured_root.resolve() / "static")
     candidates.extend(
         (
             Path(__file__).resolve().parents[2] / "static",
@@ -40,8 +41,8 @@ def _static_roots() -> tuple[Path, ...]:
     return tuple(unique)
 
 
-def get_index_html() -> str:
-    for root in _static_roots():
+def get_index_html(paths: RuntimePaths | None = None) -> str:
+    for root in _static_roots(paths):
         candidate = root / "index.html"
         try:
             if candidate.is_file():
@@ -51,8 +52,8 @@ def get_index_html() -> str:
     return _FALLBACK_INDEX_HTML
 
 
-def get_static_root() -> Path | None:
-    for root in _static_roots():
+def get_static_root(paths: RuntimePaths | None = None) -> Path | None:
+    for root in _static_roots(paths):
         try:
             if root.is_dir():
                 return root

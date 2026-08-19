@@ -4,24 +4,26 @@ import base64
 import binascii
 import json
 import logging
-import os
 import re
 import secrets
+import sys
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from time import monotonic
 from typing import Any
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, urlparse
 
 from .application import ApplicationProcessor
+from .config import AccessEnvironment, HttpRuntimeConfig, RuntimePaths
 from .knowledge_graphql import execute_graphql
 from .knowledge_store import KnowledgeStoreError
 from .persistence import SessionState, SessionStore
+from .routing import match_session_route, path_parts
 from .settings import SettingsError
 from .upload_ingest import UploadError, parse_multipart
 from .web import get_index_html, get_static_root
 
-_ASSET_ROOT = Path(os.environ.get("HELPME_ROOT", str(Path.cwd()))) / "assets"
 _ASSET_CONTENT_TYPES = {
     ".png": "image/png",
     ".jpg": "image/jpeg",
@@ -34,9 +36,6 @@ _STATIC_CONTENT_TYPES = {
     ".js": "text/javascript; charset=utf-8",
 }
 LOGGER = logging.getLogger(__name__)
-_DEFAULT_JSON_REQUEST_BYTES = 64_000
-_DEFAULT_VISION_REQUEST_BYTES = 64 * 1024 * 1024
-_DEFAULT_VISION_IMAGE_BYTES = 16 * 1024 * 1024
 _MAX_MESSAGE_CHARACTERS = 100_000
 _MAX_VISION_IMAGES = 6
 _SECURITY_HEADERS = {
@@ -52,6 +51,65 @@ _SECURITY_HEADERS = {
 
 class _Handler(BaseHTTPRequestHandler):
     server: _HelpmeServer
+    protocol_version = "HTTP/1.1"
+
+    def handle_one_request(self) -> None:
+        metrics = self.server.metrics
+        started = monotonic()
+        metrics.adjust_gauge("http_active_requests", 1)
+        self._response_status: int | None = None
+        try:
+            super().handle_one_request()
+        finally:
+            metrics.adjust_gauge("http_active_requests", -1)
+            path = urlparse(getattr(self, "path", "/")).path or "/"
+            route = self._metric_route(path)
+            metrics.counter(
+                "http_requests_total",
+                labels={
+                    "method": getattr(self, "command", "UNKNOWN"),
+                    "route": route,
+                    "status": str(self._response_status or 500),
+                },
+            )
+            metrics.observe(
+                "http_request_duration_seconds",
+                monotonic() - started,
+                labels={
+                    "method": getattr(self, "command", "UNKNOWN"),
+                    "route": route,
+                },
+            )
+
+    def send_response(self, code: int, message: str | None = None) -> None:
+        self._response_status = int(code)
+        super().send_response(code, message)
+
+    @staticmethod
+    def _metric_route(path: str) -> str:
+        if path.startswith("/api/sessions/"):
+            route = match_session_route(path)
+            if route is not None:
+                return "/api/sessions/:id/" + route.operation
+            return "/api/sessions/*"
+        if path.startswith("/api/kb/"):
+            return "/api/kb/*"
+        if path in {
+            "/api/sessions",
+            "/api/runtime/model",
+            "/api/settings",
+            "/api/expert/capabilities",
+            "/api/knowledge/sources",
+            "/graphql",
+        }:
+            return path
+        if path in {"/", "/healthz", "/metrics"}:
+            return path
+        if path.startswith("/static/"):
+            return "/static/*"
+        if path.startswith("/api/"):
+            return "/api/*"
+        return "/other"
 
     def do_GET(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
@@ -66,13 +124,29 @@ class _Handler(BaseHTTPRequestHandler):
             )
             return
         if path == "/":
-            self._send(HTTPStatus.OK, get_index_html(), "text/html; charset=utf-8")
+            self._send(
+                HTTPStatus.OK,
+                get_index_html(self.server.runtime_paths),
+                "text/html; charset=utf-8",
+            )
             return
         if path.startswith("/assets/"):
             self._send_asset(path)
             return
         if path.startswith("/static/"):
             self._send_static(path)
+            return
+        if path == "/metrics":
+            if not self.server.config.metrics_enabled:
+                self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
+                return
+            if not self._authorized():
+                return
+            self._send(
+                HTTPStatus.OK,
+                self.server.metrics.prometheus(),
+                "text/plain; version=0.0.4; charset=utf-8",
+            )
             return
         if not self._authorized():
             return
@@ -113,10 +187,10 @@ class _Handler(BaseHTTPRequestHandler):
         if path == "/api/knowledge/sources":
             self._send_json({"sources": self.server.processor.knowledge_db.source_catalog()})
             return
-        parts = [unquote(item) for item in path.split("/") if item]
-        if len(parts) == 3 and parts[:2] == ["api", "sessions"]:
+        route = match_session_route(path)
+        if route is not None and route.operation == "read":
             try:
-                session = self.server.store.load_session(parts[2])
+                session = self.server.store.load_session(route.session_id)
             except (FileNotFoundError, ValueError):
                 self._send_json({"error": "session_not_found"}, HTTPStatus.NOT_FOUND)
                 return
@@ -146,7 +220,9 @@ class _Handler(BaseHTTPRequestHandler):
         )
         try:
             request_limit = (
-                self._vision_body_limit() if message_request else _DEFAULT_JSON_REQUEST_BYTES
+                self._vision_body_limit()
+                if message_request
+                else self.server.config.max_json_request_bytes
             )
         except ValueError as exc:
             self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
@@ -201,19 +277,15 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             self._send_json({"settings": settings})
             return
-        parts = [unquote(item) for item in path.split("/") if item]
-        if (
-            len(parts) == 5
-            and parts[:2] == ["api", "sessions"]
-            and parts[3:] == ["message", "stream"]
-        ):
-            self._stream_message(parts[2], body)
+        route = match_session_route(path)
+        if route is not None and route.operation == "message_stream":
+            self._stream_message(route.session_id, body)
             return
-        if len(parts) == 4 and parts[:2] == ["api", "sessions"] and parts[3] == "message":
+        if route is not None and route.operation == "message":
             try:
                 message, images = self._message_payload(body)
-                with self.server.store.session_lock(parts[2]):
-                    session = self.server.store.load_session(parts[2])
+                with self.server.store.session_lock(route.session_id):
+                    session = self.server.store.load_session(route.session_id)
                     response = self.server.processor.respond_to_message(
                         session, message, images=images
                     )
@@ -250,7 +322,7 @@ class _Handler(BaseHTTPRequestHandler):
                 "kb_disabled", "The knowledge-base console is disabled.", HTTPStatus.FORBIDDEN
             )
             return False
-        operator_token = os.environ.get("HELPME_KB_ACCESS_TOKEN", "")
+        operator_token = self.server.access_environment.resolve_kb_access_token()
         if operator_token:
             supplied = self.headers.get("Authorization", "").removeprefix("Bearer ")
             if not secrets.compare_digest(supplied, operator_token):
@@ -269,12 +341,7 @@ class _Handler(BaseHTTPRequestHandler):
         return False
 
     def _kb_loopback_dev(self) -> bool:
-        if os.environ.get("HELPME_KB_ALLOW_LOOPBACK_DEV", "").casefold() not in {
-            "1",
-            "true",
-            "yes",
-            "on",
-        }:
+        if not self.server.access_environment.kb_loopback_dev_enabled:
             return False
         return str(self.server.server_address[0]) in {"127.0.0.1", "::1", "localhost"}
 
@@ -282,7 +349,7 @@ class _Handler(BaseHTTPRequestHandler):
         self._send_json({"error": {"code": code, "message": message}}, status)
 
     def _handle_kb_get(self, path: str) -> None:
-        parts = [unquote(item) for item in path.split("/") if item]
+        parts = path_parts(path)
         query = parse_qs(urlparse(self.path).query)
         kb = self.server.processor.kb_service
         if len(parts) == 3 and parts[2] == "capabilities":
@@ -382,7 +449,7 @@ class _Handler(BaseHTTPRequestHandler):
         self._send_json({"uploads": [result.to_dict() for result in results]}, HTTPStatus.ACCEPTED)
 
     def _handle_kb_post(self, path: str, body: dict[str, Any]) -> None:
-        parts = [unquote(item) for item in path.split("/") if item]
+        parts = path_parts(path)
         kb = self.server.processor.kb_service
         reviewed_by = str(body.get("reviewedBy", ""))[:200]
         review_note = str(body.get("reviewNote", ""))[:1000]
@@ -424,7 +491,7 @@ class _Handler(BaseHTTPRequestHandler):
         self._kb_error("not_found", "Unknown knowledge-base route.", HTTPStatus.NOT_FOUND)
 
     def _handle_kb_delete(self, path: str) -> None:
-        parts = [unquote(item) for item in path.split("/") if item]
+        parts = path_parts(path)
         if len(parts) == 4 and parts[2] == "uploads" and parts[3]:
             try:
                 result = self.server.processor.kb_service.delete(parts[3])
@@ -524,6 +591,7 @@ class _Handler(BaseHTTPRequestHandler):
             else:
                 self._send_json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
         except (BrokenPipeError, ConnectionResetError):
+            self.server.metrics.counter("sse_disconnects_total")
             return
         except Exception:  # pragma: no cover - defensive network boundary
             try:
@@ -535,9 +603,11 @@ class _Handler(BaseHTTPRequestHandler):
                     )
             except (BrokenPipeError, ConnectionResetError, OSError):
                 return
+        finally:
+            self._finish_sse()
 
     def _authorized(self) -> bool:
-        expected = os.environ.get("HELPME_ACCESS_TOKEN")
+        expected = self.server.access_environment.resolve_access_token()
         if not expected:
             return True
         supplied = self.headers.get("Authorization", "")
@@ -587,39 +657,22 @@ class _Handler(BaseHTTPRequestHandler):
             raise ValueError("the attached images exceed the configured vision request limit")
         return message, images
 
-    @staticmethod
-    def _positive_environment_bytes(name: str, default: int) -> int:
-        raw = os.environ.get(name, str(default))
-        try:
-            value = int(raw)
-        except ValueError as exc:
-            raise ValueError(f"{name} must be a positive integer") from exc
-        if value <= 0:
-            raise ValueError(f"{name} must be a positive integer")
-        return value
+    def _vision_request_limit(self) -> int:
+        return self.server.config.max_vision_request_bytes
 
-    @classmethod
-    def _vision_request_limit(cls) -> int:
-        return cls._positive_environment_bytes(
-            "HELPME_MAX_VISION_REQUEST_BYTES", _DEFAULT_VISION_REQUEST_BYTES
-        )
-
-    @classmethod
-    def _vision_body_limit(cls) -> int:
+    def _vision_body_limit(self) -> int:
         # The configured limit is on decoded image bytes; JSON data URLs add base64 overhead.
-        decoded_limit = cls._vision_request_limit()
+        decoded_limit = self._vision_request_limit()
         return decoded_limit + (decoded_limit + 2) // 3 + 256_000
 
-    @classmethod
-    def _vision_image_limit(cls) -> int:
-        return cls._positive_environment_bytes(
-            "HELPME_MAX_VISION_IMAGE_BYTES", _DEFAULT_VISION_IMAGE_BYTES
-        )
+    def _vision_image_limit(self) -> int:
+        return self.server.config.max_vision_image_bytes
 
-    def _read_json(self, *, max_bytes: int = _DEFAULT_JSON_REQUEST_BYTES) -> dict[str, Any] | None:
+    def _read_json(self, *, max_bytes: int | None = None) -> dict[str, Any] | None:
+        limit = max_bytes or self.server.config.max_json_request_bytes
         try:
             length = int(self.headers.get("Content-Length", "0"))
-            if length <= 0 or length > max_bytes:
+            if length <= 0 or length > limit:
                 raise ValueError("request body limit exceeded")
             data = json.loads(self.rfile.read(length).decode("utf-8"))
             if not isinstance(data, dict):
@@ -636,7 +689,7 @@ class _Handler(BaseHTTPRequestHandler):
 
     def _send_asset(self, path: str) -> None:
         relative = path.removeprefix("/assets/")
-        asset = self._safe_file(_ASSET_ROOT, relative)
+        asset = self._safe_file(self.server.asset_root, relative)
         if asset is None:
             self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
             return
@@ -647,7 +700,7 @@ class _Handler(BaseHTTPRequestHandler):
         )
 
     def _send_static(self, path: str) -> None:
-        static_root = get_static_root()
+        static_root = get_static_root(self.server.runtime_paths)
         if static_root is None:
             self._send_json({"error": "not_found"}, HTTPStatus.NOT_FOUND)
             return
@@ -691,15 +744,32 @@ class _Handler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/event-stream; charset=utf-8")
         self.send_header("Cache-Control", "no-cache, no-store")
-        self.send_header("Connection", "close")
+        self.send_header("Transfer-Encoding", "chunked")
+        self.send_header("X-Accel-Buffering", "no")
         for name, value in _SECURITY_HEADERS.items():
             self.send_header(name, value)
         self.end_headers()
+        self._sse_started = True
+        self._sse_finished = False
 
     def _send_sse_event(self, event: str, payload: dict[str, Any]) -> None:
         encoded = json.dumps(payload, ensure_ascii=False)
-        self.wfile.write(f"event: {event}\ndata: {encoded}\n\n".encode())
+        body = f"event: {event}\ndata: {encoded}\n\n".encode()
+        self.wfile.write(f"{len(body):X}\r\n".encode())
+        self.wfile.write(body)
+        self.wfile.write(b"\r\n")
         self.wfile.flush()
+        self.server.metrics.counter("sse_events_total", labels={"event": event})
+
+    def _finish_sse(self) -> None:
+        if not getattr(self, "_sse_started", False) or getattr(self, "_sse_finished", False):
+            return
+        self._sse_finished = True
+        try:
+            self.wfile.write(b"0\r\n\r\n")
+            self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            self.server.metrics.counter("sse_disconnects_total")
 
     def log_message(self, format: str, *args: Any) -> None:
         message = (format % args).replace("\r", "\\r").replace("\n", "\\n")
@@ -716,6 +786,18 @@ class _HelpmeServer(ThreadingHTTPServer):
         super().__init__(address, _Handler)
         self.processor = processor
         self.store = store
+        self.runtime_paths = RuntimePaths.from_environment()
+        self.access_environment = AccessEnvironment.from_environment()
+        self.asset_root = (self.runtime_paths.root or Path.cwd()) / "assets"
+        self.config = HttpRuntimeConfig.from_environment()
+        self.metrics = processor.metrics
+
+    def handle_error(self, request: Any, client_address: Any) -> None:
+        _, error, _ = sys.exc_info()
+        if isinstance(error, (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)):
+            self.metrics.counter("http_disconnects_total")
+            return
+        super().handle_error(request, client_address)
 
 
 def _text_chunks(text: str, size: int = 160) -> list[str]:

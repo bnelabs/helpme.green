@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
+from .config import RetrievalEnvironment, RuntimePaths
 from .conversation import ConversationAgent
 from .expert_skills import SkillRegistry
 from .kb_service import KbService, kb_config_from_environment
@@ -14,20 +13,15 @@ from .knowledge_store import KnowledgeDatabase, SourceSpec
 from .machinery import MachineCatalog
 from .mcp import ReadOnlyMCP
 from .model_gateway import ModelRouter, ProviderUnavailable
+from .observability import MetricsRegistry
 from .persistence import SecretStore, SessionState, SessionStore
+from .prompt_artifacts import PromptArtifactStore, prompt_artifacts_enabled
 from .settings import RuntimeSettingsStore
 from .source_ingest import (
     SourceManifest,
     embedding_provider_from_environment,
     reranker_from_environment,
 )
-
-
-def _environment_enabled(name: str, *, default: bool = False) -> bool:
-    raw = os.environ.get(name)
-    if raw is None:
-        return default
-    return raw.casefold() in {"1", "true", "yes", "on"}
 
 
 @dataclass(frozen=True)
@@ -54,25 +48,39 @@ class ApplicationProcessor:
     ) -> None:
         self.knowledge = knowledge
         self.store = store
+        self.runtime_paths = RuntimePaths.from_environment()
         self.settings = RuntimeSettingsStore(store.root, secret_store=secret_store)
-        self.model_router = ModelRouter(key_provider=self.settings.get_api_key)
+        if prompt_artifacts_enabled() and secret_store is None:
+            raise ValueError(
+                "HELPME_PROMPT_ARTIFACTS_ENABLED requires HELPME_MASTER_KEY for encrypted storage."
+            )
+        self.prompt_artifacts = (
+            PromptArtifactStore(store.root / "prompt-artifacts", secret_store=secret_store)
+            if prompt_artifacts_enabled() and secret_store is not None
+            else None
+        )
+        self.metrics = MetricsRegistry.from_environment()
+        self.model_router = ModelRouter(
+            key_provider=self.settings.get_api_key,
+            metrics=self.metrics,
+            environment=self.settings.environment,
+        )
         self.model_router.configure(self.settings.runtime())
         self.skill_registry = SkillRegistry.from_repository(knowledge.root)
         self.machine_catalog = MachineCatalog.from_path(
             knowledge.root / "knowledge/machine-catalog.yml"
         )
-        database_path = Path(
-            os.environ.get("HELPME_KNOWLEDGE_DB", str(store.root / "knowledge.db"))
-        )
+        database_path = self.runtime_paths.database_path(store.root)
         self.knowledge_db = KnowledgeDatabase(database_path)
         self._register_source_catalog(knowledge)
         self.store.knowledge_digest = self._runtime_knowledge_digest()
+        self.retrieval_environment = RetrievalEnvironment.from_environment()
         self.query_embedding_provider = (
-            embedding_provider_from_environment()
-            if _environment_enabled("HELPME_EMBEDDING_QUERY_ENABLED", default=True)
+            embedding_provider_from_environment(self.retrieval_environment)
+            if self.retrieval_environment.embedding_query_enabled
             else None
         )
-        self.reranker = reranker_from_environment()
+        self.reranker = reranker_from_environment(self.retrieval_environment)
         self.kb_service = KbService(
             self.knowledge_db,
             store,
@@ -84,6 +92,7 @@ class ApplicationProcessor:
         self.conversation = ConversationAgent(
             self.model_router,
             store,
+            prompt_artifacts=self.prompt_artifacts,
             skill_registry=self.skill_registry,
             knowledge_db=self.knowledge_db,
             machine_catalog=self.machine_catalog,

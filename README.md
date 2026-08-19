@@ -211,6 +211,7 @@ services remain available through read-only integration endpoints.
 .venv/bin/ruff check .
 .venv/bin/ruff format --check .
 .venv/bin/python -m mypy src
+.venv/bin/pytest -q tests/test_browser_replay.py
 bash scripts/verify_container.sh
 ```
 
