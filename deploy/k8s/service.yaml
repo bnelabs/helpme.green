@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: helpme-green
+  namespace: helpme-green
+  labels:
+    app.kubernetes.io/name: helpme-green
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: helpme-green
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

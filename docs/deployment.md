@@ -189,3 +189,25 @@ The helper builds the reviewed image, transfers the image, starts the container 
 pre-provisioned environment, and checks `/healthz`. It does not publish raw knowledge downloads or
 the host database. Remote deployment is not considered complete until the actual target, TLS,
 backup, restore, access, and source-licence controls have been tested.
+
+## Hetzner MicroK8s deployment
+
+The current `green.konverta.eu` runtime is isolated in the `helpme-green` MicroK8s namespace on
+the dedicated Hetzner host. It uses the host's private `localhost:32000` registry, a single
+SQLite-backed replica, the `microk8s-hostpath` storage class, and the existing Cloudflare Access
+identity boundary in front of the hostname. The checked-in [Kustomize package](../deploy/k8s/)
+contains only this application and does not modify the public `website/` artifact or the existing
+`konverta` namespace.
+
+The [Hetzner deployment workflow](../.github/workflows/deploy-hetzner.yml) runs after the `CI`
+workflow succeeds for a push to `main` (including a merged pull request). It checks out the exact
+successful commit, builds a Linux amd64 image, transfers it through a dedicated SSH account,
+imports the image into MicroK8s containerd, applies the Kustomize package, and waits for the
+deployment rollout. It does not transfer provider keys or the application runtime Secret; those
+remain on the VPS.
+
+Before activating it, configure these GitHub repository secrets: `HETZNER_HOST`,
+`HETZNER_SSH_USER`, `HETZNER_SSH_PRIVATE_KEY`, and `HETZNER_SSH_KNOWN_HOSTS`. Use a dedicated
+deployment account/key with only the MicroK8s permissions required for this namespace. Do not put
+the personal root SSH key in GitHub. Keep `main` protected by required CI checks, and review the
+one-time secret setup as an operational change.
