@@ -123,12 +123,18 @@ def test_frontend_navigation_isolates_kb_and_returns_to_notebook_for_library() -
 
 
 def test_mobile_layout_keeps_phase_rail_and_typography_readable() -> None:
+    html = (STATIC_ROOT / "index.html").read_text(encoding="utf-8")
+    javascript = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
     stylesheet = (STATIC_ROOT / "app.css").read_text(encoding="utf-8")
 
     assert "body { font-size: 16px; }" in stylesheet
-    assert "grid-template-columns: repeat(5, minmax(0, 1fr));" in stylesheet
-    assert "overflow: visible;" in stylesheet
-    assert ".phase-label { font-size: 10px; line-height: 1.15; white-space: normal; }" in stylesheet
+    assert 'id="mobilePhaseSelect"' in html
+    assert 'id="mobilePhaseProgress"' in html
+    assert "mobilePhaseSelect.replaceChildren()" in javascript
+    assert 'elements.mobilePhaseSelect.addEventListener("change"' in javascript
+    assert ".phase-list { display: none; }" in stylesheet
+    assert ".mobile-phase-control select" in stylesheet
+    assert ".mobile-phase-progress span" in stylesheet
     assert ".page-lede { font-size: 14px; line-height: 1.6; }" in stylesheet
     assert ".observation-composer textarea { font-size: 16px; min-height: 96px; }" in stylesheet
     assert (
