@@ -87,7 +87,7 @@ jobs:
           remote_tmp="$(ssh "${ssh_args[@]}" "${remote}" 'mktemp -d /tmp/helpme-green-deploy.XXXXXX')"
           tar -C deploy/k8s -czf - . | ssh "${ssh_args[@]}" "${remote}" "tar -xzf - -C '${remote_tmp}'"
           ssh "${ssh_args[@]}" "${remote}" "set -eu
-            sed -i -E 's/^  newTag: .*/  newTag: ${image_tag}/' '${remote_tmp}/kustomization.yaml'
+            sed -i -E 's/^[[:space:]]+newTag: .*/    newTag: ${image_tag}/' '${remote_tmp}/kustomization.yaml'
             microk8s kubectl apply -k '${remote_tmp}'
             microk8s kubectl -n helpme-green rollout status deployment/helpme-green --timeout=5m
             microk8s kubectl -n helpme-green get deployment helpme-green -o wide

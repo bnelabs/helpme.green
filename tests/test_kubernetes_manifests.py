@@ -97,3 +97,9 @@ def test_hetzner_workflow_deploys_only_successful_main_ci_runs() -> None:
     assert "HETZNER_SSH_KNOWN_HOSTS" in workflow
     assert "OPENROUTER_API_KEY" not in workflow
     assert "website/" not in workflow
+
+
+def test_hetzner_workflow_rewrites_the_kustomize_image_tag() -> None:
+    workflow = DEPLOY_WORKFLOW.read_text(encoding="utf-8")
+
+    assert "sed -i -E 's/^[[:space:]]+newTag: .*/    newTag: ${image_tag}/'" in workflow
