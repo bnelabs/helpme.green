@@ -121,13 +121,17 @@ def test_browser_replay_exercises_real_ui_and_survives_reload(
     assert payload["viewport"]["height"] == expected_height
     assert payload["initial"]["horizontalOverflow"] is False
     assert payload["initial"]["coreControlsVisible"] is True
-    assert payload["afterReload"]["observationCount"] == "2 saved"
+    assert payload["initial"]["defaultExamplesHidden"] is True
+    assert payload["afterReload"]["observationCount"] == "1 saved"
     assert payload["afterReload"]["assistantVisible"] is True
+    assert payload["afterReload"]["guidanceAnswerVisible"] is True
+    assert "capital of Portugal" in payload["afterReload"]["guidanceQuestion"]
     assert payload["afterReload"]["frameworkOverlay"] is False
     assert payload["afterReload"]["horizontalOverflow"] is False
     assert payload["afterReload"]["coreControlsVisible"] is True
     assert payload["consoleIssues"] == []
     assert screenshot.is_file() and screenshot.stat().st_size > 0
-    assert len(prompts) == 2
-    assert "rubber sample" in prompts[0]
+    assert len(prompts) == 3
+    assert "I have rubber" in prompts[0]
     assert "What is the capital of Portugal?" in prompts[1]
+    assert "dark, flexible rubber" in prompts[2]

@@ -80,6 +80,9 @@ import {createPhotoStorage} from "./app-storage.js";
     boardImagePrimary: document.getElementById("boardImagePrimary"),
     boardImageSecondary: document.getElementById("boardImageSecondary"),
     boardImageTertiary: document.getElementById("boardImageTertiary"),
+    evidenceBoard: document.getElementById("evidenceBoard"),
+    boardCaption: document.getElementById("boardCaption"),
+    boardEmpty: document.getElementById("boardEmpty"),
     observationList: document.getElementById("observationList"),
     observationCount: document.getElementById("observationCount"),
     evidencePhotos: document.getElementById("evidencePhotos"),
@@ -161,7 +164,15 @@ import {createPhotoStorage} from "./app-storage.js";
     settingsMaxTimeout: document.getElementById("settingsMaxTimeout"),
     settingsTheme: document.getElementById("settingsTheme"),
     saveSettings: document.getElementById("saveSettings"),
-    settingsStatus: document.getElementById("settingsStatus")
+    settingsStatus: document.getElementById("settingsStatus"),
+    guidanceComposer: document.getElementById("guidanceComposer"),
+    guidanceMessage: document.getElementById("guidanceMessage"),
+    guidanceSend: document.getElementById("guidanceSend"),
+    guidanceAnswer: document.getElementById("guidanceAnswer"),
+    guidanceRetry: document.getElementById("guidanceRetry"),
+    guidanceQuestion: document.getElementById("guidanceQuestion"),
+    guidanceText: document.getElementById("guidanceText"),
+    guidanceSourceNote: document.getElementById("guidanceSourceNote")
   };
   const photoStorage = createPhotoStorage({dbName: PHOTO_DB_NAME, storeName: PHOTO_STORE_NAME});
   const {putPhoto, getPhoto, getAllPhotos, deletePhoto} = photoStorage;
@@ -179,6 +190,7 @@ import {createPhotoStorage} from "./app-storage.js";
   let starting = false;
   let requestPending = false;
   let requestPhaseIndex = null;
+  let guidancePending = false;
   let comparisonPending = false;
   let comparisonPhaseIndex = null;
   let lastFailedRequest = null;
@@ -195,13 +207,17 @@ import {createPhotoStorage} from "./app-storage.js";
   function blankPage() {
     return {draft: "", observations: [], references: [], reply: "", sources: [], comparison: "", comparisonSources: [], evidence: blankEvidence()};
   }
+  function blankGuidance() {
+    return {draft: "", question: "", reply: "", sources: []};
+  }
   function freshState() {
     return {
       title: "New material note",
       createdAt: new Date().toISOString(),
       sessionId: null,
       currentPhase: 0,
-      selectedCategory: "plastics",
+      selectedCategory: "",
+      guidance: blankGuidance(),
       pages: phases.map(() => blankPage()),
       history: []
     };
@@ -269,6 +285,15 @@ import {createPhotoStorage} from "./app-storage.js";
       evidence: validEvidence(source.evidence, keepLegacyData)
     };
   }
+  function validGuidance(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      draft: typeof source.draft === "string" ? source.draft.slice(0, 4000) : "",
+      question: typeof source.question === "string" ? source.question.slice(0, 4000) : "",
+      reply: typeof source.reply === "string" && !isAssistantFailureText(source.reply) ? source.reply : "",
+      sources: Array.isArray(source.sources) ? source.sources.slice(0, 20) : []
+    };
+  }
   function validHistory(value) {
     if (!Array.isArray(value)) return [];
     return value.map((snapshot) => {
@@ -288,7 +313,8 @@ import {createPhotoStorage} from "./app-storage.js";
     next.createdAt = validTimestamp(value.createdAt) || next.createdAt;
     next.sessionId = typeof value.sessionId === "string" && value.sessionId ? value.sessionId.slice(0, 160) : null;
     next.currentPhase = Number.isInteger(value.currentPhase) ? Math.min(Math.max(value.currentPhase, 0), phases.length - 1) : 0;
-    next.selectedCategory = categories.some((category) => category.id === value.selectedCategory) ? value.selectedCategory : "plastics";
+    next.selectedCategory = categories.some((category) => category.id === value.selectedCategory) ? value.selectedCategory : "";
+    next.guidance = validGuidance(value.guidance);
     next.history = validHistory(value.history);
     next.pages = phases.map((_, index) => validPage(value.pages[index], true));
     return next;
@@ -320,6 +346,7 @@ import {createPhotoStorage} from "./app-storage.js";
       sessionId: state.sessionId || null,
       currentPhase: state.currentPhase,
       selectedCategory: state.selectedCategory,
+      guidance: validGuidance(state.guidance),
       pages: state.pages.map((page) => persistablePage(page)),
       history: (state.history || []).map((snapshot) => Object.assign({}, snapshot, {
         pages: Array.isArray(snapshot.pages) ? snapshot.pages.map((page) => persistablePage(page)) : []
@@ -540,7 +567,7 @@ import {createPhotoStorage} from "./app-storage.js";
     if (!page.observations.length) {
       const empty = document.createElement("li");
       empty.className = "empty-row";
-      empty.textContent = "Your observations will stay on this page.";
+      empty.textContent = "Notes and questions you keep on this phase will appear here.";
       elements.observationList.appendChild(empty);
       return;
     }
@@ -700,6 +727,29 @@ import {createPhotoStorage} from "./app-storage.js";
       elements.referenceChips.appendChild(chip);
     });
   }
+  function renderGuidance() {
+    const guidance = state.guidance || blankGuidance();
+    const guidanceFailure = lastFailedRequest && lastFailedRequest.kind === "guidance";
+    elements.guidanceMessage.value = guidance.draft;
+    elements.guidanceComposer.setAttribute("aria-busy", guidancePending ? "true" : "false");
+    elements.guidanceSend.disabled = guidancePending || requestPending || comparisonPending;
+    elements.guidanceAnswer.hidden = !guidance.question && !guidance.reply && !guidancePending && !guidanceFailure;
+    elements.guidanceQuestion.textContent = guidance.question ? "You asked: " + guidance.question : "";
+    elements.guidanceText.textContent = guidancePending && !guidance.reply
+      ? "Thinking about that now..."
+      : guidanceFailure
+        ? "I could not get guidance right now. Your question is saved here; try again when the assistant is available."
+        : guidance.reply
+          ? withAssistantVerificationNotice(guidance.reply)
+          : "";
+    const sources = guidance.sources || [];
+    elements.guidanceSourceNote.textContent = sources.length
+      ? sources.map((source) => source.label || "Reference").join(" · ")
+      : guidance.reply
+        ? "No source linked to this answer yet."
+        : "";
+    elements.guidanceRetry.hidden = !guidanceFailure || guidancePending || requestPending || comparisonPending;
+  }
   function renderRead(page, phase) {
     elements.workingTitle.textContent = phase.heading;
     const firstAssistantLine = page.reply.trim().split(/\n+/)[0].trim();
@@ -756,7 +806,7 @@ import {createPhotoStorage} from "./app-storage.js";
     elements.leftPageTag.textContent = phase.label.toUpperCase();
     elements.pageState.textContent = "Phase " + (state.currentPhase + 1) + " of " + phases.length;
     elements.message.value = page.draft;
-    elements.message.placeholder = "Add an observation for " + phase.label.toLowerCase() + "...";
+    elements.message.placeholder = "Add a note or question for " + phase.label.toLowerCase() + "...";
     renderObservations(page);
     renderEvidence(page);
     renderReferences(page);
@@ -789,14 +839,15 @@ import {createPhotoStorage} from "./app-storage.js";
     elements.compareEvidence.disabled = comparisonPending || requestPending || !hasComparisonInput;
     elements.composer.setAttribute("aria-busy", pageRequestPending ? "true" : "false");
     elements.send.disabled = pageRequestPending || pageComparisonPending;
-    elements.compareEvidence.textContent = pageComparisonPending ? "Comparing..." : difficultForm ? "Compare carefully" : "Compare with assistant";
+    elements.send.textContent = pageRequestPending ? "Answering..." : "Ask about this";
+    elements.compareEvidence.textContent = pageComparisonPending ? "Comparing..." : difficultForm ? "Compare carefully" : "Get a careful comparison";
     elements.comparisonHint.textContent = hasComparisonInput
       ? difficultForm
         ? "Next: click Compare carefully · attached photo + all page details will be analyzed"
-        : "Next: click Compare with assistant · attached photo + all page details will be analyzed"
+        : "Next: click Get a careful comparison · attached photo + all page details will be analyzed"
       : difficultForm
-        ? "Add a note or example first · the attached photo will be analyzed with it"
-        : "Add an observation or library example first";
+        ? "Optional: add a note, photo, or example first · the attached photo will be analyzed with it"
+        : "Optional: add a note, photo, or example for a closer comparison";
   }
   function renderHistory() {
     elements.historyList.replaceChildren();
@@ -886,13 +937,19 @@ import {createPhotoStorage} from "./app-storage.js";
     });
   }
   function renderBoard(page) {
-    const images = page.references.length ? page.references.map((item) => item.image) : ["/assets/material-plastics.webp", "/assets/material-paper.webp", "/assets/material-metals.webp"];
+    const hasExamples = page.references.length > 0;
+    elements.evidenceBoard.hidden = !hasExamples;
+    elements.boardCaption.hidden = !hasExamples;
+    elements.boardEmpty.hidden = hasExamples;
+    if (!hasExamples) return;
+    const images = page.references.map((item) => item.image);
     elements.boardImagePrimary.src = images[0] || "/assets/material-plastics.webp";
     elements.boardImageSecondary.src = images[1] || images[0] || "/assets/material-paper.webp";
     elements.boardImageTertiary.src = images[2] || images[1] || images[0] || "/assets/material-metals.webp";
   }
   function renderAll() {
     renderPhaseRail();
+    renderGuidance();
     renderNotebook();
     renderBoard(activePage());
     renderHistory();
@@ -921,11 +978,6 @@ import {createPhotoStorage} from "./app-storage.js";
   }
   function markPhaseAndAdvance() {
     if (state.currentPhase < phases.length - 1) {
-      if (!phaseHasWork(state.currentPhase)) {
-        elements.message.focus({preventScroll: true});
-        elements.statusNote.textContent = "Add an observation or a reference before moving on. Your page is still ready.";
-        return;
-      }
       turnToPhase(state.currentPhase + 1);
       return;
     }
@@ -985,6 +1037,7 @@ import {createPhotoStorage} from "./app-storage.js";
     conversationGeneration += 1;
     requestPending = false;
     requestPhaseIndex = null;
+    guidancePending = false;
     comparisonPending = false;
     comparisonPhaseIndex = null;
     lastFailedRequest = null;
@@ -1258,6 +1311,47 @@ import {createPhotoStorage} from "./app-storage.js";
       throw error;
     }
   }
+  async function sendGuidanceRequest(text) {
+    const requestGeneration = conversationGeneration;
+    guidancePending = true;
+    lastFailedRequest = null;
+    renderAll();
+    const guidance = state.guidance;
+    try {
+      const body = await sendAssistantMessage(text, (delta) => {
+        if (requestGeneration !== conversationGeneration) return;
+        guidance.reply += delta;
+        renderGuidance();
+      });
+      if (requestGeneration !== conversationGeneration) return;
+      const assistantAvailable = !(body.data && body.data.ai_used === false) && !body.error && !isAssistantFailureText(body.text);
+      guidance.reply = assistantAvailable ? withAssistantVerificationNotice(body.text || "I could not get guidance right now. Please try again.") : "";
+      guidance.sources = assistantAvailable && body.data && Array.isArray(body.data.sources) ? body.data.sources : [];
+      saveState();
+      lastFailedRequest = assistantAvailable ? null : {kind: "guidance", text};
+    } catch (error) {
+      if (requestGeneration !== conversationGeneration) return;
+      showConnectionError(error, "guidance", null, text);
+    } finally {
+      if (requestGeneration === conversationGeneration) {
+        guidancePending = false;
+        renderAll();
+        elements.guidanceMessage.focus({preventScroll: true});
+      }
+    }
+  }
+  async function submitGuidance(event) {
+    event.preventDefault();
+    const text = elements.guidanceMessage.value.trim();
+    if (!text || guidancePending || requestPending || comparisonPending) return;
+    const guidance = state.guidance;
+    guidance.question = text;
+    guidance.draft = "";
+    guidance.reply = "";
+    guidance.sources = [];
+    saveState();
+    await sendGuidanceRequest(text);
+  }
   async function sendObservationRequest(phaseIndex, text) {
     const requestGeneration = conversationGeneration;
     requestPending = true;
@@ -1399,6 +1493,15 @@ import {createPhotoStorage} from "./app-storage.js";
     if (!lastFailedRequest || requestPending || comparisonPending) return;
     const failed = lastFailedRequest;
     lastFailedRequest = null;
+    if (failed.kind === "guidance") {
+      const guidance = state.guidance;
+      if (!guidance || !failed.text) return;
+      guidance.reply = "";
+      guidance.sources = [];
+      saveState();
+      void sendGuidanceRequest(failed.text);
+      return;
+    }
     if (failed.kind === "observation") {
       const page = state.pages[failed.phaseIndex];
       if (!page || !failed.text) return;
@@ -1457,6 +1560,18 @@ import {createPhotoStorage} from "./app-storage.js";
     fitNoteTitle();
     saveState();
   });
+  elements.guidanceMessage.addEventListener("input", () => {
+    state.guidance.draft = elements.guidanceMessage.value;
+    saveState();
+  });
+  elements.guidanceMessage.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      elements.guidanceComposer.requestSubmit();
+    }
+  });
+  elements.guidanceComposer.addEventListener("submit", submitGuidance);
+  elements.guidanceRetry.addEventListener("click", retryLastRequest);
   elements.message.addEventListener("input", () => {
     activePage().draft = elements.message.value;
     saveState();

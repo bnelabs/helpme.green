@@ -526,7 +526,8 @@ def test_homepage_has_natural_conversation_surface(tmp_path: Path) -> None:
     assert "modelDisclosure" in body
     assert "full image and every saved detail" in body
     assert "Clear removed originals" in body
-    assert "Compare with assistant" in body
+    assert "Ask helpme.green for guidance" in body
+    assert "Get a careful comparison" in body
     assert "not a test or a final answer" in body
     assert "Nothing is lost when you move between phases." in body
     assert "Shift+Enter for a new line" in body

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f4f0e7">
-<meta name="description" content="A calm, source-aware material investigation notebook.">
+<meta name="description" content="An ordinary-language, source-aware circular-economy assistant with an optional investigation notebook.">
 <script src="../static/file-launch-guard.js" defer></script>
 <link rel="stylesheet" href="../static/app.css">
 <link rel="icon" href="/assets/favicon.png" type="image/png">
@@ -48,7 +48,7 @@
   <main class="notebook-workspace" id="notebook">
     <aside class="phase-rail" aria-label="Investigation phases">
       <div class="phase-rail-header">
-        <span class="rail-kicker">Investigation</span>
+        <span class="rail-kicker">Optional notebook</span>
         <span class="mobile-phase-count" id="mobilePhaseCount">1 of 5</span>
       </div>
       <label class="mobile-phase-control" for="mobilePhaseSelect">
@@ -63,9 +63,9 @@
       </div>
     </aside>
 
-    <section class="notebook-column" aria-label="Material investigation notebook">
+    <section class="notebook-column" aria-label="helpme.green guidance and optional material investigation notebook">
       <div class="mobile-toolbar">
-        <span class="rail-kicker">Working notebook</span>
+        <span class="rail-kicker">Guidance first · notebook optional</span>
         <div>
           <span class="page-state" id="pageState">Phase 1 of 5</span>
           <button class="library-toggle" id="libraryToggle" type="button" aria-controls="library" aria-expanded="false">Material library</button>
@@ -82,6 +82,31 @@
         <div class="auth-error" id="authError" hidden></div>
       </section>
 
+      <section class="guidance-card" aria-labelledby="guidanceTitle">
+        <div class="guidance-copy">
+          <span class="page-kicker">Start here</span>
+          <h1 id="guidanceTitle">Ask helpme.green for guidance</h1>
+          <p>Ask a normal question and get an answer first. Use the notebook below only when you want to keep material notes, photos, and checks together.</p>
+        </div>
+        <form class="guidance-composer" id="guidanceComposer" aria-busy="false">
+          <label class="sr-only" for="guidanceMessage">Ask helpme.green for guidance</label>
+          <textarea id="guidanceMessage" rows="2" placeholder="Try: I have a dark rubber sample. What should I check first?"></textarea>
+          <div class="composer-footer">
+            <span class="composer-hint">Ask about a material, process, machine, risk, or anything else.</span>
+            <button class="primary-button guidance-send" id="guidanceSend" type="submit">Get guidance</button>
+          </div>
+        </form>
+        <section class="guidance-answer" id="guidanceAnswer" aria-live="polite" aria-atomic="true" hidden>
+          <div class="guidance-answer-header">
+            <span class="page-kicker">Guidance</span>
+            <button class="retry-button" id="guidanceRetry" type="button" hidden>Try again</button>
+          </div>
+          <p class="guidance-question" id="guidanceQuestion"></p>
+          <p class="guidance-text" id="guidanceText"></p>
+          <p class="source-note" id="guidanceSourceNote"></p>
+        </section>
+      </section>
+
       <div class="notebook-stage">
         <div class="notebook-spread" id="notebookSpread">
           <article class="page page-left" aria-label="Investigation notes">
@@ -93,7 +118,7 @@
             <textarea class="note-title" id="noteTitle" maxlength="90" rows="1" aria-label="Investigation title">New material note</textarea>
             <p class="page-lede" id="pageLede">Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.</p>
 
-            <div class="evidence-board" aria-label="Material examples">
+            <div class="evidence-board" id="evidenceBoard" aria-label="Material examples">
               <figure class="board-card">
                 <img id="boardImagePrimary" src="/assets/material-plastics.webp" alt="Plastic material example">
               </figure>
@@ -104,10 +129,11 @@
                 <img id="boardImageTertiary" src="/assets/material-metals.webp" alt="Metal material example">
               </figure>
             </div>
-            <div class="board-caption">Library examples — real scrap looks, not proof of what this is</div>
+            <div class="board-caption" id="boardCaption">Library examples — real scrap looks, not proof of what this is</div>
+            <div class="board-empty" id="boardEmpty" hidden>No library example selected. Use the library only when a comparison would help.</div>
 
             <section aria-labelledby="observationsTitle">
-              <h2 class="section-title" id="observationsTitle"><span>Observations</span><span id="observationCount">0 saved</span></h2>
+              <h2 class="section-title" id="observationsTitle"><span>Notes &amp; questions</span><span id="observationCount">0 saved</span></h2>
               <ol class="observation-list" id="observationList"></ol>
             </section>
 
@@ -160,17 +186,18 @@
               <h2 class="section-title" id="referencesTitle"><span>Library examples</span><span>Library</span></h2>
               <div class="reference-chips" id="referenceChips"></div>
               <div class="comparison-actions">
-                <button class="text-button" id="compareEvidence" type="button">Compare with assistant</button>
-                <span class="comparison-hint" id="comparisonHint">Your notes + library examples</span>
+                <button class="text-button" id="compareEvidence" type="button">Get a careful comparison</button>
+                <span class="comparison-hint" id="comparisonHint">Optional: use a note, photo, or example when you need a closer comparison.</span>
               </div>
             </section>
 
             <form class="observation-composer" id="composer" aria-busy="false">
-              <label class="sr-only" for="message">Add an observation</label>
-              <textarea id="message" rows="3" placeholder="Add an observation..."></textarea>
+              <span class="composer-kicker">Optional phase note</span>
+              <label class="composer-label" for="message">What would you like to record or ask about this phase?</label>
+              <textarea id="message" rows="3" placeholder="Add a note or question for this phase..."></textarea>
               <div class="composer-footer">
-                <span class="composer-hint">Enter to save · Shift+Enter for a new line</span>
-                <button class="save-observation" id="send" type="submit">Save observation</button>
+                <span class="composer-hint">Saved here, then the assistant replies below · Shift+Enter for a new line</span>
+                <button class="save-observation" id="send" type="submit">Ask about this</button>
               </div>
             </form>
             <div class="status-line">
@@ -183,7 +210,7 @@
             <section class="working-read">
               <span class="page-kicker">Assistant's first look</span>
               <h2 id="workingTitle">Start with the first look</h2>
-              <p id="workingRead">No answer is assumed. Add a note and keep the first look, the open question, and the library examples together.</p>
+              <p id="workingRead">No phase read yet. Ask a general question above, or add a note here when keeping an investigation record will help.</p>
             </section>
             <section class="read-section" aria-labelledby="evidenceTitle">
               <h2 class="section-title" id="evidenceTitle">What we have so far</h2>
@@ -196,10 +223,10 @@
             <section class="next-question" aria-labelledby="nextQuestionTitle">
               <h2 class="section-title" id="nextQuestionTitle">Next question</h2>
               <p id="nextQuestion">What do you see, and what would you like to understand?</p>
-              <button class="text-button" id="usePrompt" type="button">Use as observation prompt</button>
+              <button class="text-button" id="usePrompt" type="button">Use this question in the phase note</button>
             </section>
             <section class="assistant-read" id="assistantRead" aria-live="polite" aria-atomic="true" hidden>
-              <span class="page-kicker">Assistant's note — saved here</span>
+              <span class="page-kicker">Assistant's reply — saved here</span>
               <p id="assistantText"></p>
               <p class="source-note" id="sourceNote"></p>
             </section>

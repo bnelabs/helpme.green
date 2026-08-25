@@ -219,11 +219,15 @@ async function textState(connection, sessionId) {
       documentWidth: document.documentElement.scrollWidth,
       viewportClientWidth: document.documentElement.clientWidth,
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-      coreControlsVisible: ["#message", "#send", "#newNote"].every(visible),
+      coreControlsVisible: ["#guidanceMessage", "#guidanceSend", "#message", "#send", "#newNote"].every(visible),
       observationCount: document.querySelector("#observationCount")?.textContent || "",
       observations: [...document.querySelectorAll("#observationList .observation-text")].map((item) => item.textContent || ""),
       assistantVisible: document.querySelector("#assistantRead")?.hidden === false,
       assistantText: document.querySelector("#assistantText")?.textContent || "",
+      guidanceAnswerVisible: document.querySelector("#guidanceAnswer")?.hidden === false,
+      guidanceQuestion: document.querySelector("#guidanceQuestion")?.textContent || "",
+      guidanceText: document.querySelector("#guidanceText")?.textContent || "",
+      defaultExamplesHidden: document.querySelector("#evidenceBoard")?.hidden === true && document.querySelector("#boardEmpty")?.hidden === false,
       frameworkOverlay: /(?:Vite|Next\.js|Webpack|Unhandled Runtime Error)/i.test(document.body?.innerText || ""),
     };
   })()`);
@@ -338,23 +342,33 @@ async function runReplay(options) {
     }
     assertResponsiveState(initial, viewport, "Initial page");
 
-    const materialObservation = "I have a dark, flexible rubber sample and want to understand what to check next.";
-    await fill(connection, sessionId, "#message", materialObservation);
+    const materialQuestion = "I have rubber. What should I check before I choose a route?";
+    await fill(connection, sessionId, "#guidanceMessage", materialQuestion);
+    await click(connection, sessionId, "#guidanceSend");
+    await waitForPage(
+      connection,
+      sessionId,
+      `document.querySelector("#guidanceAnswer")?.hidden === false && document.querySelector("#guidanceQuestion")?.textContent.includes("I have rubber") && !document.querySelector("#guidanceSend")?.disabled`,
+      timeoutMs,
+    );
+
+    const unrelatedQuestion = "What is the capital of Portugal?";
+    await fill(connection, sessionId, "#guidanceMessage", unrelatedQuestion);
+    await click(connection, sessionId, "#guidanceSend");
+    await waitForPage(
+      connection,
+      sessionId,
+      `document.querySelector("#guidanceAnswer")?.hidden === false && document.querySelector("#guidanceQuestion")?.textContent.includes("capital of Portugal") && !document.querySelector("#guidanceSend")?.disabled`,
+      timeoutMs,
+    );
+
+    const materialNote = "The sample is dark, flexible rubber and I want to keep this check with the notebook.";
+    await fill(connection, sessionId, "#message", materialNote);
     await click(connection, sessionId, "#send");
     await waitForPage(
       connection,
       sessionId,
       `document.querySelector("#observationCount")?.textContent === "1 saved" && document.querySelector("#assistantRead")?.hidden === false && !document.querySelector("#send")?.disabled`,
-      timeoutMs,
-    );
-
-    const unrelatedObservation = "What is the capital of Portugal?";
-    await fill(connection, sessionId, "#message", unrelatedObservation);
-    await click(connection, sessionId, "#send");
-    await waitForPage(
-      connection,
-      sessionId,
-      `document.querySelector("#observationCount")?.textContent === "2 saved" && document.querySelector("#assistantRead")?.hidden === false && !document.querySelector("#send")?.disabled`,
       timeoutMs,
     );
     const beforeReload = await textState(connection, sessionId);
@@ -363,13 +377,13 @@ async function runReplay(options) {
     await waitForPage(
       connection,
       sessionId,
-      `document.readyState === "complete" && document.querySelector("#observationCount")?.textContent === "2 saved"`,
+      `document.readyState === "complete" && document.querySelector("#observationCount")?.textContent === "1 saved" && document.querySelector("#guidanceAnswer")?.hidden === false`,
       timeoutMs,
     );
     const afterReload = await textState(connection, sessionId);
     assertResponsiveState(afterReload, viewport, "Reloaded page");
     const observations = afterReload.observations;
-    if (!observations.includes(materialObservation) || !observations.includes(unrelatedObservation)) {
+    if (!observations.includes(materialNote)) {
       throw new Error(`Reload lost an observation: ${JSON.stringify(afterReload)}`);
     }
     return {

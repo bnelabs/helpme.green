@@ -122,6 +122,23 @@ def test_frontend_navigation_isolates_kb_and_returns_to_notebook_for_library() -
     )
 
 
+def test_guidance_is_answer_first_and_notebook_is_optional() -> None:
+    html = (STATIC_ROOT / "index.html").read_text(encoding="utf-8")
+    javascript = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
+
+    assert "Ask helpme.green for guidance" in html
+    assert 'id="guidanceComposer"' in html
+    assert 'id="guidanceMessage"' in html
+    assert 'id="guidanceAnswer" aria-live="polite"' in html
+    assert 'id="boardEmpty"' in html
+    assert "Ask a normal question and get an answer first." in html
+    assert "async function sendGuidanceRequest(text)" in javascript
+    assert "await sendAssistantMessage(text" in javascript
+    assert "Optional: add a note, photo, or example for a closer comparison" in javascript
+    assert "Add an observation or a reference before moving on" not in javascript
+    assert 'selectedCategory: ""' in javascript
+
+
 def test_mobile_layout_keeps_phase_rail_and_typography_readable() -> None:
     html = (STATIC_ROOT / "index.html").read_text(encoding="utf-8")
     javascript = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
