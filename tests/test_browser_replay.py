@@ -121,6 +121,10 @@ def test_browser_replay_exercises_real_ui_and_survives_reload(
     assert payload["viewport"]["height"] == expected_height
     assert payload["initial"]["horizontalOverflow"] is False
     assert payload["initial"]["coreControlsVisible"] is True
+    assert payload["initial"]["notebookOpen"] is False
+    assert payload["initial"]["notebookLauncherVisible"] is True
+    assert payload["beforeReload"]["notebookOpen"] is True
+    assert payload["beforeReload"]["notebookControlsVisible"] is True
     assert payload["initial"]["defaultExamplesHidden"] is True
     assert payload["afterReload"]["observationCount"] == "1 saved"
     assert payload["afterReload"]["assistantVisible"] is True

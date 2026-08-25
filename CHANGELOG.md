@@ -7,6 +7,9 @@ format and are immutable after publication.
 
 ### Changed
 
+- Make the public start page answer-first and beginner-friendly: the optional sample notebook now
+  stays hidden until requested, photo guidance explains what to do without requiring a material
+  name, and notebook steps use plain-language labels.
 - Continue to keep provider configuration, credentials, local runtime data, and uncleared knowledge
   downloads outside release artifacts.
 - Release validation, release-note generation, native-bundle packaging, bundle verification, and

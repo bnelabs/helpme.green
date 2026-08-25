@@ -45,30 +45,31 @@
     </div>
   </header>
 
-  <main class="notebook-workspace" id="notebook">
-    <aside class="phase-rail" aria-label="Investigation phases">
+  <main class="notebook-workspace" id="notebook" data-notebook-open="false">
+    <aside class="phase-rail" aria-label="Optional investigation notebook">
       <div class="phase-rail-header">
         <span class="rail-kicker">Optional notebook</span>
         <span class="mobile-phase-count" id="mobilePhaseCount">1 of 5</span>
       </div>
       <label class="mobile-phase-control" for="mobilePhaseSelect">
-        <span class="sr-only">Investigation phase</span>
+        <span class="sr-only">Notebook step</span>
         <select id="mobilePhaseSelect"></select>
       </label>
       <div class="mobile-phase-progress" aria-hidden="true"><span id="mobilePhaseProgress"></span></div>
       <ol class="phase-list" id="phaseList"></ol>
       <div class="rail-footer">
-        <div class="rail-page-count" id="railPageCount">Phase 1 of 5</div>
+        <div class="rail-page-count" id="railPageCount">Step 1 of 5</div>
         <div class="rail-progress" aria-label="Overall progress"><span id="railProgress"></span></div>
       </div>
     </aside>
 
     <section class="notebook-column" aria-label="helpme.green guidance and optional material investigation notebook">
       <div class="mobile-toolbar">
-        <span class="rail-kicker">Guidance first · notebook optional</span>
-        <div>
-          <span class="page-state" id="pageState">Phase 1 of 5</span>
-          <button class="library-toggle" id="libraryToggle" type="button" aria-controls="library" aria-expanded="false">Material library</button>
+        <span class="rail-kicker">Optional sample notebook</span>
+        <div class="mobile-toolbar-actions">
+          <span class="page-state" id="pageState">Step 1 of 5</span>
+          <button class="notebook-close" id="closeNotebook" type="button">Hide notebook</button>
+          <button class="library-toggle" id="libraryToggle" type="button" aria-controls="library" aria-expanded="false">Examples</button>
         </div>
       </div>
 
@@ -85,15 +86,18 @@
       <section class="guidance-card" aria-labelledby="guidanceTitle">
         <div class="guidance-copy">
           <span class="page-kicker">Start here</span>
-          <h1 id="guidanceTitle">Ask helpme.green for guidance</h1>
-          <p>Ask a normal question and get an answer first. Use the notebook below only when you want to keep material notes, photos, and checks together.</p>
+          <h1 id="guidanceTitle">What can I help you with?</h1>
+          <p>Ask in your own words. You do not need to know the sample name. If you have a photo, add it only when a visual first read would help.</p>
         </div>
         <form class="guidance-composer" id="guidanceComposer" aria-busy="false">
-          <label class="sr-only" for="guidanceMessage">Ask helpme.green for guidance</label>
-          <textarea id="guidanceMessage" rows="2" placeholder="Try: I have a dark rubber sample. What should I check first?"></textarea>
-          <div class="composer-footer">
-            <span class="composer-hint">Ask about a material, process, machine, risk, or anything else.</span>
-            <button class="primary-button guidance-send" id="guidanceSend" type="submit">Get guidance</button>
+          <label class="sr-only" for="guidanceMessage">What do you need help with?</label>
+          <textarea id="guidanceMessage" rows="2" placeholder="Example: I found this black flexible piece. I do not know what it is. What should I check first?"></textarea>
+          <div class="guidance-footer">
+            <span class="composer-hint">No technical name needed. Ask about a material, process, machine, risk, or anything else.</span>
+            <div class="guidance-actions">
+              <button class="text-button guidance-photo" id="openNotebookFromGuidance" type="button">I have a sample photo</button>
+              <button class="primary-button guidance-send" id="guidanceSend" type="submit">Get an answer</button>
+            </div>
           </div>
         </form>
         <section class="guidance-answer" id="guidanceAnswer" aria-live="polite" aria-atomic="true" hidden>
@@ -107,12 +111,21 @@
         </section>
       </section>
 
+      <section class="notebook-launcher" id="notebookLauncher" aria-labelledby="notebookLauncherTitle">
+        <div>
+          <span class="page-kicker">Optional</span>
+          <h2 id="notebookLauncherTitle">Add a photo or keep notes</h2>
+          <p>Open the sample record only when you want to save a photo, add context, or request a photo-based first read.</p>
+        </div>
+        <button class="text-button" id="openNotebook" type="button">Open sample details</button>
+      </section>
+
       <div class="notebook-stage">
         <div class="notebook-spread" id="notebookSpread">
           <article class="page page-left" aria-label="Investigation notes">
             <header class="page-header">
               <span class="note-date" id="noteDate">NOTE</span>
-              <span class="note-tag" id="leftPageTag">OBSERVE</span>
+              <span class="note-tag" id="leftPageTag">DESCRIBE IT</span>
             </header>
             <label class="sr-only" for="noteTitle">Investigation title</label>
             <textarea class="note-title" id="noteTitle" maxlength="90" rows="1" aria-label="Investigation title">New material note</textarea>
@@ -137,17 +150,17 @@
               <ol class="observation-list" id="observationList"></ol>
             </section>
 
-            <section class="evidence-capture" aria-labelledby="sampleEvidenceTitle">
+            <section class="evidence-capture" id="evidenceCapture" aria-labelledby="sampleEvidenceTitle">
               <h2 class="section-title" id="sampleEvidenceTitle"><span>Your material</span><span id="evidenceCount">0 photos</span></h2>
-              <p class="evidence-intro">Add the original photo of the real scrap. When you compare, <span id="modelDisclosure">the configured vision model</span> receives the full image and every saved detail on this page. It will inspect visible pixels and explain what fits, what remains uncertain, and what to check next.</p>
+              <p class="evidence-intro">Have a sample photo? Add it here. You do not need to know what it is. The original is sent only when you request a photo-based first read, to <span id="modelDisclosure">the configured assistant</span>.</p>
               <div class="evidence-photo-row" id="evidencePhotos"></div>
               <label class="evidence-upload" for="evidencePhotoInput">Add a photo</label>
               <input class="evidence-upload-input" id="evidencePhotoInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" capture="environment" multiple>
-              <p class="sr-only" id="evidenceFieldsHint">Choose the sample form and condition when known. A guidance note appears after selecting a form.</p>
+              <p class="sr-only" id="evidenceFieldsHint">Choose the sample form and condition only when known. Leave them blank or choose Unknown when you are not sure.</p>
               <div class="evidence-fields">
                 <label class="evidence-field" for="evidenceForm">What form is the sample?
                   <select id="evidenceForm" aria-describedby="evidenceFieldsHint evidenceGuidance">
-                    <option value="">Choose sample form</option>
+                    <option value="">Not sure</option>
                     <option value="whole">Whole piece</option>
                     <option value="flakes">Flakes / chips</option>
                     <option value="granules">Granules / pellets</option>
@@ -156,15 +169,15 @@
                     <option value="closed">Closed container (do not open)</option>
                   </select>
                 </label>
-                <label class="evidence-field" for="evidenceCondition">What is it like?
+                <label class="evidence-field" for="evidenceCondition">Condition (if known)
                   <select id="evidenceCondition" aria-describedby="evidenceFieldsHint evidenceGuidance">
-                    <option value="">Choose condition</option>
+                    <option value="">Not sure</option>
                     <option value="clean">Clean / intact</option>
                     <option value="worn">Worn / weathered</option>
                     <option value="dirty">Dirty / contaminated</option>
                     <option value="mixed">Mixed / attached</option>
                     <option value="damaged">Cut / damaged</option>
-                    <option value="unknown">Unknown</option>
+                    <option value="unknown">Unknown / not sure</option>
                   </select>
                 </label>
                 <label class="evidence-field" for="evidenceOrigin">Where did it come from? (optional)
@@ -178,6 +191,7 @@
               <label class="evidence-field evidence-detail" for="evidenceDetails">What should the assistant look at? (optional)
                 <input id="evidenceDetails" type="text" maxlength="220" placeholder="For example: surface, stiffness, colour, or attached parts">
               </label>
+              <p class="evidence-prompt"><strong>Not sure what to write?</strong> Use: “I do not know what this is. Describe what is visible, what it might be, and the next simple check.”</p>
               <div class="evidence-note" id="evidenceNote">No photo yet. Your notes are enough to start.</div>
               <button class="text-button clear-photos" id="clearDetachedPhotos" type="button" hidden>Clear removed originals</button>
             </section>
@@ -186,31 +200,31 @@
               <h2 class="section-title" id="referencesTitle"><span>Library examples</span><span>Library</span></h2>
               <div class="reference-chips" id="referenceChips"></div>
               <div class="comparison-actions">
-                <button class="text-button" id="compareEvidence" type="button">Get a careful comparison</button>
-                <span class="comparison-hint" id="comparisonHint">Optional: use a note, photo, or example when you need a closer comparison.</span>
+                <button class="text-button" id="compareEvidence" type="button">Get a photo-based first read</button>
+                <span class="comparison-hint" id="comparisonHint">Add a photo or note first. You do not need to know the material name.</span>
               </div>
             </section>
 
             <form class="observation-composer" id="composer" aria-busy="false">
-              <span class="composer-kicker">Optional phase note</span>
-              <label class="composer-label" for="message">What would you like to record or ask about this phase?</label>
-              <textarea id="message" rows="3" placeholder="Add a note or question for this phase..."></textarea>
+              <span class="composer-kicker">Optional notebook note</span>
+              <label class="composer-label" for="message">Want to save a note or ask about this page?</label>
+              <textarea id="message" rows="3" placeholder="Optional: add what you noticed or want to check..."></textarea>
               <div class="composer-footer">
-                <span class="composer-hint">Saved here, then the assistant replies below · Shift+Enter for a new line</span>
-                <button class="save-observation" id="send" type="submit">Ask about this</button>
+                <span class="composer-hint">Saved to this page; the assistant can use it with the photo · Shift+Enter for a new line</span>
+                <button class="save-observation" id="send" type="submit">Get a notebook reply</button>
               </div>
             </form>
             <div class="status-line">
-              <div class="status-note" id="statusNote" aria-live="polite" aria-atomic="true">Autosaved in this browser. Nothing is lost when you move between phases.</div>
+              <div class="status-note" id="statusNote" aria-live="polite" aria-atomic="true">Saved in this browser. You can keep this record optional.</div>
               <button class="retry-button" id="retryRequest" type="button" hidden>Try again</button>
             </div>
           </article>
 
           <article class="page page-right" aria-label="Assistant's first look">
             <section class="working-read">
-              <span class="page-kicker">Assistant's first look</span>
-              <h2 id="workingTitle">Start with the first look</h2>
-              <p id="workingRead">No phase read yet. Ask a general question above, or add a note here when keeping an investigation record will help.</p>
+              <span class="page-kicker">Assistant's first read</span>
+              <h2 id="workingTitle">Start with the first read</h2>
+              <p id="workingRead">No notebook read yet. Ask a general question above, or add a note here when keeping an investigation record will help.</p>
             </section>
             <section class="read-section" aria-labelledby="evidenceTitle">
               <h2 class="section-title" id="evidenceTitle">What we have so far</h2>
@@ -223,7 +237,7 @@
             <section class="next-question" aria-labelledby="nextQuestionTitle">
               <h2 class="section-title" id="nextQuestionTitle">Next question</h2>
               <p id="nextQuestion">What do you see, and what would you like to understand?</p>
-              <button class="text-button" id="usePrompt" type="button">Use this question in the phase note</button>
+              <button class="text-button" id="usePrompt" type="button">Use this question in the notebook note</button>
             </section>
             <section class="assistant-read" id="assistantRead" aria-live="polite" aria-atomic="true" hidden>
               <span class="page-kicker">Assistant's reply — saved here</span>
@@ -240,9 +254,9 @@
         </div>
 
         <nav class="page-nav" aria-label="Notebook page navigation">
-          <button class="quiet-button" id="previousPage" type="button">Previous phase</button>
+          <button class="quiet-button" id="previousPage" type="button">Previous step</button>
           <div class="page-progress" id="pageProgress" aria-label="Phase progress"></div>
-          <button class="primary-button" id="nextPage" type="button">Continue to identification</button>
+          <button class="primary-button" id="nextPage" type="button">Continue</button>
         </nav>
         <details class="note-history" id="noteHistory" hidden>
           <summary>Previous notes kept on this device</summary>

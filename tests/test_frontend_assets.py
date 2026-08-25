@@ -63,6 +63,9 @@ def test_frontend_contract_covers_state_and_accessibility_fixes() -> None:
     assert 'id="clearDetachedPhotos"' in html
     assert 'aria-describedby="evidenceFieldsHint evidenceGuidance"' in html
     assert 'id="library"' in html and 'role="dialog"' in html
+    assert 'id="notebookLauncher"' in html
+    assert 'id="openNotebookFromGuidance"' in html
+    assert 'id="evidenceCapture"' in html
     assert "createPhotoStorage" in javascript
     assert "indexedDB" in storage
     assert "SUPPORTED_VISION_IMAGE_TYPES" in javascript
@@ -86,7 +89,7 @@ def test_frontend_contract_covers_state_and_accessibility_fixes() -> None:
     assert '<textarea class="note-title" id="noteTitle"' in html
     assert "fitNoteTitle" in javascript
     assert "modelDisclosure" in javascript
-    assert "full image and every saved detail" in html
+    assert "original is sent only when you request a photo-based first read" in html
     assert "ASSISTANT_VERIFICATION_NOTICE" in javascript
     assert "MAX_LIBRARY_REFERENCE_IMAGES" in javascript
     assert "original photo" in javascript
@@ -116,27 +119,49 @@ def test_frontend_navigation_isolates_kb_and_returns_to_notebook_for_library() -
     assert 'const settingsView = document.getElementById("settingsView");' in kb_javascript
     assert "settingsView.hidden = !settingsActive;" in kb_javascript
     assert 'remove.setAttribute("aria-label", "Remove observation " + (index + 1));' in javascript
-    assert (
-        '"Next: click Compare carefully · attached photo + all page details will be analyzed"'
-        in javascript
-    )
+    assert '"Next: read the original photo with all saved details"' in javascript
 
 
 def test_guidance_is_answer_first_and_notebook_is_optional() -> None:
     html = (STATIC_ROOT / "index.html").read_text(encoding="utf-8")
     javascript = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
 
-    assert "Ask helpme.green for guidance" in html
+    assert "What can I help you with?" in html
     assert 'id="guidanceComposer"' in html
     assert 'id="guidanceMessage"' in html
     assert 'id="guidanceAnswer" aria-live="polite"' in html
     assert 'id="boardEmpty"' in html
-    assert "Ask a normal question and get an answer first." in html
+    assert "You do not need to know the sample name." in html
+    assert "Add a photo or keep notes" in html
+    assert "I have a sample photo" in html
     assert "async function sendGuidanceRequest(text)" in javascript
     assert "await sendAssistantMessage(text" in javascript
-    assert "Optional: add a note, photo, or example for a closer comparison" in javascript
+    assert "Add a photo or note first. You do not need to know the material name." in javascript
+    assert "notebookOpen: state.notebookOpen === true" in javascript
+    assert (
+        "next.notebookOpen = value.notebookOpen === true || pagesHaveWork(next.pages);"
+        in javascript
+    )
     assert "Add an observation or a reference before moving on" not in javascript
     assert 'selectedCategory: ""' in javascript
+
+
+def test_beginner_path_keeps_optional_notebook_out_of_the_first_view() -> None:
+    html = (STATIC_ROOT / "index.html").read_text(encoding="utf-8")
+    stylesheet = (STATIC_ROOT / "app.css").read_text(encoding="utf-8")
+    javascript = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
+
+    assert 'data-notebook-open="false"' in html
+    assert 'id="openNotebookFromGuidance"' in html
+    assert 'id="openNotebook"' in html
+    assert 'id="closeNotebook"' in html
+    assert 'id="guidanceSend" type="submit">Get an answer' in html
+    assert 'id="compareEvidence" type="button">Get a photo-based first read' in html
+    assert '.notebook-workspace[data-notebook-open="false"] .notebook-stage' in stylesheet
+    assert "state.notebookOpen = true;" in javascript
+    assert "target.getBoundingClientRect().top + window.scrollY - 92" in javascript
+    assert 'nextLabel: "Continue to possible types"' in javascript
+    assert 'nextLabel: "Choose a next check"' in javascript
 
 
 def test_mobile_layout_keeps_phase_rail_and_typography_readable() -> None:
