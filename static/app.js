@@ -11,11 +11,11 @@ import {createPhotoStorage} from "./app-storage.js";
   const SUPPORTED_VISION_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
   const ASSISTANT_VERIFICATION_NOTICE = "AI note: Models can make mistakes. Please check important details against reliable sources and, where relevant, measurements or qualified professional advice before acting.";
   const phases = [
-    {id: "observe", label: "Observe", detail: "What is in front of you?", heading: "Start with the first look", lede: "Describe what is in front of you, what is happening with it, or what you need to understand. Your words stay attached to this phase.", question: "What do you see, and what would you like to understand?", change: ["A clearer view of surface, form, or condition.", "A note about what is known, suspected, or still open."]},
-    {id: "identify", label: "Identify", detail: "Name with care", heading: "Name the material with care", lede: "Use the library to keep a helpful example nearby. A visual match is a starting point, not a confirmed answer.", question: "Which material type is worth checking next?", change: ["A label, document, or test result that supports the name.", "A mixed, coated, or layered piece that changes the first read."]},
-    {id: "understand", label: "Understand", detail: "Keep the details", heading: "Keep the details together", lede: "Keep what you saw, the examples you chose, and the question you are trying to answer on the same page.", question: "What would change how you see this material?", change: ["A missing detail about its condition or past use.", "Something that does not fit the first read."]},
-    {id: "options", label: "Options", detail: "Compare routes", heading: "Compare possible routes", lede: "Look at possible directions before you choose one. Keep the limits and the next check in view.", question: "Which direction is worth looking into first, and why?", change: ["A limit that makes one route less useful.", "A missing source, measurement, or expert check."]},
-    {id: "next", label: "Next steps", detail: "Choose the next check", heading: "Choose the next useful check", lede: "End with a clear, reversible next action linked to your question—not a conclusion that goes beyond what you know.", question: "What is the simplest useful next check?", change: ["A new detail that answers the open question.", "A result that makes the next choice clearer."]}
+    {id: "observe", label: "Describe it", detail: "What can you see?", heading: "Describe what you can see", lede: "Start with direct, visible facts. You do not need to name the material or be sure about what it is.", question: "What can you directly see, feel, or read without guessing?", nextLabel: "Continue to possible types", change: ["A visible feature such as surface, shape, colour, or attachment.", "A label or measurement that is already available."]},
+    {id: "identify", label: "Possible types", detail: "What might it be?", heading: "Consider possible material types", lede: "Keep possible names tentative. Library examples can help you compare, but a visual match is not proof of identity.", question: "Which material family might fit, and what supports that possibility?", nextLabel: "Continue to context", change: ["A label, document, or test result that supports a possibility.", "A mixed, coated, or layered piece that changes the first read."]},
+    {id: "understand", label: "Add context", detail: "What changes it?", heading: "Add the context that matters", lede: "Record where the sample came from, what it was used for, and anything attached, mixed, worn, or contaminated.", question: "Where did it come from, and what could change the first read?", nextLabel: "Continue to options", change: ["A missing detail about condition, origin, or previous use.", "Something that does not fit the first impression."]},
+    {id: "options", label: "Compare options", detail: "Which route fits?", heading: "Compare possible routes", lede: "Look at possible directions before you choose one. Keep the limits and the next check in view.", question: "Which direction is worth looking into first, and why?", nextLabel: "Choose a next check", change: ["A limit that makes one route less useful.", "A missing source, measurement, or expert check."]},
+    {id: "next", label: "Next check", detail: "What should happen next?", heading: "Choose the next useful check", lede: "End with a clear, reversible next action linked to your question—not a conclusion that goes beyond what you know.", question: "What is the simplest useful next check?", nextLabel: "Finish this note", change: ["A new detail that answers the open question.", "A result that makes the next choice clearer."]}
   ];
   const categories = [
     {id: "plastics", label: "Plastics", image: "/assets/material-plastics.webp", subtypes: [
@@ -67,6 +67,12 @@ import {createPhotoStorage} from "./app-storage.js";
 
   const elements = {
     body: document.body,
+    notebookWorkspace: document.getElementById("notebook"),
+    notebookLauncher: document.getElementById("notebookLauncher"),
+    openNotebook: document.getElementById("openNotebook"),
+    openNotebookFromGuidance: document.getElementById("openNotebookFromGuidance"),
+    closeNotebook: document.getElementById("closeNotebook"),
+    notebookStage: document.querySelector(".notebook-stage"),
     phaseList: document.getElementById("phaseList"),
     mobilePhaseSelect: document.getElementById("mobilePhaseSelect"),
     mobilePhaseCount: document.getElementById("mobilePhaseCount"),
@@ -217,6 +223,7 @@ import {createPhotoStorage} from "./app-storage.js";
       sessionId: null,
       currentPhase: 0,
       selectedCategory: "",
+      notebookOpen: false,
       guidance: blankGuidance(),
       pages: phases.map(() => blankPage()),
       history: []
@@ -294,6 +301,15 @@ import {createPhotoStorage} from "./app-storage.js";
       sources: Array.isArray(source.sources) ? source.sources.slice(0, 20) : []
     };
   }
+  function pageHasWork(page) {
+    return Boolean(page && (
+      page.observations.length || page.references.length || page.reply || page.comparison || page.draft.trim() ||
+      page.evidence.photos.length || page.evidence.condition || page.evidence.origin.trim() || page.evidence.details.trim()
+    ));
+  }
+  function pagesHaveWork(pages) {
+    return Array.isArray(pages) && pages.some((page) => pageHasWork(page));
+  }
   function validHistory(value) {
     if (!Array.isArray(value)) return [];
     return value.map((snapshot) => {
@@ -317,6 +333,7 @@ import {createPhotoStorage} from "./app-storage.js";
     next.guidance = validGuidance(value.guidance);
     next.history = validHistory(value.history);
     next.pages = phases.map((_, index) => validPage(value.pages[index], true));
+    next.notebookOpen = value.notebookOpen === true || pagesHaveWork(next.pages);
     return next;
   }
   function loadState() {
@@ -346,6 +363,7 @@ import {createPhotoStorage} from "./app-storage.js";
       sessionId: state.sessionId || null,
       currentPhase: state.currentPhase,
       selectedCategory: state.selectedCategory,
+      notebookOpen: state.notebookOpen === true,
       guidance: validGuidance(state.guidance),
       pages: state.pages.map((page) => persistablePage(page)),
       history: (state.history || []).map((snapshot) => Object.assign({}, snapshot, {
@@ -483,11 +501,7 @@ import {createPhotoStorage} from "./app-storage.js";
   }
   function activePage() { return state.pages[state.currentPhase]; }
   function phaseHasWork(index) {
-    const page = state.pages[index];
-    return Boolean(page && (
-      page.observations.length || page.references.length || page.reply || page.comparison || page.draft.trim() ||
-      page.evidence.photos.length || page.evidence.condition || page.evidence.origin.trim() || page.evidence.details.trim()
-    ));
+    return pageHasWork(state.pages[index]);
   }
   function phaseState(index) {
     if (index === state.currentPhase) return "active";
@@ -505,6 +519,31 @@ import {createPhotoStorage} from "./app-storage.js";
     try { return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light"; }
     catch (_) { return "light"; }
   }
+  function renderNotebookVisibility() {
+    const open = state.notebookOpen === true;
+    elements.notebookWorkspace.dataset.notebookOpen = open ? "true" : "false";
+    elements.notebookLauncher.hidden = open;
+    elements.closeNotebook.hidden = !open;
+  }
+  function openNotebook({scrollTo = ""} = {}) {
+    state.notebookOpen = true;
+    saveState();
+    renderAll();
+    if (!scrollTo) return;
+    window.setTimeout(() => {
+      const target = scrollTo === "evidence" ? document.querySelector(".evidence-capture") : elements.notebookStage;
+      if (!target) return;
+      const top = target.getBoundingClientRect().top + window.scrollY - 92;
+      window.scrollTo({top: Math.max(0, top), behavior: "smooth"});
+    }, 0);
+  }
+  function closeNotebook() {
+    setLibraryOpen(false);
+    state.notebookOpen = false;
+    saveState();
+    renderAll();
+    elements.guidanceMessage.focus({preventScroll: true});
+  }
   function renderPhaseRail() {
     elements.phaseList.replaceChildren();
     elements.mobilePhaseSelect.replaceChildren();
@@ -515,7 +554,7 @@ import {createPhotoStorage} from "./app-storage.js";
       const button = document.createElement("button");
       button.className = "phase-button";
       button.type = "button";
-      button.setAttribute("aria-label", "Open phase " + (index + 1) + ": " + phase.label);
+      button.setAttribute("aria-label", "Open notebook step " + (index + 1) + ": " + phase.label);
       const number = document.createElement("span");
       number.className = "phase-number";
       number.textContent = String(index + 1);
@@ -545,7 +584,7 @@ import {createPhotoStorage} from "./app-storage.js";
     elements.mobilePhaseSelect.value = String(state.currentPhase);
     elements.mobilePhaseCount.textContent = (state.currentPhase + 1) + " of " + phases.length;
     elements.mobilePhaseProgress.style.width = progress + "%";
-    elements.railPageCount.textContent = "Phase " + (state.currentPhase + 1) + " of " + phases.length;
+    elements.railPageCount.textContent = "Step " + (state.currentPhase + 1) + " of " + phases.length;
     elements.railProgress.style.width = progress + "%";
   }
   function renderPageProgress() {
@@ -554,7 +593,7 @@ import {createPhotoStorage} from "./app-storage.js";
       const dot = document.createElement("button");
       dot.className = "page-dot";
       dot.type = "button";
-      dot.setAttribute("aria-label", "Go to phase " + (index + 1) + ": " + phase.label);
+      dot.setAttribute("aria-label", "Go to notebook step " + (index + 1) + ": " + phase.label);
       if (index === state.currentPhase) dot.classList.add("active");
       if (phaseState(index) === "complete" && index !== state.currentPhase) dot.classList.add("complete");
       dot.addEventListener("click", () => goToPhase(index));
@@ -634,7 +673,7 @@ import {createPhotoStorage} from "./app-storage.js";
     if (!evidence.photos.length) {
       const empty = document.createElement("span");
       empty.className = "evidence-empty";
-      empty.textContent = "Add a photo of the real piece when you have one.";
+      empty.textContent = "Add a photo if you want the assistant to inspect the sample.";
       elements.evidencePhotos.appendChild(empty);
     } else {
       evidence.photos.forEach((photo, index) => {
@@ -688,11 +727,11 @@ import {createPhotoStorage} from "./app-storage.js";
     }
     const detail = evidence.form || evidence.condition || evidence.origin || evidence.details;
     elements.evidenceNote.textContent = evidence.photos.length
-      ? "Your original photo" + (evidence.photos.length === 1 ? " is" : "s are") + " ready for the next comparison."
+      ? "Your original photo" + (evidence.photos.length === 1 ? " is" : "s are") + " ready for a photo-based first read."
       : detail
         ? "These details stay with this page. Add a photo when you have one."
-        : "No photo yet. Your notes are enough to start.";
-    if (elements.modelDisclosure) elements.modelDisclosure.textContent = modelTargetLabel();
+        : "No photo yet. You can still ask for guidance above.";
+    if (elements.modelDisclosure) elements.modelDisclosure.textContent = "the configured assistant";
     updateDetachedPhotoControl();
   }
   function renderReferences(page) {
@@ -804,16 +843,16 @@ import {createPhotoStorage} from "./app-storage.js";
     fitNoteTitle();
     elements.noteDate.textContent = "NOTE — " + new Intl.DateTimeFormat("en-GB", {day: "2-digit", month: "short", year: "numeric"}).format(new Date(state.createdAt || Date.now())).toUpperCase();
     elements.leftPageTag.textContent = phase.label.toUpperCase();
-    elements.pageState.textContent = "Phase " + (state.currentPhase + 1) + " of " + phases.length;
+    elements.pageState.textContent = "Step " + (state.currentPhase + 1) + " of " + phases.length;
     elements.message.value = page.draft;
-    elements.message.placeholder = "Add a note or question for " + phase.label.toLowerCase() + "...";
+    elements.message.placeholder = "Add a note for " + phase.label.toLowerCase() + " if useful...";
     renderObservations(page);
     renderEvidence(page);
     renderReferences(page);
     renderRead(page, phase);
     renderPageProgress();
     elements.previousPage.disabled = state.currentPhase === 0;
-    elements.nextPage.textContent = state.currentPhase === phases.length - 1 ? "Finish this note" : "Continue to " + phases[state.currentPhase + 1].label.toLowerCase();
+    elements.nextPage.textContent = phases[state.currentPhase].nextLabel;
     const pageRequestPending = requestPending && requestPhaseIndex === state.currentPhase;
     const pageComparisonPending = comparisonPending && comparisonPhaseIndex === state.currentPhase;
     const pageFailure = lastFailedRequest && lastFailedRequest.phaseIndex === state.currentPhase ? lastFailedRequest : null;
@@ -822,16 +861,16 @@ import {createPhotoStorage} from "./app-storage.js";
     elements.statusNote.textContent = persistenceError || photoStorageError
       ? persistenceError || photoStorageError
       : pageComparisonPending
-      ? "Sending the original photo and all saved page details to " + modelTargetLabel() + "..."
+      ? "Reading the original photo and saved details with the assistant..."
       : pageRequestPending
-        ? "Sending the observation and attached photo to " + modelTargetLabel() + "..."
+        ? "Sending your note and attached photo to the assistant..."
         : pageFailure
           ? offline
             ? "You appear to be offline. Your note is saved here; try again when connected."
             : pageFailure.kind === "comparison"
-              ? "Your notes are saved on this page. The comparison is not available right now."
-              : "The observation is saved on this page. The assistant read is not available right now."
-        : "Autosaved in this browser. Nothing is lost when you move between phases.";
+              ? "Your details are saved on this page. The photo-based first read is not available right now."
+              : "Your note is saved on this page. The assistant reply is not available right now."
+        : "Saved in this browser. You can keep this record optional.";
     elements.retryRequest.hidden = !pageFailure || pageRequestPending || pageComparisonPending;
     const hasComparisonInput = Boolean(
       page.observations.length || page.references.length || page.evidence.photos.length || page.evidence.condition || page.evidence.origin || page.evidence.details
@@ -839,15 +878,15 @@ import {createPhotoStorage} from "./app-storage.js";
     elements.compareEvidence.disabled = comparisonPending || requestPending || !hasComparisonInput;
     elements.composer.setAttribute("aria-busy", pageRequestPending ? "true" : "false");
     elements.send.disabled = pageRequestPending || pageComparisonPending;
-    elements.send.textContent = pageRequestPending ? "Answering..." : "Ask about this";
-    elements.compareEvidence.textContent = pageComparisonPending ? "Comparing..." : difficultForm ? "Compare carefully" : "Get a careful comparison";
+    elements.send.textContent = pageRequestPending ? "Answering..." : "Get a notebook reply";
+    elements.compareEvidence.textContent = pageComparisonPending ? "Reading photo..." : difficultForm ? "Read this photo carefully" : "Get a photo-based first read";
     elements.comparisonHint.textContent = hasComparisonInput
       ? difficultForm
-        ? "Next: click Compare carefully · attached photo + all page details will be analyzed"
-        : "Next: click Get a careful comparison · attached photo + all page details will be analyzed"
+        ? "Next: read the original photo with all saved details"
+        : "Next: read the original photo with all saved details"
       : difficultForm
-        ? "Optional: add a note, photo, or example first · the attached photo will be analyzed with it"
-        : "Optional: add a note, photo, or example for a closer comparison";
+        ? "Add a photo or note first. You do not need to know the material name."
+        : "Add a photo or note first. You do not need to know the material name.";
   }
   function renderHistory() {
     elements.historyList.replaceChildren();
@@ -948,6 +987,7 @@ import {createPhotoStorage} from "./app-storage.js";
     elements.boardImageTertiary.src = images[2] || images[1] || images[0] || "/assets/material-metals.webp";
   }
   function renderAll() {
+    renderNotebookVisibility();
     renderPhaseRail();
     renderGuidance();
     renderNotebook();
@@ -1042,7 +1082,7 @@ import {createPhotoStorage} from "./app-storage.js";
     comparisonPhaseIndex = null;
     lastFailedRequest = null;
     renderAll();
-    elements.noteTitle.focus({preventScroll: true});
+    elements.guidanceMessage.focus({preventScroll: true});
   }
   function restoreHistory(index) {
     const snapshot = state.history[index];
@@ -1054,6 +1094,7 @@ import {createPhotoStorage} from "./app-storage.js";
     sessionId = null;
     state.sessionId = null;
     state.currentPhase = 0;
+    state.notebookOpen = true;
     state.history = [current, ...state.history.filter((_, itemIndex) => itemIndex !== index)];
     conversationGeneration += 1;
     lastFailedRequest = null;
@@ -1631,7 +1672,13 @@ import {createPhotoStorage} from "./app-storage.js";
     saveState();
     elements.message.focus({preventScroll: true});
   });
-  elements.libraryToggle.addEventListener("click", (event) => setLibraryOpen(true, event.currentTarget));
+  elements.openNotebook.addEventListener("click", () => openNotebook());
+  elements.openNotebookFromGuidance.addEventListener("click", () => openNotebook({scrollTo: "evidence"}));
+  elements.closeNotebook.addEventListener("click", closeNotebook);
+  elements.libraryToggle.addEventListener("click", (event) => {
+    openNotebook();
+    setLibraryOpen(true, event.currentTarget);
+  });
   elements.libraryClose.addEventListener("click", () => setLibraryOpen(false));
   elements.libraryBackdrop.addEventListener("click", () => setLibraryOpen(false));
   const libraryNav = document.querySelector('.nav-link[href="#library"]');
@@ -1639,6 +1686,7 @@ import {createPhotoStorage} from "./app-storage.js";
     libraryNav.addEventListener("click", (event) => {
       event.preventDefault();
       if (window.location.hash === "#kb" || window.location.hash === "#settings") window.location.hash = "#notebook";
+      openNotebook();
       setLibraryOpen(true, event.currentTarget);
     });
   }
@@ -1670,6 +1718,7 @@ import {createPhotoStorage} from "./app-storage.js";
   elements.materialSearch.addEventListener("input", () => renderLibrary());
   elements.globalSearch.addEventListener("input", () => {
     elements.materialSearch.value = elements.globalSearch.value;
+    openNotebook();
     setLibraryOpen(true);
     renderLibrary();
   });

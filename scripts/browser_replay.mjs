@@ -219,7 +219,10 @@ async function textState(connection, sessionId) {
       documentWidth: document.documentElement.scrollWidth,
       viewportClientWidth: document.documentElement.clientWidth,
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-      coreControlsVisible: ["#guidanceMessage", "#guidanceSend", "#message", "#send", "#newNote"].every(visible),
+      coreControlsVisible: ["#guidanceMessage", "#guidanceSend", "#newNote"].every(visible) && (visible("#openNotebook") || visible("#closeNotebook")),
+      notebookOpen: document.querySelector("#notebook")?.dataset.notebookOpen === "true",
+      notebookLauncherVisible: visible("#notebookLauncher"),
+      notebookControlsVisible: visible("#message") && visible("#send"),
       observationCount: document.querySelector("#observationCount")?.textContent || "",
       observations: [...document.querySelectorAll("#observationList .observation-text")].map((item) => item.textContent || ""),
       assistantVisible: document.querySelector("#assistantRead")?.hidden === false,
@@ -359,6 +362,14 @@ async function runReplay(options) {
       connection,
       sessionId,
       `document.querySelector("#guidanceAnswer")?.hidden === false && document.querySelector("#guidanceQuestion")?.textContent.includes("capital of Portugal") && !document.querySelector("#guidanceSend")?.disabled`,
+      timeoutMs,
+    );
+
+    await click(connection, sessionId, "#openNotebookFromGuidance");
+    await waitForPage(
+      connection,
+      sessionId,
+      `document.querySelector("#notebook")?.dataset.notebookOpen === "true" && document.querySelector("#notebookLauncher")?.hidden === true && document.querySelector("#evidenceCapture") !== null`,
       timeoutMs,
     );
 
